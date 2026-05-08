@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <AssemblyName>MinimalViewer</AssemblyName>
+    <RootNamespace>MinimalViewer</RootNamespace>
+    <Description>Minimal example of the Blazor dataflow visualizer.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/DotNet/Diagram.Blazor.Server/Diagram.Blazor.Server.csproj" />
+  </ItemGroup>
+
+</Project>

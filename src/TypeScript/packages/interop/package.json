@@ -1,0 +1,30 @@
+{
+  "name": "@dataflow-visualizer/interop",
+  "version": "0.1.0",
+  "private": true,
+  "description": ".NET bridge for the dataflow visualizer",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@dataflow-visualizer/protocol": "workspace:*",
+    "@dataflow-visualizer/runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.1.3"
+  }
+}

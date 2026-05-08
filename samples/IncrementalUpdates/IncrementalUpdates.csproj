@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <AssemblyName>IncrementalUpdates</AssemblyName>
+    <RootNamespace>IncrementalUpdates</RootNamespace>
+    <Description>Demonstrates incremental graph diff updates.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/DotNet/Diagram.Blazor.Server/Diagram.Blazor.Server.csproj" />
+  </ItemGroup>
+
+</Project>

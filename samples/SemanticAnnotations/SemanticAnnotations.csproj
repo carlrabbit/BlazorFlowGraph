@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <AssemblyName>SemanticAnnotations</AssemblyName>
+    <RootNamespace>SemanticAnnotations</RootNamespace>
+    <Description>Demonstrates semantic annotation-based graph projection.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/DotNet/Diagram.Blazor.Server/Diagram.Blazor.Server.csproj" />
+    <ProjectReference Include="../../src/DotNet/Diagram.Projection/Diagram.Projection.csproj" />
+    <ProjectReference Include="../../src/DotNet/Diagram.Semantics/Diagram.Semantics.csproj" />
+  </ItemGroup>
+
+</Project>

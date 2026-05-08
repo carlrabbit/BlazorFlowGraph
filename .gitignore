@@ -1,0 +1,33 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.userprefs
+.idea/
+*.DotSettings
+
+# Node / TypeScript
+node_modules/
+dist/
+.cache/
+.turbo/
+*.tsbuildinfo
+coverage/
+
+# pnpm
+.pnpm-store/
+
+# Build outputs
+wwwroot/js/
+wwwroot/css/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+*.lock
+!pnpm-lock.yaml
