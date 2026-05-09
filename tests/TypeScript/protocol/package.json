@@ -1,0 +1,17 @@
+{
+  "name": "@dataflow-visualizer/protocol-tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@dataflow-visualizer/protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.3"
+  }
+}

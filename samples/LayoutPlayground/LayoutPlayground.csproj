@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <AssemblyName>LayoutPlayground</AssemblyName>
+    <RootNamespace>LayoutPlayground</RootNamespace>
+    <Description>Layout tuning, viewport debugging, and reconciliation testing playground.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/DotNet/Diagram.Blazor.Server/Diagram.Blazor.Server.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>Diagram.Protocol</AssemblyName>
+    <RootNamespace>Diagram.Protocol</RootNamespace>
+    <Description>Shared graph contracts and protocol types for the dataflow visualizer.</Description>
+  </PropertyGroup>
+
+</Project>

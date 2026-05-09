@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <AssemblyName>LargeGraphStress</AssemblyName>
+    <RootNamespace>LargeGraphStress</RootNamespace>
+    <Description>Stress testing with large synthetic graphs.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/DotNet/Diagram.Blazor.Server/Diagram.Blazor.Server.csproj" />
+  </ItemGroup>
+
+</Project>
