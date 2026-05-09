@@ -1,5 +1,3 @@
-# Milestones
-
 # BlazorFlowGraph Milestone Plan
 
 This document defines the planned milestone progression for BlazorFlowGraph.
