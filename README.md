@@ -260,6 +260,8 @@ See [`docs/integration/guide.md`](docs/integration/guide.md) for more detail.
 
 ## Development
 
+For a zero-install development environment, see [`Codespace.md`](Codespace.md) for GitHub Codespace setup instructions.
+
 ### Prerequisites
 
 - .NET 10 SDK

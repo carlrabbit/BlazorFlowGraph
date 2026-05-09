@@ -1,0 +1,47 @@
+{
+  "name": "BlazorFlowGraph",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "10",
+      "installUsingApt": false
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22",
+      "nodeGypDependencies": false
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "EditorConfig.EditorConfig"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[csharp]": {
+          "editor.defaultFormatter": "ms-dotnettools.csharp"
+        },
+        "typescript.preferences.importModuleSpecifier": "relative"
+      }
+    }
+  },
+  "onCreateCommand": "corepack enable && corepack prepare pnpm@10.11.0 --activate",
+  "updateContentCommand": "pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx && pnpm build && dotnet build BlazorFlowGraph.slnx --configuration Release",
+  "forwardPorts": [5000, 5001],
+  "portsAttributes": {
+    "5000": {
+      "label": "Blazor HTTP",
+      "onAutoForward": "notify"
+    },
+    "5001": {
+      "label": "Blazor HTTPS",
+      "onAutoForward": "notify"
+    }
+  },
+  "remoteUser": "vscode"
+}
