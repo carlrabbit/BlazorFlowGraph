@@ -1,0 +1,70 @@
+@page "/"
+@rendermode Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveServer
+@using Diagram.Blazor
+@using Diagram.Diffing
+@using Diagram.Protocol
+@inject IGraphDiffer Differ
+
+<h1>Incremental Updates</h1>
+
+<div class="controls">
+    <button @onclick="AddNode">Add Node</button>
+    <button @onclick="RemoveLastNode" disabled="@(_snapshot.Nodes.Count == 0)">Remove Node</button>
+    <button @onclick="Reset">Reset</button>
+    <span class="hint">
+        Version @_snapshot.Version &bull; @_snapshot.Nodes.Count nodes &bull; @_snapshot.Edges.Count edges
+    </span>
+</div>
+
+<DataflowGraph Snapshot="@_snapshot" Width="900" Height="480" />
+
+@code {
+    private int _nextId = 1;
+    private GraphSnapshot _snapshot = new(0, [], []);
+
+    private void AddNode()
+    {
+        var id = new NodeId($"node-{_nextId}");
+        var label = $"Node {_nextId}";
+        _nextId++;
+
+        var newNodes = _snapshot.Nodes
+            .Append(new GraphNode(id, label, "default"))
+            .ToList();
+
+        // Connect to a random existing node if available
+        var newEdges = _snapshot.Edges.ToList();
+        if (_snapshot.Nodes.Count > 0)
+        {
+            var sourceNode = _snapshot.Nodes[Random.Shared.Next(_snapshot.Nodes.Count)];
+            newEdges.Add(new GraphEdge(
+                new EdgeId($"e-{sourceNode.Id.Value}-{id.Value}"),
+                sourceNode.Id,
+                id));
+        }
+
+        var nextSnapshot = new GraphSnapshot(_snapshot.Version + 1, newNodes, newEdges);
+        var diff = Differ.Diff(_snapshot, nextSnapshot);
+        _ = diff; // diff is computed but used implicitly via snapshot replacement
+        _snapshot = nextSnapshot;
+    }
+
+    private void RemoveLastNode()
+    {
+        if (_snapshot.Nodes.Count == 0) return;
+
+        var removedId = _snapshot.Nodes[^1].Id;
+        var newNodes = _snapshot.Nodes.SkipLast(1).ToList();
+        var newEdges = _snapshot.Edges
+            .Where(e => e.SourceId != removedId && e.TargetId != removedId)
+            .ToList();
+
+        _snapshot = new GraphSnapshot(_snapshot.Version + 1, newNodes, newEdges);
+    }
+
+    private void Reset()
+    {
+        _nextId = 1;
+        _snapshot = new GraphSnapshot(_snapshot.Version + 1, [], []);
+    }
+}

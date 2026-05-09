@@ -3,11 +3,14 @@
   <PropertyGroup>
     <AssemblyName>IncrementalUpdates</AssemblyName>
     <RootNamespace>IncrementalUpdates</RootNamespace>
-    <Description>Demonstrates incremental graph diff updates.</Description>
+    <Description>Demonstrates incremental graph diff updates via the diff engine.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/DotNet/Diagram.Blazor.Server/Diagram.Blazor.Server.csproj" />
+    <ProjectReference Include="../../src/DotNet/Diagram.Blazor/Diagram.Blazor.csproj" />
+    <ProjectReference Include="../../src/DotNet/Diagram.Diffing/Diagram.Diffing.csproj" />
+    <ProjectReference Include="../../src/DotNet/Diagram.Projection/Diagram.Projection.csproj" />
+    <ProjectReference Include="../../src/DotNet/Diagram.Semantics/Diagram.Semantics.csproj" />
   </ItemGroup>
 
 </Project>

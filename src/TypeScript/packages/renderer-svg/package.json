@@ -19,6 +19,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@dataflow-visualizer/layout": "workspace:*",
     "@dataflow-visualizer/protocol": "workspace:*",
     "@dataflow-visualizer/runtime": "workspace:*"
   },

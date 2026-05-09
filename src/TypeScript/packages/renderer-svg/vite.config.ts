@@ -10,10 +10,12 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [
+        "@dataflow-visualizer/layout",
         "@dataflow-visualizer/protocol",
         "@dataflow-visualizer/runtime",
       ],
     },
+    emptyOutDir: false,
     sourcemap: true,
     target: "es2022",
   },

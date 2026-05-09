@@ -8,6 +8,7 @@
   "include": ["src"],
   "references": [
     { "path": "../protocol" },
-    { "path": "../runtime" }
+    { "path": "../runtime" },
+    { "path": "../layout" }
   ]
 }

@@ -82,6 +82,9 @@ importers:
 
   src/TypeScript/packages/renderer-svg:
     dependencies:
+      '@dataflow-visualizer/layout':
+        specifier: workspace:*
+        version: link:../layout
       '@dataflow-visualizer/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -130,6 +133,9 @@ importers:
 
   tests/TypeScript/renderer-svg:
     dependencies:
+      '@dataflow-visualizer/layout':
+        specifier: workspace:*
+        version: link:../../../src/TypeScript/packages/layout
       '@dataflow-visualizer/protocol':
         specifier: workspace:*
         version: link:../../../src/TypeScript/packages/protocol
