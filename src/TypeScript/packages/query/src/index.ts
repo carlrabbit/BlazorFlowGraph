@@ -238,11 +238,14 @@ function bfs(
     for (const edge of nextEdges) {
       if (edgeFilter != null && !edgeFilter(edge)) continue;
 
-      const neighborId = direction === "upstream"
-        ? edge.sourceId
-        : direction === "downstream"
-          ? edge.targetId
-          : (edge.sourceId === id ? edge.targetId : edge.sourceId);
+      let neighborId: NodeId;
+      if (direction === "upstream") {
+        neighborId = edge.sourceId;
+      } else if (direction === "downstream") {
+        neighborId = edge.targetId;
+      } else {
+        neighborId = edge.sourceId === id ? edge.targetId : edge.sourceId;
+      }
 
       if (neighborId === startId || visited.has(neighborId)) continue;
       if (nodeFilter != null && !nodeFilter(neighborId)) continue;

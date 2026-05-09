@@ -178,17 +178,13 @@ function renderNodesLayer(
   layout: LayoutResult,
   options: RenderLayerOptions
 ): string {
-  const nodeWidth = toSafeInt(options.nodeWidth ?? 120);
-  const nodeHeight = toSafeInt(options.nodeHeight ?? 40);
-  void nodeWidth;
-  void nodeHeight;
   const elements = Array.from(state.nodes.values()).map((node) => {
     const pos = layout.nodes.get(node.id);
     if (pos == null) return "";
     const x = toSafeInt(pos.x);
     const y = toSafeInt(pos.y);
-    const w = toSafeInt(pos.width);
-    const h = toSafeInt(pos.height);
+    const w = toSafeInt(pos.width ?? options.nodeWidth ?? 120);
+    const h = toSafeInt(pos.height ?? options.nodeHeight ?? 40);
     const labelText = escapeXml(node.label);
     const textX = toSafeInt(w / 2);
     const textY = toSafeInt(h / 2 + 5);
