@@ -23,7 +23,7 @@ GitHub Codespaces provides a cloud-hosted development environment pre-configured
 
 ### Toolchain
 
-| Tool | Version | How installed |
+| Tool | Version | How Installed |
 |------|---------|--------------|
 | .NET SDK | 10 (latest minor) | devcontainer feature `ghcr.io/devcontainers/features/dotnet:2` |
 | Node.js | 22 LTS | devcontainer feature `ghcr.io/devcontainers/features/node:1` |
@@ -122,7 +122,7 @@ The devcontainer uses a minimal Ubuntu base with targeted features for .NET and 
 
 ### Use Port Attributes for Discoverability
 
-Ports `5000` and `5001` are declared with descriptive labels and `onAutoForward: "notify"`. This surfaces them in the **Ports** panel without opening a browser tab automatically, which is the appropriate behaviour for a server-side Blazor application that requires an explicit start command.
+Ports `5000` and `5001` are declared with descriptive labels and `onAutoForward: "notify"`. This surfaces them in the **Ports** panel without opening a browser tab automatically, which is the appropriate behavior for a server-side Blazor application that requires an explicit start command.
 
 ### Align Tool Versions with CI
 
