@@ -7,33 +7,33 @@ public class SampleComponent { }
 
 public class SemanticAttributesTests
 {
-    [Fact]
-    public void SemanticNodeAttribute_DefaultKind_IsDefault()
+    [Test]
+    public async Task SemanticNodeAttribute_DefaultKind_IsDefault()
     {
         var attr = new SemanticNodeAttribute();
-        attr.Kind.Should().Be("default");
+        await Assert.That(attr.Kind).IsEqualTo("default");
     }
 
-    [Fact]
-    public void SemanticNodeAttribute_CanBeApplied()
+    [Test]
+    public async Task SemanticNodeAttribute_CanBeApplied()
     {
         var attrs = typeof(SampleComponent)
             .GetCustomAttributes(typeof(SemanticNodeAttribute), inherit: true);
-        attrs.Should().HaveCount(1);
+        await Assert.That(attrs.Length).IsEqualTo(1);
     }
 
-    [Fact]
-    public void SemanticNodeAttribute_Kind_IsPreserved()
+    [Test]
+    public async Task SemanticNodeAttribute_Kind_IsPreserved()
     {
         var attr = (SemanticNodeAttribute)typeof(SampleComponent)
             .GetCustomAttributes(typeof(SemanticNodeAttribute), inherit: true)[0];
-        attr.Kind.Should().Be("component");
+        await Assert.That(attr.Kind).IsEqualTo("component");
     }
 
-    [Fact]
-    public void SemanticEdgeAttribute_CanBeCreated()
+    [Test]
+    public async Task SemanticEdgeAttribute_CanBeCreated()
     {
         var attr = new SemanticEdgeAttribute { Label = "depends-on" };
-        attr.Label.Should().Be("depends-on");
+        await Assert.That(attr.Label).IsEqualTo("depends-on");
     }
 }

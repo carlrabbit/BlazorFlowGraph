@@ -26,15 +26,24 @@ jobs:
       - name: Build
         run: dotnet build BlazorFlowGraph.slnx --no-restore --configuration Release
 
-      - name: Test
-        run: dotnet test BlazorFlowGraph.slnx --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+      - name: Test — Diagram.Protocol
+        run: dotnet run --no-build --project tests/DotNet/Diagram.Protocol.Tests --configuration Release -- --report-trx --results-directory TestResults
+
+      - name: Test — Diagram.Diffing
+        run: dotnet run --no-build --project tests/DotNet/Diagram.Diffing.Tests --configuration Release -- --report-trx --results-directory TestResults
+
+      - name: Test — Diagram.Projection
+        run: dotnet run --no-build --project tests/DotNet/Diagram.Projection.Tests --configuration Release -- --report-trx --results-directory TestResults
+
+      - name: Test — Diagram.Semantics
+        run: dotnet run --no-build --project tests/DotNet/Diagram.Semantics.Tests --configuration Release -- --report-trx --results-directory TestResults
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dotnet-test-results
-          path: "**/TestResults/*.trx"
+          path: "TestResults/*.trx"
 
   build-typescript:
     name: Build & Typecheck TypeScript
@@ -51,8 +60,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -79,8 +86,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

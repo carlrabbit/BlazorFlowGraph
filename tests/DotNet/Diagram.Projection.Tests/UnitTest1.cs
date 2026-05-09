@@ -17,8 +17,8 @@ public class ReflectionGraphProjectorTests
 {
     private readonly ReflectionGraphProjector _projector = new();
 
-    [Fact]
-    public void Project_SemanticObjects_ProducesNodes()
+    [Test]
+    public async Task Project_SemanticObjects_ProducesNodes()
     {
         var a = new ServiceA();
         var b = new ServiceB();
@@ -26,12 +26,12 @@ public class ReflectionGraphProjectorTests
 
         var snapshot = _projector.Project([a, b], version: 1);
 
-        snapshot.Nodes.Should().HaveCount(2);
-        snapshot.Version.Should().Be(1);
+        await Assert.That(snapshot.Nodes).Count().IsEqualTo(2);
+        await Assert.That(snapshot.Version).IsEqualTo(1);
     }
 
-    [Fact]
-    public void Project_SemanticEdge_ProducesEdge()
+    [Test]
+    public async Task Project_SemanticEdge_ProducesEdge()
     {
         var a = new ServiceA();
         var b = new ServiceB();
@@ -39,21 +39,21 @@ public class ReflectionGraphProjectorTests
 
         var snapshot = _projector.Project([a, b]);
 
-        snapshot.Edges.Should().HaveCount(1);
+        await Assert.That(snapshot.Edges).Count().IsEqualTo(1);
     }
 
-    [Fact]
-    public void Project_NonAnnotatedObject_IsIgnored()
+    [Test]
+    public async Task Project_NonAnnotatedObject_IsIgnored()
     {
         var snapshot = _projector.Project([new object()]);
-        snapshot.Nodes.Should().BeEmpty();
+        await Assert.That(snapshot.Nodes).IsEmpty();
     }
 
-    [Fact]
-    public void Project_NodeLabel_UsesAttributeLabel()
+    [Test]
+    public async Task Project_NodeLabel_UsesAttributeLabel()
     {
         var a = new ServiceA();
         var snapshot = _projector.Project([a]);
-        snapshot.Nodes[0].Label.Should().Be("Service A");
+        await Assert.That(snapshot.Nodes[0].Label).IsEqualTo("Service A");
     }
 }

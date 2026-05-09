@@ -10,8 +10,8 @@ public class GraphDifferTests
     private static GraphSnapshot Empty(int version = 0) =>
         new(version, [], []);
 
-    [Fact]
-    public void Diff_AddedNodes_ReturnsAddOperations()
+    [Test]
+    public async Task Diff_AddedNodes_ReturnsAddOperations()
     {
         var from = Empty(0);
         var node = new GraphNode(new NodeId("n1"), "Node 1", "default");
@@ -19,13 +19,13 @@ public class GraphDifferTests
 
         var diff = _differ.Diff(from, to);
 
-        diff.NodeOperations.Should().HaveCount(1);
-        diff.NodeOperations[0].Type.Should().Be(DiffOperationType.Add);
-        diff.NodeOperations[0].Node.Should().Be(node);
+        await Assert.That(diff.NodeOperations).Count().IsEqualTo(1);
+        await Assert.That(diff.NodeOperations[0].Type).IsEqualTo(DiffOperationType.Add);
+        await Assert.That(diff.NodeOperations[0].Node).IsEqualTo(node);
     }
 
-    [Fact]
-    public void Diff_RemovedNodes_ReturnsRemoveOperations()
+    [Test]
+    public async Task Diff_RemovedNodes_ReturnsRemoveOperations()
     {
         var node = new GraphNode(new NodeId("n1"), "Node 1", "default");
         var from = new GraphSnapshot(0, [node], []);
@@ -33,12 +33,12 @@ public class GraphDifferTests
 
         var diff = _differ.Diff(from, to);
 
-        diff.NodeOperations.Should().HaveCount(1);
-        diff.NodeOperations[0].Type.Should().Be(DiffOperationType.Remove);
+        await Assert.That(diff.NodeOperations).Count().IsEqualTo(1);
+        await Assert.That(diff.NodeOperations[0].Type).IsEqualTo(DiffOperationType.Remove);
     }
 
-    [Fact]
-    public void Diff_UpdatedNode_ReturnsUpdateOperation()
+    [Test]
+    public async Task Diff_UpdatedNode_ReturnsUpdateOperation()
     {
         var original = new GraphNode(new NodeId("n1"), "Old Label", "default");
         var updated = new GraphNode(new NodeId("n1"), "New Label", "default");
@@ -47,13 +47,13 @@ public class GraphDifferTests
 
         var diff = _differ.Diff(from, to);
 
-        diff.NodeOperations.Should().HaveCount(1);
-        diff.NodeOperations[0].Type.Should().Be(DiffOperationType.Update);
-        diff.NodeOperations[0].Node.Label.Should().Be("New Label");
+        await Assert.That(diff.NodeOperations).Count().IsEqualTo(1);
+        await Assert.That(diff.NodeOperations[0].Type).IsEqualTo(DiffOperationType.Update);
+        await Assert.That(diff.NodeOperations[0].Node.Label).IsEqualTo("New Label");
     }
 
-    [Fact]
-    public void Diff_UnchangedNodes_ReturnsNoOperations()
+    [Test]
+    public async Task Diff_UnchangedNodes_ReturnsNoOperations()
     {
         var node = new GraphNode(new NodeId("n1"), "Node 1", "default");
         var from = new GraphSnapshot(0, [node], []);
@@ -61,14 +61,14 @@ public class GraphDifferTests
 
         var diff = _differ.Diff(from, to);
 
-        diff.NodeOperations.Should().BeEmpty();
+        await Assert.That(diff.NodeOperations).IsEmpty();
     }
 
-    [Fact]
-    public void Diff_Versions_ArePreserved()
+    [Test]
+    public async Task Diff_Versions_ArePreserved()
     {
         var diff = _differ.Diff(Empty(3), Empty(7));
-        diff.FromVersion.Should().Be(3);
-        diff.ToVersion.Should().Be(7);
+        await Assert.That(diff.FromVersion).IsEqualTo(3);
+        await Assert.That(diff.ToVersion).IsEqualTo(7);
     }
 }
