@@ -300,9 +300,14 @@ Avoid:
 
 # Documentation
 
+Consult the AI-oriented reference docs in `docs/ai/` when they are relevant to the task.
+
+If a task introduces a new architectural area, protocol rule, rendering constraint, or other durable AI-facing guidance that is not already covered, extend the appropriate document in `docs/ai/` or add a new focused AI spec when necessary.
+
 When introducing major architectural changes:
 
 - update ADRs
+- update relevant `docs/ai/*.md` guidance when AI-facing implementation constraints have changed
 - document runtime boundaries
 - document protocol changes
 - explain reconciliation implications
