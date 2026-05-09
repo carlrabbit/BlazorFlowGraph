@@ -3,11 +3,14 @@
   <PropertyGroup>
     <AssemblyName>MinimalViewer</AssemblyName>
     <RootNamespace>MinimalViewer</RootNamespace>
-    <Description>Minimal example of the Blazor dataflow visualizer.</Description>
+    <Description>Minimal example of the Blazor dataflow visualizer — renders a static graph.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/DotNet/Diagram.Blazor.Server/Diagram.Blazor.Server.csproj" />
+    <ProjectReference Include="../../src/DotNet/Diagram.Blazor/Diagram.Blazor.csproj" />
+    <ProjectReference Include="../../src/DotNet/Diagram.Diffing/Diagram.Diffing.csproj" />
+    <ProjectReference Include="../../src/DotNet/Diagram.Projection/Diagram.Projection.csproj" />
+    <ProjectReference Include="../../src/DotNet/Diagram.Semantics/Diagram.Semantics.csproj" />
   </ItemGroup>
 
 </Project>

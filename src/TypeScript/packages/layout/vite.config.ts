@@ -11,6 +11,7 @@ export default defineConfig({
     rollupOptions: {
       external: ["@dataflow-visualizer/protocol"],
     },
+    emptyOutDir: false,
     sourcemap: true,
     target: "es2022",
   },

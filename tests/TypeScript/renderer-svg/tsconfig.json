@@ -6,6 +6,7 @@
   },
   "include": ["src"],
   "references": [
+    { "path": "../../../src/TypeScript/packages/layout" },
     { "path": "../../../src/TypeScript/packages/protocol" },
     { "path": "../../../src/TypeScript/packages/runtime" },
     { "path": "../../../src/TypeScript/packages/renderer-svg" }

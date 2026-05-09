@@ -14,6 +14,7 @@ export default defineConfig({
         "@dataflow-visualizer/runtime",
       ],
     },
+    emptyOutDir: false,
     sourcemap: true,
     target: "es2022",
   },

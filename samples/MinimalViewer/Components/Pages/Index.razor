@@ -1,0 +1,40 @@
+@page "/"
+@rendermode Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveServer
+@using Diagram.Blazor
+@using Diagram.Protocol
+@using Diagram.Projection
+
+<h1>Minimal Viewer</h1>
+<p class="hint">Pan with mouse drag &bull; Zoom with scroll wheel</p>
+
+<DataflowGraph Snapshot="@_snapshot" Width="900" Height="550" />
+
+@code {
+    private GraphSnapshot? _snapshot;
+
+    protected override void OnInitialized()
+    {
+        // Build a simple sample graph demonstrating the projection pipeline.
+        _snapshot = new GraphSnapshot(
+            Version: 1,
+            Nodes:
+            [
+                new GraphNode(new NodeId("service-a"), "Service A", "service"),
+                new GraphNode(new NodeId("service-b"), "Service B", "service"),
+                new GraphNode(new NodeId("service-c"), "Service C", "service"),
+                new GraphNode(new NodeId("database"), "Database", "datastore"),
+                new GraphNode(new NodeId("cache"), "Cache", "datastore"),
+                new GraphNode(new NodeId("api-gateway"), "API Gateway", "gateway"),
+            ],
+            Edges:
+            [
+                new GraphEdge(new EdgeId("e1"), new NodeId("api-gateway"), new NodeId("service-a"), "routes to"),
+                new GraphEdge(new EdgeId("e2"), new NodeId("api-gateway"), new NodeId("service-b"), "routes to"),
+                new GraphEdge(new EdgeId("e3"), new NodeId("service-a"), new NodeId("database"), "reads"),
+                new GraphEdge(new EdgeId("e4"), new NodeId("service-b"), new NodeId("database"), "reads"),
+                new GraphEdge(new EdgeId("e5"), new NodeId("service-a"), new NodeId("cache"), "caches"),
+                new GraphEdge(new EdgeId("e6"), new NodeId("service-b"), new NodeId("service-c"), "calls"),
+            ]
+        );
+    }
+}

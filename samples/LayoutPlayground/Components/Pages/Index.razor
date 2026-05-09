@@ -1,0 +1,49 @@
+@page "/"
+@rendermode Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveServer
+@using Diagram.Blazor
+@using Diagram.Protocol
+
+<h1>Layout Playground</h1>
+
+<div class="controls">
+    <label>
+        Nodes:&nbsp;
+        <input type="number" min="1" max="50" @bind="_nodeCount" @bind:event="oninput" />
+    </label>
+    <button @onclick="Regenerate">Regenerate</button>
+    <span class="hint">Pan: drag &bull; Zoom: scroll &bull; Graph version: @_snapshot?.Version</span>
+</div>
+
+<DataflowGraph Snapshot="@_snapshot" Width="960" Height="540" />
+
+@code {
+    private int _nodeCount = 8;
+    private int _version;
+    private GraphSnapshot? _snapshot;
+
+    protected override void OnInitialized() => Regenerate();
+
+    private void Regenerate()
+    {
+        var count = Math.Clamp(_nodeCount, 1, 50);
+        var nodes = Enumerable.Range(1, count)
+            .Select(i => new GraphNode(new NodeId($"n{i}"), $"Node {i}", "default"))
+            .ToList();
+
+        // Seed with _version for reproducibility within a session;
+        // each click produces a different but stable topology.
+        var rng = new Random(_version);
+        var edges = new List<GraphEdge>();
+        for (int i = 1; i < nodes.Count; i++)
+        {
+            var src = nodes[rng.Next(i)];
+            var dst = nodes[i];
+            edges.Add(new GraphEdge(
+                new EdgeId($"e{i}"),
+                src.Id,
+                dst.Id));
+        }
+
+        _snapshot = new GraphSnapshot(++_version, nodes, edges);
+    }
+}
