@@ -80,6 +80,25 @@ importers:
         specifier: ^3.1.3
         version: 3.2.4
 
+  src/TypeScript/packages/query:
+    dependencies:
+      '@dataflow-visualizer/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@dataflow-visualizer/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+    devDependencies:
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vite:
+        specifier: ^6.3.5
+        version: 6.4.2
+      vitest:
+        specifier: ^3.1.3
+        version: 3.2.4
+
   src/TypeScript/packages/renderer-svg:
     dependencies:
       '@dataflow-visualizer/layout':
@@ -123,6 +142,25 @@ importers:
       '@dataflow-visualizer/protocol':
         specifier: workspace:*
         version: link:../../../src/TypeScript/packages/protocol
+    devDependencies:
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.1.3
+        version: 3.2.4
+
+  tests/TypeScript/query:
+    dependencies:
+      '@dataflow-visualizer/protocol':
+        specifier: workspace:*
+        version: link:../../../src/TypeScript/packages/protocol
+      '@dataflow-visualizer/query':
+        specifier: workspace:*
+        version: link:../../../src/TypeScript/packages/query
+      '@dataflow-visualizer/runtime':
+        specifier: workspace:*
+        version: link:../../../src/TypeScript/packages/runtime
     devDependencies:
       typescript:
         specifier: ^5.8.3

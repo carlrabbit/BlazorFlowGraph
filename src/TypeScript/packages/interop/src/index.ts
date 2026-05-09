@@ -3,10 +3,17 @@
  */
 
 import type { GraphSnapshot, GraphDiff } from "@dataflow-visualizer/protocol";
-import { applySnapshot, applyDiff, createEmptyState } from "@dataflow-visualizer/runtime";
+import {
+  applySnapshot,
+  applyDiff,
+  createEmptyState,
+  GraphRuntimeStore,
+  GraphRuntimeEventBus,
+} from "@dataflow-visualizer/runtime";
 import type { GraphState } from "@dataflow-visualizer/runtime";
 
 export type { GraphSnapshot, GraphDiff, GraphState };
+export { GraphRuntimeStore, GraphRuntimeEventBus };
 
 /** Callback invoked when the graph state changes. */
 export type StateChangeCallback = (state: GraphState) => void;
@@ -19,9 +26,16 @@ export class DotNetBridge {
   private state: GraphState = createEmptyState();
   private readonly listeners: Set<StateChangeCallback> = new Set();
 
+  /** Shared store for all runtime state slices. */
+  readonly store: GraphRuntimeStore = new GraphRuntimeStore();
+
+  /** Shared event bus for runtime events. */
+  readonly eventBus: GraphRuntimeEventBus = this.store.eventBus;
+
   /** Receives a full snapshot from the .NET side. */
   receiveSnapshot(snapshot: GraphSnapshot): void {
     this.state = applySnapshot(snapshot);
+    this.store.setData(this.state);
     this.notifyListeners();
   }
 
@@ -34,6 +48,7 @@ export class DotNetBridge {
       return;
     }
     this.state = applyDiff(this.state, diff);
+    this.store.setData(this.state);
     this.notifyListeners();
   }
 

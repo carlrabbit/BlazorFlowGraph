@@ -1,0 +1,19 @@
+{
+  "name": "@dataflow-visualizer/query-tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@dataflow-visualizer/protocol": "workspace:*",
+    "@dataflow-visualizer/runtime": "workspace:*",
+    "@dataflow-visualizer/query": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.3"
+  }
+}
