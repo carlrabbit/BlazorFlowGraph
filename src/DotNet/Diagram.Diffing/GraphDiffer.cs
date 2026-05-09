@@ -58,6 +58,29 @@ public sealed class GraphDiffer : IGraphDiffer
                 edgeOps.Add(new EdgeDiffOperation(DiffOperationType.Remove, edge));
         }
 
-        return new GraphDiff(from.Version, to.Version, nodeOps, edgeOps);
+        List<GroupDiffOperation>? groupOps = null;
+
+        if (from.Groups is not null || to.Groups is not null)
+        {
+            groupOps = new List<GroupDiffOperation>();
+            var fromGroups = (from.Groups ?? []).ToDictionary(g => g.Id);
+            var toGroups = (to.Groups ?? []).ToDictionary(g => g.Id);
+
+            foreach (var (id, group) in toGroups)
+            {
+                if (!fromGroups.TryGetValue(id, out var existing))
+                    groupOps.Add(new GroupDiffOperation(DiffOperationType.Add, group));
+                else if (existing != group)
+                    groupOps.Add(new GroupDiffOperation(DiffOperationType.Update, group));
+            }
+
+            foreach (var (id, group) in fromGroups)
+            {
+                if (!toGroups.ContainsKey(id))
+                    groupOps.Add(new GroupDiffOperation(DiffOperationType.Remove, group));
+            }
+        }
+
+        return new GraphDiff(from.Version, to.Version, nodeOps, edgeOps, groupOps);
     }
 }

@@ -25,8 +25,14 @@ public sealed class ReflectionGraphProjector : IGraphProjector
     {
         var nodes = new List<GraphNode>();
         var edges = new List<GraphEdge>();
+        var groups = new List<GraphGroup>();
 
-        foreach (var obj in semanticObjects)
+        var objectList = semanticObjects as IList<object> ?? semanticObjects.ToList();
+
+        // Build a stable id lookup so group membership can reference node ids.
+        var objectIds = new Dictionary<object, NodeId>(ReferenceEqualityComparer.Instance);
+
+        foreach (var obj in objectList)
         {
             var type = obj.GetType();
             var nodeAttr = type.GetCustomAttributes(typeof(SemanticNodeAttribute), inherit: true)
@@ -37,6 +43,7 @@ public sealed class ReflectionGraphProjector : IGraphProjector
                 continue;
 
             var nodeId = new NodeId(RuntimeHelpers.GetHashCode(obj).ToString("x8"));
+            objectIds[obj] = nodeId;
             var label = nodeAttr.Label ?? type.Name;
             nodes.Add(new GraphNode(nodeId, label, nodeAttr.Kind));
 
@@ -59,6 +66,45 @@ public sealed class ReflectionGraphProjector : IGraphProjector
             }
         }
 
-        return new GraphSnapshot(version, nodes, edges);
+        foreach (var obj in objectList)
+        {
+            var type = obj.GetType();
+            var groupAttr = type.GetCustomAttributes(typeof(SemanticGroupAttribute), inherit: true)
+                                .OfType<SemanticGroupAttribute>()
+                                .FirstOrDefault();
+
+            if (groupAttr is null)
+                continue;
+
+            var childIds = new List<NodeId>();
+            foreach (var prop in type.GetProperties())
+            {
+                var value = prop.GetValue(obj);
+                if (value is null)
+                    continue;
+
+                if (objectIds.TryGetValue(value, out var childId))
+                {
+                    childIds.Add(childId);
+                    continue;
+                }
+
+                // Support collection properties containing annotated nodes.
+                if (value is System.Collections.IEnumerable enumerable)
+                {
+                    foreach (var item in enumerable)
+                    {
+                        if (item is not null && objectIds.TryGetValue(item, out var itemId))
+                            childIds.Add(itemId);
+                    }
+                }
+            }
+
+            var groupId = new GroupId(RuntimeHelpers.GetHashCode(obj).ToString("x8"));
+            var label = groupAttr.Label ?? type.Name;
+            groups.Add(new GraphGroup(groupId, label, groupAttr.Kind, childIds));
+        }
+
+        return new GraphSnapshot(version, nodes, edges, groups.Count > 0 ? groups : null);
     }
 }

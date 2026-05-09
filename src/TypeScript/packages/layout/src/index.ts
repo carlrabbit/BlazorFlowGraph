@@ -4,6 +4,15 @@
 
 import type { GraphSnapshot } from "@dataflow-visualizer/protocol";
 
+/** Controls when layout is (re)computed. */
+export type LayoutPolicy = "Never" | "Incremental" | "Full" | "GroupLocal" | "Manual";
+
+/** Stable layout coordinates that persist across graph updates. */
+export interface PersistentLayoutState {
+  readonly nodePositions: ReadonlyMap<string, { x: number; y: number }>;
+  readonly policy: LayoutPolicy;
+}
+
 export interface LayoutNode {
   readonly id: string;
   readonly x: number;

@@ -79,11 +79,59 @@ Avoid pushing rendering, reconciliation, or layout algorithms into Razor compone
 - `@dataflow-visualizer/interop`
 - `@dataflow-visualizer/host`
 
+## TypeScript Packages (Updated)
+
+- `@dataflow-visualizer/protocol` — graph contracts, groups, overlays, protocol versioning
+- `@dataflow-visualizer/runtime` — GraphState, state slices, GraphRuntimeStore, GraphRuntimeEventBus, buildSearchIndex
+- `@dataflow-visualizer/query` — topology indexes, traversal (findUpstream/Downstream/Connected/Neighbors/extractSubgraph)
+- `@dataflow-visualizer/renderer-svg` — SVG rendering with layer support (RenderLayer)
+- `@dataflow-visualizer/layout` — layout engine, LayoutPolicy, PersistentLayoutState
+- `@dataflow-visualizer/interop` — DotNetBridge exposing store and eventBus
+- `@dataflow-visualizer/host` — runtime bootstrap, viewport management
+
+## Runtime Store Architecture
+
+The browser runtime uses a central `GraphRuntimeStore` (in `@dataflow-visualizer/runtime`) that holds:
+
+- `GraphDataState` — nodes, edges, groups (the authoritative projection data)
+- `InteractionState` — selection, hover
+- `FocusState` — focused node/group, navigation history
+- `SearchState` — text/kind query and matched node IDs
+- `OverlayState` — per-node and per-edge overlay decorations
+- `LayoutState` — layout policy and group expansion state
+
+Mutations fire typed events via `GraphRuntimeEventBus`:
+- `SelectionChanged`, `FocusChanged`, `GroupCollapsed`, `GroupExpanded`, `SearchApplied`, `ViewportChanged`
+
+## Groups
+
+Groups (`GraphGroup`) are semantic topology containers introduced in Milestone 2.
+- Protocol: `GraphGroup` in both TypeScript and .NET with `childNodeIds`
+- Diff: `GroupDiffOperation` (add/remove/update) in `GraphDiff`
+- Runtime: `expandedGroupIds` in `LayoutState` tracks collapse/expand state
+- Query: `findGroupMembers`, `findGroupBoundaryEdges` in `@dataflow-visualizer/query`
+
+## Query Engine
+
+The `@dataflow-visualizer/query` package provides topology traversal:
+- `buildTopologyIndex(data)` — builds incoming/outgoing edge maps and group membership indexes
+- `findUpstream/Downstream/Connected/Neighbors` — BFS traversal with depth limits and filters
+- `extractSubgraph` — extracts a subgraph around seed nodes (critical for focus and isolation)
+
+## Search
+
+`buildSearchIndex(data)` in `@dataflow-visualizer/runtime` builds a search index over node labels, kinds, and metadata. The `GraphRuntimeStore.setSearch()` method updates search state and fires `SearchApplied`.
+
+## Persistence
+
+`GraphViewState` (.NET: `Diagram.Protocol/GraphViewState.cs`) captures browser-side view state for deep links and saved views: viewport, expanded groups, selected nodes, focused node.
+
 ## Planned Direction
 
 - keep expanding the diff-based synchronization model
 - preserve automatic layout as a core capability
 - move toward ELK-based layout while keeping current placeholder behavior clearly distinguished
+- evolve overlay rendering with per-layer rendering pipeline
 
 ## Related Docs
 

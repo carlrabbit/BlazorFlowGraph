@@ -11,10 +11,20 @@ Rendering is SVG-first and browser-side.
 The main rendering path is:
 
 1. .NET produces graph snapshots or diffs
-2. the browser runtime reconciles graph state
-3. layout is applied in the browser
-4. `@dataflow-visualizer/renderer-svg` renders SVG output
+2. the browser runtime reconciles graph state into `GraphRuntimeStore`
+3. layout is applied in the browser (via `@dataflow-visualizer/layout`)
+4. `@dataflow-visualizer/renderer-svg` renders SVG output via layered rendering passes
 5. the host inserts the rendered result into the DOM
+
+## Rendering Layers
+
+The renderer supports explicit layer ordering via `RenderLayer`:
+
+```
+"groups" → "edges" → "nodes" → "labels" → "selection" → "overlays"
+```
+
+Use `renderLayer(layer, state, layout, options)` to render a specific layer. Layers for groups and overlays are currently stubbed with extension points.
 
 ## Rendering Responsibilities
 

@@ -26,11 +26,27 @@ public sealed record GraphEdge(
     NodeId TargetId,
     string? Label = null);
 
+/// <summary>Unique identifier for a graph group.</summary>
+public readonly record struct GroupId(string Value)
+{
+    public override string ToString() => Value;
+}
+
+/// <summary>A semantic group that aggregates child nodes.</summary>
+public sealed record GraphGroup(
+    GroupId Id,
+    string Label,
+    string Kind,
+    IReadOnlyList<NodeId> ChildNodeIds,
+    IReadOnlyDictionary<string, object>? Metadata = null);
+
 /// <summary>A complete snapshot of the graph at a given version.</summary>
 public sealed record GraphSnapshot(
     int Version,
     IReadOnlyList<GraphNode> Nodes,
-    IReadOnlyList<GraphEdge> Edges);
+    IReadOnlyList<GraphEdge> Edges,
+    IReadOnlyList<GraphGroup>? Groups = null,
+    int ProtocolVersion = 1);
 
 /// <summary>The type of a diff operation.</summary>
 public enum DiffOperationType
@@ -46,9 +62,19 @@ public sealed record NodeDiffOperation(DiffOperationType Type, GraphNode Node);
 /// <summary>A diff operation on an edge.</summary>
 public sealed record EdgeDiffOperation(DiffOperationType Type, GraphEdge Edge);
 
+/// <summary>A diff operation on a group.</summary>
+public sealed record GroupDiffOperation(DiffOperationType Type, GraphGroup Group);
+
 /// <summary>An incremental diff between two graph versions.</summary>
 public sealed record GraphDiff(
     int FromVersion,
     int ToVersion,
     IReadOnlyList<NodeDiffOperation> NodeOperations,
-    IReadOnlyList<EdgeDiffOperation> EdgeOperations);
+    IReadOnlyList<EdgeDiffOperation> EdgeOperations,
+    IReadOnlyList<GroupDiffOperation>? GroupOperations = null);
+
+/// <summary>A semantic overlay on a node.</summary>
+public sealed record NodeOverlay(NodeId NodeId, string Kind, IReadOnlyDictionary<string, object>? Data = null);
+
+/// <summary>A semantic overlay on an edge.</summary>
+public sealed record EdgeOverlay(EdgeId EdgeId, string Kind, IReadOnlyDictionary<string, object>? Data = null);

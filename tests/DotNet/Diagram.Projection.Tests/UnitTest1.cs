@@ -13,6 +13,13 @@ public class ServiceA
 [SemanticNode(Label = "Service B", Kind = "service")]
 public class ServiceB { }
 
+[SemanticGroup(Label = "My Group", Kind = "cluster")]
+public class ServiceGroup
+{
+    public ServiceA? MemberA { get; set; }
+    public ServiceB? MemberB { get; set; }
+}
+
 public class ReflectionGraphProjectorTests
 {
     private readonly ReflectionGraphProjector _projector = new();
@@ -56,4 +63,40 @@ public class ReflectionGraphProjectorTests
         var snapshot = _projector.Project([a]);
         await Assert.That(snapshot.Nodes[0].Label).IsEqualTo("Service A");
     }
+
+    [Test]
+    public async Task Project_NoGroupAnnotations_GroupsIsNull()
+    {
+        var a = new ServiceA();
+        var b = new ServiceB();
+        var snapshot = _projector.Project([a, b]);
+        await Assert.That(snapshot.Groups).IsNull();
+    }
+
+    [Test]
+    public async Task Project_SemanticGroup_ProducesGroup()
+    {
+        var a = new ServiceA();
+        var b = new ServiceB();
+        var group = new ServiceGroup { MemberA = a, MemberB = b };
+
+        var snapshot = _projector.Project([a, b, group]);
+
+        await Assert.That(snapshot.Groups).Count().IsEqualTo(1);
+        await Assert.That(snapshot.Groups![0].Label).IsEqualTo("My Group");
+        await Assert.That(snapshot.Groups[0].Kind).IsEqualTo("cluster");
+    }
+
+    [Test]
+    public async Task Project_SemanticGroup_ChildIdsMatchMemberNodes()
+    {
+        var a = new ServiceA();
+        var b = new ServiceB();
+        var group = new ServiceGroup { MemberA = a, MemberB = b };
+
+        var snapshot = _projector.Project([a, b, group]);
+
+        await Assert.That(snapshot.Groups![0].ChildNodeIds).Count().IsEqualTo(2);
+    }
 }
+

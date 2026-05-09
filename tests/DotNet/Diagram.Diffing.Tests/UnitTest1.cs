@@ -71,4 +71,66 @@ public class GraphDifferTests
         await Assert.That(diff.FromVersion).IsEqualTo(3);
         await Assert.That(diff.ToVersion).IsEqualTo(7);
     }
+
+    [Test]
+    public async Task Diff_BothSnapshotsNoGroups_GroupOperationsIsNull()
+    {
+        var diff = _differ.Diff(Empty(0), Empty(1));
+        await Assert.That(diff.GroupOperations).IsNull();
+    }
+
+    [Test]
+    public async Task Diff_AddedGroups_ReturnsAddOperations()
+    {
+        var group = new GraphGroup(new GroupId("g1"), "Group 1", "cluster", [new NodeId("n1")]);
+        var from = Empty(0);
+        var to = new GraphSnapshot(1, [], [], [group]);
+
+        var diff = _differ.Diff(from, to);
+
+        await Assert.That(diff.GroupOperations).Count().IsEqualTo(1);
+        await Assert.That(diff.GroupOperations![0].Type).IsEqualTo(DiffOperationType.Add);
+        await Assert.That(diff.GroupOperations[0].Group).IsEqualTo(group);
+    }
+
+    [Test]
+    public async Task Diff_RemovedGroups_ReturnsRemoveOperations()
+    {
+        var group = new GraphGroup(new GroupId("g1"), "Group 1", "cluster", []);
+        var from = new GraphSnapshot(0, [], [], [group]);
+        var to = Empty(1);
+
+        var diff = _differ.Diff(from, to);
+
+        await Assert.That(diff.GroupOperations).Count().IsEqualTo(1);
+        await Assert.That(diff.GroupOperations![0].Type).IsEqualTo(DiffOperationType.Remove);
+    }
+
+    [Test]
+    public async Task Diff_UpdatedGroup_ReturnsUpdateOperation()
+    {
+        var original = new GraphGroup(new GroupId("g1"), "Old Label", "cluster", []);
+        var updated = new GraphGroup(new GroupId("g1"), "New Label", "cluster", []);
+        var from = new GraphSnapshot(0, [], [], [original]);
+        var to = new GraphSnapshot(1, [], [], [updated]);
+
+        var diff = _differ.Diff(from, to);
+
+        await Assert.That(diff.GroupOperations).Count().IsEqualTo(1);
+        await Assert.That(diff.GroupOperations![0].Type).IsEqualTo(DiffOperationType.Update);
+        await Assert.That(diff.GroupOperations[0].Group.Label).IsEqualTo("New Label");
+    }
+
+    [Test]
+    public async Task Diff_UnchangedGroups_ReturnsNoGroupOperations()
+    {
+        var group = new GraphGroup(new GroupId("g1"), "Group 1", "cluster", []);
+        var from = new GraphSnapshot(0, [], [], [group]);
+        var to = new GraphSnapshot(1, [], [], [group]);
+
+        var diff = _differ.Diff(from, to);
+
+        await Assert.That(diff.GroupOperations).IsEmpty();
+    }
 }
+

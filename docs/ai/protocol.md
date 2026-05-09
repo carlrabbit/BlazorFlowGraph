@@ -65,6 +65,28 @@ Future protocol changes should continue to:
 - support incremental updates cleanly
 - avoid coupling semantic authoring concerns to browser rendering concerns
 
+## Groups in the Protocol
+
+`GraphSnapshot` now carries an optional `groups` array (`GraphGroup[]`). Each group has:
+- a stable `GroupId`
+- a `label` and `kind`
+- a `childNodeIds` list pointing to contained nodes
+
+Group diffs are communicated through `GraphDiff.groupOperations` (`GroupDiffOperation[]`).
+
+## Overlays in the Protocol
+
+`NodeOverlay` and `EdgeOverlay` are lightweight decoration records:
+- `nodeId`/`edgeId` — the target element
+- `kind` — the overlay category (e.g. "health", "warning", "trace")
+- `data` — optional metadata bag
+
+These travel independently of the graph data and are applied through `OverlayState`.
+
+## Protocol Versioning
+
+`GraphSnapshot` carries a `protocolVersion` integer (default `1`). This allows the runtime to detect and handle forward/backward compatibility between server and client.
+
 ## Related Docs
 
 - `docs/protocol/contracts.md`

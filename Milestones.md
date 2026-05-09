@@ -162,133 +162,109 @@ Implement:
 
 ---
 
-# Milestone 2 — Incremental Graph Synchronization
+# Milestone 2 — Semantic Topology Exploration Runtime
 
 ## Goal
 
-Introduce diff-based graph synchronization and reconciliation.
+Transform the system from a graph renderer into a semantic topology exploration runtime.
 
-This milestone establishes the core runtime architecture for:
-- evolving graphs
-- stable interaction state
-- efficient updates
-
-This is one of the most important architectural milestones.
+This milestone establishes:
+- semantic navigation
+- topology querying
+- grouping semantics
+- focus systems
+- overlay systems
+- scalable runtime architecture
 
 ---
 
 ## Scope
 
-## .NET
-
-### Graph Diffing
-
-Implement:
-- node add/remove/update diffs
-- edge add/remove/update diffs
-- grouping diffs
-- metadata diffs
-
-Requirements:
-- deterministic diff generation
-- stable identifiers
-- minimal update sets
-
----
-
-### Incremental Projection Updates
-
-Implement:
-- projection reconciliation support
-- projection snapshot versioning
-- change tracking support
-
----
-
 ## TypeScript Runtime
 
-### Reconciliation Engine
+### Runtime Store Architecture
 
-Implement:
-- graph patch application
-- node reconciliation
-- edge reconciliation
-- grouping reconciliation
+Implemented `GraphRuntimeStore` with explicit state slices:
+- `GraphDataState` — nodes, edges, groups
+- `InteractionState` — selection, hover
+- `FocusState` — focused node/group, navigation history
+- `SearchState` — text query, matched node IDs
+- `OverlayState` — per-node, per-edge overlays
+- `LayoutState` — layout policy, expanded group IDs
 
-Requirements:
-- stable DOM preservation
-- minimal rerendering
-- deterministic update ordering
+### Semantic Event Bus
 
----
+`GraphRuntimeEventBus` fires typed events: `SelectionChanged`, `FocusChanged`, `GroupCollapsed`, `GroupExpanded`, `SearchApplied`, `ViewportChanged`.
 
-### Selection Persistence
+### Graph Query Engine
 
-Implement:
-- stable selection tracking
-- selection reconciliation
-- graceful removal handling
+New package `@dataflow-visualizer/query`:
+- `buildTopologyIndex` — incoming/outgoing edge maps, group membership
+- `findUpstream`, `findDownstream`, `findConnected`, `findNeighbors`
+- `findGroupMembers`, `findGroupBoundaryEdges`
+- `extractSubgraph` — seed-node-based subgraph extraction with traversal options
 
----
+### Search Index
 
-### Viewport Preservation
+`buildSearchIndex` in `@dataflow-visualizer/runtime` — text, kind, and metadata search.
 
-Implement:
-- viewport persistence across updates
-- focus retention
-- incremental viewport stabilization
+### Layout Policies
 
----
+`LayoutPolicy` enum: `Never | Incremental | Full | GroupLocal | Manual`.
+`PersistentLayoutState` for stable coordinate persistence.
 
-### Animated Updates
+### Renderer Layering
 
-Implement:
-- node transitions
-- edge transitions
-- insert/remove animations
-
-Requirements:
-- optional animation support
-- deterministic animation state
+`RenderLayer` type and `renderLayer` function in `@dataflow-visualizer/renderer-svg` provide explicit rendering passes.
 
 ---
 
-## Interaction Runtime
+## .NET
 
-Implement:
-- node selection
-- hover state
-- focus state
-- topology highlighting
+### Protocol Groups
 
----
+`GraphGroup` and `GroupId` types. `GraphSnapshot` carries optional `groups`. `GraphDiff` carries optional `groupOperations` (`GroupDiffOperation[]`).
 
-## Samples
+### Overlays
 
-Implement:
-- live incremental update sample
-- streaming topology sample
-- graph mutation sample
+`NodeOverlay` and `EdgeOverlay` protocol records.
+
+### Protocol Versioning
+
+`GraphSnapshot.ProtocolVersion` integer field.
+
+### Group Diffing
+
+`GraphDiffer` computes group add/remove/update operations.
+
+### Persistence Model
+
+`GraphViewState` + `ViewportSnapshot` for serializable browser view state (deep links, bookmarks).
+
+### Semantic Attributes
+
+`SemanticGroupAttribute` for marking group containers. `ReflectionGraphProjector` projects them into `GraphGroup` entries.
 
 ---
 
 ## Tests
 
-Implement:
-- reconciliation tests
-- diff application tests
-- selection persistence tests
-- viewport persistence tests
+- Query engine: 22 traversal, isolation, and grouping tests
+- Runtime store and event bus: 24 tests
+- .NET protocol + diffing: 39 tests total (groups, overlays, view state)
 
 ---
 
 ## Exit Criteria
 
-- graphs update incrementally
-- full rerenders are avoided
-- selection survives updates
-- viewport survives updates
-- reconciliation behavior is deterministic
+- runtime store separates concerns ✅
+- topology querying is centralized in query package ✅
+- groups are semantic containers ✅
+- layout policies are explicit ✅
+- overlays are extensible ✅
+- protocol versioning is manageable ✅
+- persistence model exists ✅
+- semantic event model is formalized ✅
 
 ---
 
