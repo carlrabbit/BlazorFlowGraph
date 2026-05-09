@@ -227,6 +227,8 @@ Current milestones in the repository include:
 4. Blazor integration and JavaScript interop
 5. layout abstraction with a placeholder automatic layout
 
+For the planned milestone progression and long-term capability roadmap, see [`Milestones.md`](Milestones.md).
+
 ## Quick Start
 
 ### Minimal Blazor Integration
