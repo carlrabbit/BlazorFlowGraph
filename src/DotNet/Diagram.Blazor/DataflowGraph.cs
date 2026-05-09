@@ -30,7 +30,7 @@ public sealed partial class DataflowGraph : ComponentBase, IAsyncDisposable
 
     private string ContainerId { get; } = $"dfg-{Guid.NewGuid():N}";
     private bool _initialized;
-    private GraphSnapshot? _lastSnapshot;
+    private int? _lastSnapshotVersion;
 
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
@@ -51,15 +51,17 @@ public sealed partial class DataflowGraph : ComponentBase, IAsyncDisposable
             _initialized = true;
         }
 
-        if (_initialized && Snapshot is not null && !ReferenceEquals(Snapshot, _lastSnapshot))
+        if (_initialized && Snapshot is not null && Snapshot.Version != _lastSnapshotVersion)
         {
-            _lastSnapshot = Snapshot;
+            _lastSnapshotVersion = Snapshot.Version;
             await SendSnapshotAsync(Snapshot);
         }
     }
 
     private async Task SendSnapshotAsync(GraphSnapshot snapshot)
     {
+        // Project NodeId/EdgeId record structs to plain strings to match the TypeScript
+        // GraphSnapshot protocol interface which uses string literals for all IDs.
         var jsSnapshot = new
         {
             version = snapshot.Version,

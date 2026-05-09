@@ -31,6 +31,9 @@ function clampScale(s: number): number {
   return Math.max(0.1, Math.min(10, s));
 }
 
+/** Zoom step multiplier applied per wheel tick (10% increase/decrease). */
+const ZOOM_FACTOR = 1.1;
+
 /** Arrow marker definition used for directed edges. */
 const ARROW_DEFS = `<defs>
   <marker id="dfv-arrow" markerWidth="8" markerHeight="8"
@@ -141,7 +144,7 @@ export function mount(options: HostOptions): {
     const rect = svg.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-    const delta = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+    const delta = e.deltaY < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR;
     const newScale = clampScale(viewport.scale * delta);
     // Zoom towards mouse position
     viewport = {

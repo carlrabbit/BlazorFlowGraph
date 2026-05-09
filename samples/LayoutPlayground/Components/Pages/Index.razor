@@ -30,7 +30,8 @@
             .Select(i => new GraphNode(new NodeId($"n{i}"), $"Node {i}", "default"))
             .ToList();
 
-        // Create a random spanning tree of edges to ensure connectivity
+        // Seed with _version for reproducibility within a session;
+        // each click produces a different but stable topology.
         var rng = new Random(_version);
         var edges = new List<GraphEdge>();
         for (int i = 1; i < nodes.Count; i++)

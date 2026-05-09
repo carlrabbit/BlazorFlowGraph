@@ -1,9 +1,7 @@
 @page "/"
 @rendermode Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveServer
 @using Diagram.Blazor
-@using Diagram.Diffing
 @using Diagram.Protocol
-@inject IGraphDiffer Differ
 
 <h1>Incremental Updates</h1>
 
@@ -44,8 +42,6 @@
         }
 
         var nextSnapshot = new GraphSnapshot(_snapshot.Version + 1, newNodes, newEdges);
-        var diff = Differ.Diff(_snapshot, nextSnapshot);
-        _ = diff; // diff is computed but used implicitly via snapshot replacement
         _snapshot = nextSnapshot;
     }
 
