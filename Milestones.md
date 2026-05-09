@@ -49,7 +49,7 @@ without introducing incremental synchronization complexity.
 
 ---
 
-# Scope
+## Scope
 
 ## .NET
 
@@ -152,7 +152,7 @@ Implement:
 
 ---
 
-# Exit Criteria
+## Exit Criteria
 
 - semantic graph can be projected from .NET
 - graph can be rendered in browser
@@ -177,7 +177,7 @@ This is one of the most important architectural milestones.
 
 ---
 
-# Scope
+## Scope
 
 ## .NET
 
@@ -282,7 +282,7 @@ Implement:
 
 ---
 
-# Exit Criteria
+## Exit Criteria
 
 - graphs update incrementally
 - full rerenders are avoided
@@ -302,7 +302,7 @@ This milestone transforms the renderer into a semantic topology explorer rather 
 
 ---
 
-# Scope
+## Scope
 
 ## Layout Engine Integration
 
@@ -389,7 +389,7 @@ Implement:
 
 ---
 
-# Exit Criteria
+## Exit Criteria
 
 - automatic layouts function reliably
 - layouts remain stable during updates
