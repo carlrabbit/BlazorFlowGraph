@@ -22,6 +22,7 @@ coverage/
 # Build outputs
 wwwroot/js/
 wwwroot/css/
+TestResults/
 
 # OS
 .DS_Store
