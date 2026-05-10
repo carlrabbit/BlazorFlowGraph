@@ -69,9 +69,16 @@ function updatePackageJsonVersions(relativeDirectory, version) {
     }
 
     const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+    if (typeof packageJson.version !== "string" || packageJson.version.length === 0) {
+      throw new Error(`Package version is missing or invalid in ${relativeDirectory}/${entry.name}/package.json.`);
+    }
+
+    const previousVersion = packageJson.version;
     packageJson.version = version;
     writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
-    console.log(`Updated ${relativeDirectory}/${entry.name}/package.json -> ${version}`);
+    console.log(
+      `Updated ${relativeDirectory}/${entry.name}/package.json ${previousVersion} -> ${version}`
+    );
   }
 }
 
