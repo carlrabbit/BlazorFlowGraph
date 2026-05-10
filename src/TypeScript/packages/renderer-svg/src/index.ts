@@ -1,11 +1,13 @@
 /**
  * Renderer-SVG package — SVG renderer for the dataflow graph.
  * Milestone 3: adds GraphRendererBackend abstraction and RenderFrame model.
+ * Milestone 4: adds style tokens, accessibility, group rendering, overlay rendering,
+ *              and viewport-culling support in buildRenderFrame.
  */
 
 import type { GraphState } from "@dataflow-visualizer/runtime";
 import type { LayoutResult } from "@dataflow-visualizer/layout";
-import type { VisibleGraph } from "@dataflow-visualizer/runtime";
+import type { VisibleGraph, ViewportContext, GraphGroup, NodeOverlay } from "@dataflow-visualizer/runtime";
 
 export type { LayoutResult, VisibleGraph };
 
@@ -26,7 +28,85 @@ export interface RenderLayerOptions {
 export type RenderLayer = "groups" | "edges" | "nodes" | "labels" | "selection" | "overlays";
 
 // ---------------------------------------------------------------------------
-// RenderFrame model (Phase 2)
+// Style tokens (Milestone 4) — map node kinds to visual appearance
+// ---------------------------------------------------------------------------
+
+/**
+ * StyleToken defines the visual appearance of a node by kind.
+ * All values are optional; unspecified values fall back to defaults.
+ */
+export interface StyleToken {
+  /** Background fill colour (CSS colour string). */
+  readonly fill: string;
+  /** Border stroke colour. */
+  readonly stroke: string;
+  /** Border stroke width in pixels. */
+  readonly strokeWidth: number;
+  /** Text colour for the node label. */
+  readonly textColor: string;
+  /** Corner radius for the node rectangle. */
+  readonly rx: number;
+}
+
+/** Built-in style tokens keyed by node kind. */
+export const defaultStyleTokens: Record<string, StyleToken> = {
+  default: {
+    fill: "#e0e7ff",
+    stroke: "#6366f1",
+    strokeWidth: 1.5,
+    textColor: "#1e1b4b",
+    rx: 4,
+  },
+  service: {
+    fill: "#d1fae5",
+    stroke: "#059669",
+    strokeWidth: 1.5,
+    textColor: "#064e3b",
+    rx: 4,
+  },
+  datastore: {
+    fill: "#fef3c7",
+    stroke: "#d97706",
+    strokeWidth: 1.5,
+    textColor: "#78350f",
+    rx: 6,
+  },
+  gateway: {
+    fill: "#ede9fe",
+    stroke: "#7c3aed",
+    strokeWidth: 2,
+    textColor: "#4c1d95",
+    rx: 4,
+  },
+  queue: {
+    fill: "#fee2e2",
+    stroke: "#dc2626",
+    strokeWidth: 1.5,
+    textColor: "#7f1d1d",
+    rx: 4,
+  },
+  group: {
+    fill: "#f0f9ff",
+    stroke: "#0284c7",
+    strokeWidth: 1,
+    textColor: "#0c4a6e",
+    rx: 8,
+  },
+};
+
+/**
+ * Resolves the StyleToken for the given node kind.
+ * Falls back to the `default` token if the kind is not registered.
+ */
+export function resolveStyleToken(
+  kind: string,
+  tokens: Record<string, StyleToken> = defaultStyleTokens
+): StyleToken {
+  return tokens[kind] ?? tokens["default"] ?? defaultStyleTokens["default"]!;
+}
+
+// ---------------------------------------------------------------------------
+// RenderFrame model (Phase 2 / Milestone 4 extended)
 // ---------------------------------------------------------------------------
 
 /** A positioned node ready for rendering (derived from LayoutResult). */
@@ -47,6 +127,28 @@ export interface RenderEdge {
   readonly sections: readonly { readonly startPoint: { x: number; y: number }; readonly endPoint: { x: number; y: number } }[];
 }
 
+/** A positioned group hull ready for rendering (Milestone 4). */
+export interface RenderGroup {
+  readonly id: string;
+  readonly label: string;
+  readonly kind: string;
+  /** Bounding box of the group (encompasses all child nodes). */
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/** An active overlay badge to render on a node (Milestone 4). */
+export interface RenderOverlay {
+  /** Node ID this overlay targets. */
+  readonly nodeId: string;
+  /** Overlay kind (e.g. "warning", "error", "info"). */
+  readonly kind: string;
+  /** Optional badge text or icon indicator. */
+  readonly badge?: string | undefined;
+}
+
 /**
  * RenderFrame is the explicit rendering representation produced by the view projection
  * pipeline. Backends receive a RenderFrame rather than raw runtime state.
@@ -58,38 +160,57 @@ export interface RenderFrame {
   readonly nodes: readonly RenderNode[];
   /** Edges visible in this frame. */
   readonly edges: readonly RenderEdge[];
+  /** Groups visible in this frame (Milestone 4). */
+  readonly groups: readonly RenderGroup[];
+  /** Overlays to render on nodes (Milestone 4). */
+  readonly overlays: readonly RenderOverlay[];
   /** Total canvas dimensions derived from the layout. */
   readonly canvasWidth: number;
   readonly canvasHeight: number;
 }
 
+/** Group padding around child node bounds when computing group hull (in pixels). */
+const GROUP_PADDING = 16;
+
 /**
  * Builds a RenderFrame from a GraphState (or VisibleGraph-filtered subset)
  * and the computed LayoutResult. This is the view projection step.
+ *
+ * Milestone 4: accepts optional `viewport` for viewport-space culling,
+ * includes group hulls and overlay badges in the output frame.
  */
 export function buildRenderFrame(
   state: GraphState,
   layout: LayoutResult,
-  options?: { nodeWidth?: number; nodeHeight?: number; visible?: VisibleGraph }
+  options?: {
+    nodeWidth?: number;
+    nodeHeight?: number;
+    visible?: VisibleGraph;
+    viewport?: ViewportContext;
+    styleTokens?: Record<string, StyleToken>;
+    /** Optional node overlays from OverlayState.nodeOverlays to include in the frame. */
+    nodeOverlays?: ReadonlyMap<string, NodeOverlay>;
+  }
 ): RenderFrame {
   const nodeWidth = options?.nodeWidth ?? 120;
   const nodeHeight = options?.nodeHeight ?? 40;
   const visible = options?.visible;
+  const viewport = options?.viewport;
+
+  // Viewport culling bounds (in graph-space) for fast element rejection
+  const cullBounds = viewport?.visibleBounds;
 
   const nodes: RenderNode[] = [];
   for (const node of state.nodes.values()) {
     if (visible != null && !visible.visibleNodeIds.has(node.id)) continue;
     const pos = layout.nodes.get(node.id);
     if (pos == null) continue;
-    nodes.push({
-      id: node.id,
-      label: node.label,
-      kind: node.kind,
-      x: Math.floor(pos.x),
-      y: Math.floor(pos.y),
-      width: Math.floor(pos.width ?? nodeWidth),
-      height: Math.floor(pos.height ?? nodeHeight),
-    });
+    const x = Math.floor(pos.x);
+    const y = Math.floor(pos.y);
+    const w = Math.floor(pos.width ?? nodeWidth);
+    const h = Math.floor(pos.height ?? nodeHeight);
+    if (cullBounds != null && !boundsIntersect(x, y, w, h, cullBounds)) continue;
+    nodes.push({ id: node.id, label: node.label, kind: node.kind, x, y, width: w, height: h });
   }
 
   const edges: RenderEdge[] = [];
@@ -104,12 +225,87 @@ export function buildRenderFrame(
     });
   }
 
+  // Build group hulls (Milestone 4)
+  const groups: RenderGroup[] = [];
+  for (const group of state.groups.values()) {
+    if (visible != null && !visible.visibleGroupIds.has(group.id)) continue;
+    const hull = computeGroupHull(group, layout, nodeWidth, nodeHeight);
+    if (hull == null) continue;
+    if (cullBounds != null && !boundsIntersect(hull.x, hull.y, hull.width, hull.height, cullBounds)) continue;
+    groups.push({
+      id: group.id,
+      label: group.label,
+      kind: group.kind,
+      ...hull,
+    });
+  }
+
+  // Build overlay badges from provided nodeOverlays (Milestone 4)
+  const overlays: RenderOverlay[] = [];
+  if (options?.nodeOverlays != null) {
+    for (const [nodeId, overlay] of options.nodeOverlays) {
+      if (visible != null && !visible.visibleNodeIds.has(nodeId)) continue;
+      const badge = typeof overlay.data?.["badge"] === "string" ? overlay.data["badge"] : undefined;
+      overlays.push({ nodeId, kind: overlay.kind, badge });
+    }
+  }
+
   return {
     nodes,
     edges,
+    groups,
+    overlays,
     canvasWidth: Math.floor(layout.width),
     canvasHeight: Math.floor(layout.height),
   };
+}
+
+/** Returns the bounding hull for a group from child node positions, or null if no children placed. */
+function computeGroupHull(
+  group: GraphGroup,
+  layout: LayoutResult,
+  defaultWidth: number,
+  defaultHeight: number
+): { x: number; y: number; width: number; height: number } | null {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  let found = false;
+
+  for (const childId of group.childNodeIds) {
+    const pos = layout.nodes.get(childId);
+    if (pos == null) continue;
+    found = true;
+    const x = Math.floor(pos.x);
+    const y = Math.floor(pos.y);
+    const w = Math.floor(pos.width ?? defaultWidth);
+    const h = Math.floor(pos.height ?? defaultHeight);
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x + w);
+    maxY = Math.max(maxY, y + h);
+  }
+
+  if (!found) return null;
+
+  return {
+    x: minX - GROUP_PADDING,
+    y: minY - GROUP_PADDING,
+    width: maxX - minX + GROUP_PADDING * 2,
+    height: maxY - minY + GROUP_PADDING * 2,
+  };
+}
+
+/** Returns true when the given rectangle intersects the viewport visible bounds. */
+function boundsIntersect(
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  vb: { x: number; y: number; width: number; height: number }
+): boolean {
+  return x < vb.x + vb.width && x + w > vb.x && y < vb.y + vb.height && y + h > vb.y;
 }
 
 // ---------------------------------------------------------------------------
@@ -168,16 +364,25 @@ const ARROW_DEFS_MARKUP = [
 /**
  * SVG-based implementation of GraphRendererBackend.
  * Maintains a persistent SVG element with a viewport group for pan/zoom transforms.
+ * Milestone 4: adds ARIA accessibility attributes and style-token-aware node rendering.
  */
 export class SvgRendererBackend implements GraphRendererBackend {
   private svg: SVGSVGElement | null = null;
   private viewportGroup: SVGGElement | null = null;
+  private readonly tokens: Record<string, StyleToken>;
+
+  constructor(options?: { styleTokens?: Record<string, StyleToken> }) {
+    this.tokens = options?.styleTokens ?? defaultStyleTokens;
+  }
 
   initialize(container: Element, width: number, height: number): void {
     const svg = document.createElementNS(SVG_NS, "svg") as SVGSVGElement;
     svg.setAttribute("xmlns", SVG_NS);
     svg.setAttribute("width", String(Math.floor(width)));
     svg.setAttribute("height", String(Math.floor(height)));
+    // Accessibility: mark as an interactive graphics document
+    svg.setAttribute("role", "graphics-document");
+    svg.setAttribute("aria-label", "Dataflow graph");
     svg.style.touchAction = "none";
     svg.style.userSelect = "none";
     svg.innerHTML = ARROW_DEFS_MARKUP;
@@ -195,7 +400,7 @@ export class SvgRendererBackend implements GraphRendererBackend {
 
   renderFrame(frame: RenderFrame): void {
     if (this.viewportGroup == null) return;
-    this.viewportGroup.innerHTML = buildFrameMarkup(frame);
+    this.viewportGroup.innerHTML = buildFrameMarkup(frame, this.tokens);
   }
 
   updateViewport(panX: number, panY: number, scale: number): void {
@@ -223,8 +428,23 @@ export class SvgRendererBackend implements GraphRendererBackend {
   }
 }
 
-/** Builds the inner SVG markup string from a RenderFrame. */
-function buildFrameMarkup(frame: RenderFrame): string {
+/** Builds the inner SVG markup string from a RenderFrame (Milestone 4: groups, overlays, style tokens, ARIA). */
+function buildFrameMarkup(frame: RenderFrame, tokens: Record<string, StyleToken> = defaultStyleTokens): string {
+  // Layer order: groups → edges → nodes → overlays
+  const groupElements = frame.groups.map((group) => {
+    const style = resolveStyleToken(group.kind, tokens);
+    const labelText = escapeXml(group.label);
+    return [
+      `<g class="dfv-group" data-group-id="${escapeXmlAttr(group.id)}" role="graphics-object" aria-label="${escapeXmlAttr(group.label)} group">`,
+      `  <rect x="${group.x}" y="${group.y}" width="${group.width}" height="${group.height}"`,
+      `        rx="${style.rx}" ry="${style.rx}"`,
+      `        fill="${escapeXmlAttr(style.fill)}" fill-opacity="0.3"`,
+      `        stroke="${escapeXmlAttr(style.stroke)}" stroke-width="1" stroke-dasharray="4 3"/>`,
+      `  <text x="${group.x + 8}" y="${group.y + 14}" font-size="11" fill="${escapeXmlAttr(style.stroke)}" font-weight="500">${labelText}</text>`,
+      `</g>`,
+    ].join("\n");
+  });
+
   const edgeElements = frame.edges.map((edge) => {
     const section = edge.sections[0];
     if (section == null) return "";
@@ -240,7 +460,7 @@ function buildFrameMarkup(frame: RenderFrame): string {
         ? `<text x="${midX}" y="${midY}" text-anchor="middle" font-size="10" fill="#6b7280">${edgeLabel}</text>`
         : "";
     return [
-      `<g class="dfv-edge">`,
+      `<g class="dfv-edge" role="graphics-symbol" aria-label="${edgeLabel !== "" ? escapeXmlAttr(edgeLabel) : "edge"}">`,
       `  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#dfv-arrow)"/>`,
       labelEl,
       `</g>`,
@@ -249,25 +469,61 @@ function buildFrameMarkup(frame: RenderFrame): string {
       .join("\n");
   });
 
+  // Build overlay badge lookup for fast access
+  const overlayByNode = new Map<string, RenderOverlay>();
+  for (const ov of frame.overlays) {
+    overlayByNode.set(ov.nodeId, ov);
+  }
+
   const nodeElements = frame.nodes.map((node) => {
+    const style = resolveStyleToken(node.kind, tokens);
     const labelText = escapeXml(node.label);
     const textX = Math.floor(node.width / 2);
     const textY = Math.floor(node.height / 2 + 5);
+    const overlay = overlayByNode.get(node.id);
+    const badgeMarkup = overlay != null ? buildOverlayBadge(overlay, node.width) : "";
     return [
-      `<g class="dfv-node" data-node-id="${escapeXmlAttr(node.id)}" transform="translate(${node.x},${node.y})">`,
-      `  <rect width="${node.width}" height="${node.height}" rx="4" ry="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>`,
-      `  <text x="${textX}" y="${textY}" text-anchor="middle" font-size="12">${labelText}</text>`,
+      `<g class="dfv-node" data-node-id="${escapeXmlAttr(node.id)}" data-kind="${escapeXmlAttr(node.kind)}"`,
+      `   transform="translate(${node.x},${node.y})"`,
+      `   role="graphics-symbol" aria-label="${escapeXmlAttr(node.label)}">`,
+      `  <rect width="${node.width}" height="${node.height}"`,
+      `        rx="${style.rx}" ry="${style.rx}"`,
+      `        fill="${escapeXmlAttr(style.fill)}"`,
+      `        stroke="${escapeXmlAttr(style.stroke)}" stroke-width="${style.strokeWidth}"/>`,
+      `  <text x="${textX}" y="${textY}" text-anchor="middle" font-size="12"`,
+      `        fill="${escapeXmlAttr(style.textColor)}">${labelText}</text>`,
+      badgeMarkup,
       `</g>`,
-    ].join("\n");
+    ]
+      .filter(Boolean)
+      .join("\n");
   });
 
-  return [...edgeElements, ...nodeElements].filter(Boolean).join("\n");
+  return [...groupElements, ...edgeElements, ...nodeElements].filter(Boolean).join("\n");
+}
+
+/** Builds a small badge overlay indicator in the top-right corner of a node. */
+function buildOverlayBadge(overlay: RenderOverlay, nodeWidth: number): string {
+  const badgeColors: Record<string, string> = {
+    warning: "#f59e0b",
+    error: "#ef4444",
+    info: "#3b82f6",
+    success: "#10b981",
+  };
+  const color = badgeColors[overlay.kind] ?? "#6b7280";
+  const text = overlay.badge != null ? escapeXml(overlay.badge.slice(0, 2)) : "●";
+  const bx = nodeWidth - 10;
+  return [
+    `<g class="dfv-overlay dfv-overlay-${escapeXmlAttr(overlay.kind)}" aria-label="${escapeXmlAttr(overlay.kind)} indicator">`,
+    `  <circle cx="${bx}" cy="0" r="8" fill="${color}" stroke="white" stroke-width="1"/>`,
+    `  <text x="${bx}" y="4" text-anchor="middle" font-size="8" fill="white" font-weight="bold">${text}</text>`,
+    `</g>`,
+  ].join("\n");
 }
 
 /**
  * Renders only a specific layer of the graph.
- * "edges" and "nodes" delegate to the existing inner rendering logic.
- * "groups" and "overlays" are reserved for future implementation.
+ * Milestone 4: groups and overlays are now implemented.
  */
 export function renderLayer(
   layer: RenderLayer,
@@ -281,16 +537,16 @@ export function renderLayer(
     case "nodes":
       return renderNodesLayer(state, layout, options);
     case "groups":
-      // TODO: render group hulls/containers
+      return renderGroupsLayer(state, layout, options);
+    case "overlays":
+      // Overlay rendering is handled via buildRenderFrame + buildFrameMarkup in the backend.
+      // renderLayer is a state-only path and doesn't carry overlay state — return empty.
       return "";
     case "labels":
-      // TODO: render floating label decorations
+      // Floating label decorations are embedded in node/edge elements.
       return "";
     case "selection":
-      // TODO: render selection highlight rings
-      return "";
-    case "overlays":
-      // TODO: render node/edge overlays
+      // Selection highlight rings are a browser-side interaction concern.
       return "";
   }
 }
@@ -300,11 +556,13 @@ export function renderLayer(
  * Returns an HTML string of `<g>` elements to be placed inside an SVG viewport group.
  * All user-supplied string values are XML-escaped before insertion.
  * All positional values are derived from integer arithmetic only.
+ * Milestone 4: nodes use style tokens and include ARIA labels.
  */
 export function renderInnerSvg(
   state: GraphState,
   layout: LayoutResult,
-  options: Pick<RenderOptions, "nodeWidth" | "nodeHeight">
+  options: Pick<RenderOptions, "nodeWidth" | "nodeHeight">,
+  tokens: Record<string, StyleToken> = defaultStyleTokens
 ): string {
   const nodeWidth = toSafeInt(options.nodeWidth ?? 120);
   const nodeHeight = toSafeInt(options.nodeHeight ?? 40);
@@ -324,7 +582,7 @@ export function renderInnerSvg(
         ? `<text x="${midX}" y="${midY}" text-anchor="middle" font-size="10" fill="#6b7280">${edgeLabel}</text>`
         : "";
     return [
-      `<g class="dfv-edge">`,
+      `<g class="dfv-edge" role="graphics-symbol" aria-label="${edgeLabel !== "" ? escapeXmlAttr(edgeLabel) : "edge"}">`,
       `  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"`,
       `        stroke="#9ca3af" stroke-width="1.5" marker-end="url(#dfv-arrow)"/>`,
       labelEl,
@@ -341,14 +599,17 @@ export function renderInnerSvg(
     const y = toSafeInt(pos.y);
     const w = toSafeInt(pos.width);
     const h = toSafeInt(pos.height);
+    const style = resolveStyleToken(node.kind, tokens);
     const labelText = escapeXml(node.label);
     const textX = toSafeInt(w / 2);
     const textY = toSafeInt(h / 2 + 5);
     return [
-      `<g class="dfv-node" data-node-id="${escapeXmlAttr(node.id)}" transform="translate(${x},${y})">`,
-      `  <rect width="${w}" height="${h}" rx="4" ry="4"`,
-      `        fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>`,
-      `  <text x="${textX}" y="${textY}" text-anchor="middle" font-size="12">${labelText}</text>`,
+      `<g class="dfv-node" data-node-id="${escapeXmlAttr(node.id)}" data-kind="${escapeXmlAttr(node.kind)}"`,
+      `   transform="translate(${x},${y})" role="graphics-symbol" aria-label="${escapeXmlAttr(node.label)}">`,
+      `  <rect width="${w}" height="${h}" rx="${style.rx}" ry="${style.rx}"`,
+      `        fill="${escapeXmlAttr(style.fill)}"`,
+      `        stroke="${escapeXmlAttr(style.stroke)}" stroke-width="${style.strokeWidth}"/>`,
+      `  <text x="${textX}" y="${textY}" text-anchor="middle" font-size="12" fill="${escapeXmlAttr(style.textColor)}">${labelText}</text>`,
       `</g>`,
     ].join("\n");
   });
@@ -360,20 +621,23 @@ export function renderInnerSvg(
  * Renders the graph state as a complete SVG string using the provided layout.
  * Suitable for static embedding. For interactive use, prefer the host package
  * which manages viewport transforms and event listeners directly.
+ * Milestone 4: adds ARIA roles and style token support.
  */
 export function renderToSvg(
   state: GraphState,
   layout: LayoutResult,
-  options: RenderOptions
+  options: RenderOptions,
+  tokens: Record<string, StyleToken> = defaultStyleTokens
 ): string {
   const width = toSafeInt(options.width);
   const height = toSafeInt(options.height);
-  const inner = renderInnerSvg(state, layout, options);
+  const inner = renderInnerSvg(state, layout, options, tokens);
   const defs = buildArrowDefs();
   return [
     `<svg xmlns="http://www.w3.org/2000/svg"`,
     ` width="${width}" height="${height}"`,
-    ` viewBox="0 0 ${width} ${height}">`,
+    ` viewBox="0 0 ${width} ${height}"`,
+    ` role="graphics-document" aria-label="Dataflow graph">`,
     defs,
     inner,
     `</svg>`,
@@ -401,7 +665,7 @@ function renderEdgesLayer(
         ? `<text x="${midX}" y="${midY}" text-anchor="middle" font-size="10" fill="#6b7280">${edgeLabel}</text>`
         : "";
     return [
-      `<g class="dfv-edge">`,
+      `<g class="dfv-edge" role="graphics-symbol" aria-label="${edgeLabel !== "" ? escapeXmlAttr(edgeLabel) : "edge"}">`,
       `  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"`,
       `        stroke="#9ca3af" stroke-width="1.5" marker-end="url(#dfv-arrow)"/>`,
       labelEl,
@@ -413,11 +677,12 @@ function renderEdgesLayer(
   return elements.filter(Boolean).join("\n");
 }
 
-/** Renders only the node layer. */
+/** Renders only the node layer with style tokens and accessibility (Milestone 4). */
 function renderNodesLayer(
   state: GraphState,
   layout: LayoutResult,
-  options: RenderLayerOptions
+  options: RenderLayerOptions,
+  tokens: Record<string, StyleToken> = defaultStyleTokens
 ): string {
   const elements = Array.from(state.nodes.values()).map((node) => {
     const pos = layout.nodes.get(node.id);
@@ -426,14 +691,44 @@ function renderNodesLayer(
     const y = toSafeInt(pos.y);
     const w = toSafeInt(pos.width ?? options.nodeWidth ?? 120);
     const h = toSafeInt(pos.height ?? options.nodeHeight ?? 40);
+    const style = resolveStyleToken(node.kind, tokens);
     const labelText = escapeXml(node.label);
     const textX = toSafeInt(w / 2);
     const textY = toSafeInt(h / 2 + 5);
     return [
-      `<g class="dfv-node" data-node-id="${escapeXmlAttr(node.id)}" transform="translate(${x},${y})">`,
-      `  <rect width="${w}" height="${h}" rx="4" ry="4"`,
-      `        fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>`,
-      `  <text x="${textX}" y="${textY}" text-anchor="middle" font-size="12">${labelText}</text>`,
+      `<g class="dfv-node" data-node-id="${escapeXmlAttr(node.id)}" data-kind="${escapeXmlAttr(node.kind)}"`,
+      `   transform="translate(${x},${y})" role="graphics-symbol" aria-label="${escapeXmlAttr(node.label)}">`,
+      `  <rect width="${w}" height="${h}" rx="${style.rx}" ry="${style.rx}"`,
+      `        fill="${escapeXmlAttr(style.fill)}"`,
+      `        stroke="${escapeXmlAttr(style.stroke)}" stroke-width="${style.strokeWidth}"/>`,
+      `  <text x="${textX}" y="${textY}" text-anchor="middle" font-size="12" fill="${escapeXmlAttr(style.textColor)}">${labelText}</text>`,
+      `</g>`,
+    ].join("\n");
+  });
+  return elements.filter(Boolean).join("\n");
+}
+
+/** Renders only the groups layer — group hull containers (Milestone 4). */
+function renderGroupsLayer(
+  state: GraphState,
+  layout: LayoutResult,
+  options: RenderLayerOptions,
+  tokens: Record<string, StyleToken> = defaultStyleTokens
+): string {
+  const nodeWidth = options.nodeWidth ?? 120;
+  const nodeHeight = options.nodeHeight ?? 40;
+  const elements = Array.from(state.groups.values()).map((group) => {
+    const hull = computeGroupHull(group, layout, nodeWidth, nodeHeight);
+    if (hull == null) return "";
+    const style = resolveStyleToken(group.kind, tokens);
+    const labelText = escapeXml(group.label);
+    return [
+      `<g class="dfv-group" data-group-id="${escapeXmlAttr(group.id)}" role="graphics-object" aria-label="${escapeXmlAttr(group.label)} group">`,
+      `  <rect x="${hull.x}" y="${hull.y}" width="${hull.width}" height="${hull.height}"`,
+      `        rx="${style.rx}" ry="${style.rx}"`,
+      `        fill="${escapeXmlAttr(style.fill)}" fill-opacity="0.3"`,
+      `        stroke="${escapeXmlAttr(style.stroke)}" stroke-width="1" stroke-dasharray="4 3"/>`,
+      `  <text x="${hull.x + 8}" y="${hull.y + 14}" font-size="11" fill="${escapeXmlAttr(style.stroke)}" font-weight="500">${labelText}</text>`,
       `</g>`,
     ].join("\n");
   });

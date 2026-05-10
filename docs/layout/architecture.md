@@ -2,34 +2,57 @@
 
 The layout package provides the pluggable layout boundary for the browser runtime.
 
-## Current Implementation
+## Current Implementation (Milestone 4)
 
 - `LayoutGraph` is the layout-specific input model built from `GraphSnapshot`
 - `LayoutProvider` is the async interface implemented by layout engines
-- `GridLayoutProvider` is the current default/reference implementation
-- `computeLayout(...)` remains the simple built-in grid helper used by the reference provider
+- `GridLayoutProvider` is the default/reference implementation (grid arrangement)
+- `ElkLayoutProvider` is the production layout engine backed by [elkjs](https://github.com/kieler/elkjs)
+- `computeLayout(...)` remains the simple built-in grid helper used by the host package
 
 ```typescript
+// Reference implementation (fast, no dependencies)
 const graph = buildLayoutGraph(snapshot);
 const provider = new GridLayoutProvider();
 const layout = await provider.computeLayout(graph);
+
+// Production ELK layout (hierarchical, layered, etc.)
+const elkProvider = new ElkLayoutProvider({ algorithm: "layered" });
+const elkLayout = await elkProvider.computeLayout(graph);
 ```
 
-## Planned Direction
+## ElkLayoutProvider
 
-ELK remains the planned production layout engine, but it should plug into the existing `LayoutProvider` interface rather than changing the rendering pipeline or runtime ownership boundaries.
+`ElkLayoutProvider` implements `LayoutProvider` using ELK:
 
-## ELK Integration Sketch
+- **Algorithm**: defaults to `"layered"` (Sugiyama-style hierarchical layout); configurable via `algorithm` constructor option
+- **Lazy loading**: `elkjs` is loaded via dynamic import on first call to avoid bundling overhead for consumers that only use `GridLayoutProvider`
+- **Fallback**: automatically falls back to `GridLayoutProvider` if ELK initialization fails (e.g. in Node.js test environments without a WASM worker context)
 
 ```typescript
-import ELK from 'elkjs/lib/elk.bundled.js';
-
-const elk = new ELK();
-const layout = await elk.layout(elkGraph);
+const provider = new ElkLayoutProvider({ algorithm: "mrtree" });
+const layout = await provider.computeLayout(graph, { spacing: 30, nodeWidth: 140 });
 ```
 
 ## Layout Options
 
-- `algorithm`: ELK algorithm identifier (e.g. `layered`, `force`, `mrtree`)
+All `LayoutProvider` implementations accept `LayoutOptions`:
+
+- `algorithm`: ELK algorithm identifier (e.g. `layered`, `force`, `mrtree`, `box`) — ElkLayoutProvider only
 - `nodeWidth` / `nodeHeight`: Default node dimensions
 - `spacing`: Padding between nodes
+
+## Adding a New Layout Engine
+
+Implement `LayoutProvider`:
+
+```typescript
+class MyLayoutProvider implements LayoutProvider {
+  async computeLayout(graph: LayoutGraph, options?: LayoutOptions): Promise<LayoutResult> {
+    // ... compute layout
+    return { nodes, edges, width, height };
+  }
+}
+```
+
+The rendering pipeline and runtime remain unaffected by layout engine changes.

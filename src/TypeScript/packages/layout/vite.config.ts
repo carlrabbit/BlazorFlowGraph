@@ -9,6 +9,9 @@ export default defineConfig({
       fileName: "index",
     },
     rollupOptions: {
+      // elkjs is a dynamic import inside ElkLayoutProvider and is intentionally
+      // not listed as an external — consumers bundle it alongside the provider
+      // only when they instantiate ElkLayoutProvider.
       external: ["@dataflow-visualizer/protocol"],
     },
     emptyOutDir: false,
