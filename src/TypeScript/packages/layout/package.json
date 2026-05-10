@@ -19,7 +19,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@dataflow-visualizer/protocol": "workspace:*"
+    "@dataflow-visualizer/protocol": "workspace:*",
+    "elkjs": "^0.11.1"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

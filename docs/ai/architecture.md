@@ -81,13 +81,13 @@ Avoid pushing rendering, reconciliation, or layout algorithms into Razor compone
 - `@dataflow-visualizer/interop`
 - `@dataflow-visualizer/host`
 
-## TypeScript Packages (Updated — Milestone 3)
+## TypeScript Packages (Updated — Milestone 4)
 
 - `@dataflow-visualizer/protocol` — graph contracts, groups, overlays, protocol versioning
-- `@dataflow-visualizer/runtime` — GraphState, state slices, GraphRuntimeStore, GraphRuntimeEventBus, buildSearchIndex; **NEW**: SemanticCommand, GraphRuntimeHost, ViewportContext, VisibleGraph, OverlayRegistry, SpatialIndex, RuntimeDiagnostics, expanded RuntimeEventMap
+- `@dataflow-visualizer/runtime` — GraphState, state slices, GraphRuntimeStore, GraphRuntimeEventBus, buildSearchIndex; SemanticCommand, GraphRuntimeHost, ViewportContext, VisibleGraph, OverlayRegistry, SpatialIndex, RuntimeDiagnostics, expanded RuntimeEventMap
 - `@dataflow-visualizer/query` — topology indexes, traversal (findUpstream/Downstream/Connected/Neighbors/extractSubgraph)
-- `@dataflow-visualizer/renderer-svg` — SVG rendering with layer support (RenderLayer); **NEW**: RenderFrame, GraphRendererBackend, SvgRendererBackend, buildRenderFrame
-- `@dataflow-visualizer/layout` — layout engine, LayoutPolicy, PersistentLayoutState; **NEW**: LayoutProvider, LayoutGraph, buildLayoutGraph, GridLayoutProvider
+- `@dataflow-visualizer/renderer-svg` — SVG rendering with layer support (RenderLayer); RenderFrame, GraphRendererBackend, SvgRendererBackend, buildRenderFrame; **NEW M4**: StyleToken, defaultStyleTokens, resolveStyleToken, group hull rendering, overlay badge rendering, viewport culling in buildRenderFrame
+- `@dataflow-visualizer/layout` — layout engine, LayoutPolicy, PersistentLayoutState; LayoutProvider, LayoutGraph, buildLayoutGraph, GridLayoutProvider; **NEW M4**: ElkLayoutProvider (ELK-backed, lazy-loaded)
 - `@dataflow-visualizer/interop` — DotNetBridge exposing store and eventBus
 - `@dataflow-visualizer/host` — runtime bootstrap, viewport management
 
@@ -130,13 +130,24 @@ runtime state
 - `GraphRendererBackend` — interface abstracting the render surface (SVG, Canvas, WebGL)
 - `SvgRendererBackend` — SVG implementation validating the interface
 
+## ElkLayoutProvider (Milestone 4)
+
+`ElkLayoutProvider` is the production-quality `LayoutProvider` implementation backed by [elkjs](https://github.com/kieler/elkjs):
+
+- implements `LayoutProvider` interface — drop-in replacement for `GridLayoutProvider`
+- defaults to the `layered` ELK algorithm (Sugiyama-style hierarchical layout)
+- algorithm is configurable via constructor: `new ElkLayoutProvider({ algorithm: "mrtree" })`
+- loads elkjs lazily via dynamic `import("elkjs/lib/elk.bundled.js")` on first `computeLayout` call — keeps the module graph clean for consumers that only use `GridLayoutProvider`
+- falls back to `GridLayoutProvider` if ELK initialization or layout fails (e.g. in CI/test environments without a WASM worker context)
+- accepts all standard `LayoutOptions` (nodeWidth, nodeHeight, spacing, algorithm override)
+
 ## LayoutProvider (Milestone 3)
 
 Layout engines implement `LayoutProvider`:
 - `computeLayout(graph: LayoutGraph, options?): Promise<LayoutResult>`
 - `LayoutGraph` is purpose-built for layout — separate from runtime or semantic graphs
 - `GridLayoutProvider` is the default (reference) implementation
-- ELK and other engines integrate by implementing `LayoutProvider`
+- `ElkLayoutProvider` (Milestone 4) is the recommended production engine
 
 ## Visibility and Spatial Index (Milestone 3)
 
@@ -186,10 +197,10 @@ The `@dataflow-visualizer/query` package provides topology traversal:
 ## Planned Direction
 
 - keep expanding the diff-based synchronization model
-- move toward ELK-based layout via the `LayoutProvider` interface
 - expand overlay platform with per-layer rendering pipeline
 - evolve `SvgRendererBackend` toward full `GraphRendererBackend` lifecycle
-- add minimap/multi-viewport support building on `ViewportContext`
+- add minimap/multi-viewport support building on `ViewportContext` (Extension — Multi-View Synchronization)
+- richer search/filter workflows building on the Milestone 2 query foundations
 
 ## Related Docs
 

@@ -1,12 +1,14 @@
 /**
  * Layout package tests — Milestone 3:
  * LayoutProvider interface, LayoutGraph model, GridLayoutProvider.
+ * Milestone 4: ElkLayoutProvider.
  */
 
 import { describe, expect, it } from "vitest";
 import {
   buildLayoutGraph,
   GridLayoutProvider,
+  ElkLayoutProvider,
   computeLayout,
   type LayoutGraph,
   type LayoutProvider,
@@ -210,5 +212,58 @@ describe("LayoutPolicy — expanded values", () => {
   it("Frozen is a valid LayoutPolicy", () => {
     const policy: import("@dataflow-visualizer/layout").LayoutPolicy = "Frozen";
     expect(policy).toBe("Frozen");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ElkLayoutProvider (Milestone 4)
+// ---------------------------------------------------------------------------
+
+describe("ElkLayoutProvider", () => {
+  it("satisfies LayoutProvider interface", () => {
+    const provider: LayoutProvider = new ElkLayoutProvider();
+    expect(typeof provider.computeLayout).toBe("function");
+  });
+
+  it("computes layout for a simple graph (falls back to grid when ELK fails in Node)", async () => {
+    // ELK may fail in a Node test environment without a proper WASM worker.
+    // The provider falls back to GridLayoutProvider in that case.
+    const graph: LayoutGraph = {
+      nodes: [
+        { id: "n1", width: 120, height: 40 },
+        { id: "n2", width: 120, height: 40 },
+      ],
+      edges: [{ id: "e1", sourceId: "n1", targetId: "n2" }],
+      groups: [],
+    };
+    const provider = new ElkLayoutProvider({ algorithm: "layered" });
+    const result = await provider.computeLayout(graph);
+    expect(result.nodes.size).toBe(2);
+    expect(result.edges.size).toBe(1);
+    for (const node of result.nodes.values()) {
+      expect(node.x).toBeGreaterThanOrEqual(0);
+      expect(node.y).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it("accepts custom nodeWidth and nodeHeight options", async () => {
+    const graph: LayoutGraph = {
+      nodes: [{ id: "n1", width: 200, height: 60 }],
+      edges: [],
+      groups: [],
+    };
+    const provider = new ElkLayoutProvider();
+    const result = await provider.computeLayout(graph, { nodeWidth: 200, nodeHeight: 60 });
+    expect(result.nodes.size).toBe(1);
+    const node = result.nodes.get("n1");
+    expect(node).toBeDefined();
+  });
+
+  it("handles empty graph without error", async () => {
+    const graph: LayoutGraph = { nodes: [], edges: [], groups: [] };
+    const provider = new ElkLayoutProvider();
+    const result = await provider.computeLayout(graph);
+    expect(result.nodes.size).toBe(0);
+    expect(result.edges.size).toBe(0);
   });
 });

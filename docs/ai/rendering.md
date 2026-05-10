@@ -17,7 +17,7 @@ The main rendering path is:
 5. a `GraphRendererBackend` receives the `RenderFrame` and performs the actual rendering
 6. the host inserts the rendered result into the DOM
 
-## Render Pipeline (Milestone 3)
+## Render Pipeline (Milestone 3 / Milestone 4)
 
 The rendering pipeline is formally separated into stages:
 
@@ -41,7 +41,14 @@ The SVG renderer supports explicit layer ordering via `RenderLayer`:
 "groups" → "edges" → "nodes" → "labels" → "selection" → "overlays"
 ```
 
-Use `renderLayer(layer, state, layout, options)` to render a specific layer. Layers for groups and overlays are currently stubbed with extension points.
+Use `renderLayer(layer, state, layout, options)` to render a specific layer.
+
+As of Milestone 4:
+- `"groups"` — renders group hull containers as dashed rectangles with padded bounding boxes; uses style tokens resolved from group `kind`
+- `"edges"` — renders directed edge lines with arrowheads and optional labels
+- `"nodes"` — renders node rectangles with kind-specific style tokens and ARIA labels
+- `"overlays"` — handled via `buildRenderFrame + buildFrameMarkup` in the backend; not supported in the stateless `renderLayer` path
+- `"labels"`, `"selection"` — floating labels are embedded in node/edge elements; selection rings are a browser-side interaction concern
 
 ## GraphRendererBackend
 
@@ -59,20 +66,71 @@ interface GraphRendererBackend {
 
 `SvgRendererBackend` is the current implementation. Alternative backends implement this interface without touching the render pipeline or runtime.
 
+As of Milestone 4, `SvgRendererBackend` accepts an optional `styleTokens` registry:
+
+```typescript
+const backend = new SvgRendererBackend({ styleTokens: myTokens });
+```
+
+## Style Tokens (Milestone 4)
+
+Style tokens map node/group `kind` to visual appearance:
+
+```typescript
+interface StyleToken {
+  fill: string;        // background fill
+  stroke: string;      // border stroke
+  strokeWidth: number; // border width
+  textColor: string;   // label text colour
+  rx: number;          // corner radius
+}
+```
+
+`defaultStyleTokens` covers: `default`, `service`, `datastore`, `gateway`, `queue`, `group`.
+
+Use `resolveStyleToken(kind, tokens?)` to look up a token with automatic fallback to `default`.
+
+## Accessibility (Milestone 4)
+
+SVG elements now carry ARIA roles:
+- SVG root: `role="graphics-document"`, `aria-label="Dataflow graph"`
+- Node `<g>` elements: `role="graphics-symbol"`, `aria-label="{node.label}"`
+- Group hull `<g>` elements: `role="graphics-object"`, `aria-label="{group.label} group"`
+- Edge `<g>` elements: `role="graphics-symbol"`, `aria-label="{edge label or 'edge'}"`
+
 ## RenderFrame
 
 `RenderFrame` is the explicit rendering representation produced by the view projection pipeline:
 
 ```typescript
 interface RenderFrame {
-  nodes: readonly RenderNode[];   // positioned nodes (id, label, kind, x, y, width, height)
-  edges: readonly RenderEdge[];   // positioned edges (id, label?, sections)
+  nodes: readonly RenderNode[];     // positioned nodes (id, label, kind, x, y, width, height)
+  edges: readonly RenderEdge[];     // positioned edges (id, label?, sections)
+  groups: readonly RenderGroup[];   // group hulls (Milestone 4)
+  overlays: readonly RenderOverlay[]; // overlay badges (Milestone 4)
   canvasWidth: number;
   canvasHeight: number;
 }
 ```
 
 Backends receive `RenderFrame`, not raw runtime state. This is the stable surface for backend implementors.
+
+`buildRenderFrame(state, layout, options?)` options as of Milestone 4:
+- `visible?: VisibleGraph` — filter nodes/edges/groups to visible subset
+- `viewport?: ViewportContext` — apply viewport-space culling (exclude off-screen elements)
+- `nodeOverlays?: ReadonlyMap<string, NodeOverlay>` — overlay badges to include in the frame
+- `styleTokens?: Record<string, StyleToken>` — custom style registry (passed through to `SvgRendererBackend`)
+
+## Viewport Culling (Milestone 4)
+
+Pass a `ViewportContext` to `buildRenderFrame` to cull elements outside the visible bounds:
+
+```typescript
+const viewport = createViewportContext(panX, panY, scale, screenWidth, screenHeight);
+const frame = buildRenderFrame(state, layout, { viewport });
+```
+
+Elements whose bounding box does not intersect `viewport.visibleBounds` are excluded from the frame, reducing DOM work for large graphs.
 
 ## VisibleGraph
 
@@ -119,7 +177,7 @@ Automatic layout is a core feature of the visualization experience.
 
 The `LayoutProvider` interface (in `@dataflow-visualizer/layout`) is the extension point for layout engines.
 The `GridLayoutProvider` is the default (reference) implementation.
-ELK integration targets the same interface without changes to the rendering pipeline.
+The `ElkLayoutProvider` (Milestone 4) is the production engine backed by elkjs, implementing the same interface.
 
 The `LayoutGraph` model is purpose-built for layout — distinct from both the runtime graph and the semantic graph.
 

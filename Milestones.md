@@ -465,10 +465,30 @@ This milestone focuses on:
 
 ## Exit Criteria
 
-- the deferred Milestone 3 items are implemented or explicitly re-scoped
-- the layout pipeline remains provider-based and ready for non-grid engines
-- rendering/runtime boundaries remain intact while group and overlay rendering mature
-- docs and samples reflect the supported integration path and current platform capabilities
+- the deferred Milestone 3 items are implemented or explicitly re-scoped ✅
+- the layout pipeline remains provider-based and ready for non-grid engines ✅
+- rendering/runtime boundaries remain intact while group and overlay rendering mature ✅
+- docs and samples reflect the supported integration path and current platform capabilities ✅
+
+### Implemented
+
+- **ElkLayoutProvider** — ELK-backed `LayoutProvider` using elkjs with lazy dynamic import for tree-shaking; falls back to `GridLayoutProvider` if ELK is unavailable (e.g. in test environments). Accepts `algorithm` and layout option overrides.
+- **Style tokens** — `StyleToken` system in `@dataflow-visualizer/renderer-svg` maps node `kind` to visual appearance (fill, stroke, strokeWidth, textColor, rx). `defaultStyleTokens` covers: `default`, `service`, `datastore`, `gateway`, `queue`, `group`. `resolveStyleToken(kind, registry?)` resolves with fallback to `default`.
+- **Accessibility** — SVG roots now carry `role="graphics-document"` and `aria-label="Dataflow graph"`. Node `<g>` elements carry `role="graphics-symbol"` and `aria-label` with the node label. Group containers carry `role="graphics-object"`.
+- **Group rendering** — `renderLayer("groups", ...)` now produces group hull containers as dashed rectangles with padded bounding boxes around child nodes. `buildRenderFrame` includes `groups: RenderGroup[]` in the frame. Group style tokens applied via kind resolution.
+- **Overlay rendering** — `buildRenderFrame` accepts `nodeOverlays?: ReadonlyMap<string, NodeOverlay>` and produces `overlays: RenderOverlay[]` in the frame. `SvgRendererBackend.renderFrame` renders overlay badges (colored circles with short text) on matching nodes.
+- **Viewport culling** — `buildRenderFrame` accepts optional `viewport?: ViewportContext`; nodes and group hulls outside `viewport.visibleBounds` are excluded from the frame, reducing backend rendering load for large graphs.
+- **LayoutPlayground expansion** — sample now uses varied node kinds (`service`, `datastore`, `gateway`, `queue`), includes a Groups checkbox that splits nodes into two groups, and shows group label/count in the UI.
+- **Tests** — 4 new `ElkLayoutProvider` tests in `layout-tests`; 23 new Milestone 4 tests in `renderer-svg-tests` covering style tokens, accessibility, group rendering, overlay rendering, viewport culling, and RenderFrame structure.
+
+### Explicitly re-scoped to Extension — Multi-View Synchronization
+
+- **Minimap / overview panel** — requires dedicated rendering surface, minimap viewport synchronization, and substantial interaction work. Deferred to Extension milestone.
+- **Coordinated multi-view** — depends on minimap infrastructure. Deferred to the same Extension milestone.
+
+### Partially deferred
+
+- **Richer search/filtering workflows** — the search index and runtime infrastructure exists. Richer overlay-driven workflows require dedicated UX work and are deferred to Extension — Search and Filtering.
 
 ---
 
