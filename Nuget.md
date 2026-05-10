@@ -18,8 +18,8 @@ This repository publishes the reusable .NET libraries as NuGet packages:
    Shared metadata (license, repository URL, tags, readme, symbols) is configured in `Directory.Build.props`.
 3. **Ship symbols**  
    `.snupkg` symbol packages are enabled for debugging and source navigation.
-4. **Validate packaging in CI**  
-   `dotnet pack` is run in CI so package regressions are caught early.
+4. **Publish only from release tags**  
+   The publish workflow only runs for tags matching `vX.X.X.X`.
 5. **Include package readme**  
    This file is embedded into packages as `PackageReadmeFile`.
 
@@ -38,11 +38,11 @@ dotnet pack src/DotNet/Diagram.Blazor/Diagram.Blazor.csproj --no-build --configu
 ## Publishing Example
 
 ```bash
-dotnet nuget push "artifacts/nuget/*.nupkg" \
-  --source https://api.nuget.org/v3/index.json \
-  --api-key "$NUGET_API_KEY" \
-  --skip-duplicate
+git tag v1.0.0.0
+git push origin v1.0.0.0
 ```
+
+The `NuGet Publish` workflow handles pack + push using `NUGET_API_KEY`.
 
 ## Manual Setup Required (cannot be fully automated in this PR)
 
@@ -50,4 +50,4 @@ dotnet nuget push "artifacts/nuget/*.nupkg" \
 2. Create a NuGet.org API key with push scope for these package IDs.
 3. Store the key as a GitHub Actions secret (for example `NUGET_API_KEY`).
 4. Decide and document the release versioning policy (tags, prerelease suffixes, stable cadence).
-5. Add/enable a publish workflow trigger policy (for example tag-based release-only publish) after maintainers confirm ownership and secret setup.
+5. Create and push release tags using the required format (`vX.X.X.X`) to trigger publishing.
