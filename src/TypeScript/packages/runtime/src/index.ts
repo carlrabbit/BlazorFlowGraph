@@ -804,9 +804,6 @@ export class GraphRuntimeHost {
    * are handled automatically. Additional handlers can be registered via `addCommandHandler`.
    */
   dispatch(command: SemanticCommand): void {
-    this.store.eventBus.emit("SelectionChanged", {
-      selectedNodeIds: this.store.getSnapshot().interaction.selectedNodeIds,
-    });
     this._handleBuiltIn(command);
     for (const handler of this._commandHandlers) {
       handler(command);

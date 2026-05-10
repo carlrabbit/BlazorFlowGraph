@@ -239,7 +239,12 @@ function buildFrameMarkup(frame: RenderFrame): string {
       edgeLabel !== ""
         ? `<text x="${midX}" y="${midY}" text-anchor="middle" font-size="10" fill="#6b7280">${edgeLabel}</text>`
         : "";
-    return [`<g class="dfv-edge">`, `  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#dfv-arrow)"/>`, labelEl, `</g>`]
+    return [
+      `<g class="dfv-edge">`,
+      `  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#dfv-arrow)"/>`,
+      labelEl,
+      `</g>`,
+    ]
       .filter(Boolean)
       .join("\n");
   });
