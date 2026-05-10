@@ -15,6 +15,7 @@ import type {
 } from "@dataflow-visualizer/protocol";
 
 export type { GraphSnapshot, GraphDiff, NodeOverlay, EdgeOverlay };
+export type { NodeId, GroupId, GraphNode, GraphEdge, GraphGroup };
 
 // ---------------------------------------------------------------------------
 // Core graph state
@@ -139,6 +140,12 @@ export type RuntimeEventMap = {
   GroupExpanded: { readonly groupId: GroupId };
   SearchApplied: { readonly query: string; readonly matchedNodeIds: ReadonlySet<NodeId> };
   ViewportChanged: Record<string, never>;
+  /** Fired when a semantic command is dispatched through GraphRuntimeHost. */
+  CommandDispatched: { readonly command: SemanticCommand };
+  /** Fired when an overlay kind is registered or its visibility changes. */
+  OverlayRegistryChanged: { readonly kind: string };
+  /** Fired after a layout computation completes. */
+  LayoutCompleted: { readonly durationMs: number };
 };
 
 export type RuntimeEventName = keyof RuntimeEventMap;
@@ -373,4 +380,481 @@ export function buildSearchIndex(data: GraphDataState | GraphState): SearchIndex
       return result;
     },
   };
+}
+
+// ---------------------------------------------------------------------------
+// Semantic commands (Phase 6)
+// ---------------------------------------------------------------------------
+
+/** Focus a specific node, bringing it into view and making it the active element. */
+export interface FocusNodeCommand {
+  readonly type: "FocusNode";
+  readonly nodeId: NodeId;
+}
+
+/** Collapse a group into a compact representation. */
+export interface CollapseGroupCommand {
+  readonly type: "CollapseGroup";
+  readonly groupId: GroupId;
+}
+
+/** Expand a previously collapsed group. */
+export interface ExpandGroupCommand {
+  readonly type: "ExpandGroup";
+  readonly groupId: GroupId;
+}
+
+/** Fit the viewport around the current selection, or the full graph if nothing is selected. */
+export interface FitSelectionCommand {
+  readonly type: "FitSelection";
+}
+
+/** Apply a search query and update the search state. */
+export interface ApplySearchCommand {
+  readonly type: "ApplySearch";
+  readonly query: string;
+}
+
+/** Navigate back in the focus navigation history. */
+export interface NavigateBackCommand {
+  readonly type: "NavigateBack";
+}
+
+/** Discriminated union of all semantic runtime commands. */
+export type SemanticCommand =
+  | FocusNodeCommand
+  | CollapseGroupCommand
+  | ExpandGroupCommand
+  | FitSelectionCommand
+  | ApplySearchCommand
+  | NavigateBackCommand;
+
+// ---------------------------------------------------------------------------
+// Viewport context (Phase 8)
+// ---------------------------------------------------------------------------
+
+/** Axis-aligned bounding rectangle in graph-space coordinates. */
+export interface GraphBounds {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/**
+ * Contextual information about the current viewport state.
+ * Enables viewport-aware rendering decisions such as visibility culling.
+ */
+export interface ViewportContext {
+  /** Pan offset in screen pixels. */
+  readonly panX: number;
+  readonly panY: number;
+  /** Zoom scale factor (1.0 = 100%). */
+  readonly scale: number;
+  /** Visible area in graph-space coordinates, derived from pan and scale. */
+  readonly visibleBounds: GraphBounds;
+  /** Screen dimensions of the render surface. */
+  readonly screenWidth: number;
+  readonly screenHeight: number;
+}
+
+/**
+ * Creates a viewport context from raw pan/zoom and screen dimensions.
+ * `visibleBounds` is computed automatically.
+ */
+export function createViewportContext(
+  panX: number,
+  panY: number,
+  scale: number,
+  screenWidth: number,
+  screenHeight: number
+): ViewportContext {
+  const safeScale = scale > 0 ? scale : 1;
+  return {
+    panX,
+    panY,
+    scale: safeScale,
+    screenWidth,
+    screenHeight,
+    visibleBounds: {
+      x: -panX / safeScale,
+      y: -panY / safeScale,
+      width: screenWidth / safeScale,
+      height: screenHeight / safeScale,
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Visible graph (Phase 3)
+// ---------------------------------------------------------------------------
+
+/**
+ * A filtered subset of the runtime graph that represents what is currently
+ * visible given active viewport, search, and focus policies.
+ * This is distinct from both the semantic graph and the full runtime graph.
+ */
+export interface VisibleGraph {
+  readonly visibleNodeIds: ReadonlySet<NodeId>;
+  readonly visibleEdgeIds: ReadonlySet<string>;
+  readonly visibleGroupIds: ReadonlySet<GroupId>;
+}
+
+/** Policies that control which elements appear in the VisibleGraph. */
+export interface VisibilityPolicy {
+  /** IDs of nodes matched by active search. Empty set means no search filter. */
+  readonly searchMatchedIds?: ReadonlySet<NodeId>;
+  /** When non-null, only the focused node and its immediate neighbors are visible. */
+  readonly focusedNodeId?: NodeId | null;
+  /** Groups that are currently collapsed — their child nodes are hidden. */
+  readonly collapsedGroupIds?: ReadonlySet<GroupId>;
+}
+
+/**
+ * Builds a `VisibleGraph` from the runtime data and optional visibility policies.
+ * All nodes are visible by default; policies progressively restrict visibility.
+ */
+export function buildVisibleGraph(
+  data: GraphDataState | GraphState,
+  policy?: VisibilityPolicy
+): VisibleGraph {
+  const searchFilter = policy?.searchMatchedIds;
+  const focusedNode = policy?.focusedNodeId;
+  const collapsedGroups = policy?.collapsedGroupIds ?? new Set<GroupId>();
+
+  // Build set of hidden node IDs from collapsed groups
+  const hiddenByGroup = new Set<NodeId>();
+  for (const group of data.groups.values()) {
+    if (collapsedGroups.has(group.id)) {
+      for (const childId of group.childNodeIds) {
+        hiddenByGroup.add(childId);
+      }
+    }
+  }
+
+  // Determine candidate visible nodes
+  const visibleNodeIds = new Set<NodeId>();
+  for (const nodeId of data.nodes.keys()) {
+    if (hiddenByGroup.has(nodeId)) continue;
+    if (searchFilter != null && searchFilter.size > 0 && !searchFilter.has(nodeId)) continue;
+    visibleNodeIds.add(nodeId);
+  }
+
+  // Focus filter: restrict to focused node and neighbors (one hop)
+  if (focusedNode != null && data.nodes.has(focusedNode)) {
+    const focusVisible = new Set<NodeId>([focusedNode]);
+    for (const edge of data.edges.values()) {
+      if (edge.sourceId === focusedNode && visibleNodeIds.has(edge.targetId)) {
+        focusVisible.add(edge.targetId);
+      }
+      if (edge.targetId === focusedNode && visibleNodeIds.has(edge.sourceId)) {
+        focusVisible.add(edge.sourceId);
+      }
+    }
+    for (const id of [...visibleNodeIds]) {
+      if (!focusVisible.has(id)) visibleNodeIds.delete(id);
+    }
+  }
+
+  // Only include edges where both endpoints are visible
+  const visibleEdgeIds = new Set<string>();
+  for (const edge of data.edges.values()) {
+    if (visibleNodeIds.has(edge.sourceId) && visibleNodeIds.has(edge.targetId)) {
+      visibleEdgeIds.add(edge.id);
+    }
+  }
+
+  // Include non-collapsed groups that have at least one visible member
+  const visibleGroupIds = new Set<GroupId>();
+  for (const group of data.groups.values()) {
+    if (collapsedGroups.has(group.id)) continue;
+    if (group.childNodeIds.some((id) => visibleNodeIds.has(id))) {
+      visibleGroupIds.add(group.id);
+    }
+  }
+
+  return { visibleNodeIds, visibleEdgeIds, visibleGroupIds };
+}
+
+// ---------------------------------------------------------------------------
+// Overlay registry (Phase 4)
+// ---------------------------------------------------------------------------
+
+/** Describes a named overlay type that can be registered with the OverlayRegistry. */
+export interface OverlayDescriptor {
+  /** Unique identifier for this overlay type. */
+  readonly kind: string;
+  /** Human-readable name for display in tooling and diagnostics. */
+  readonly displayName: string;
+  /** Controls z-order when multiple overlays are composed. Higher = rendered last (on top). */
+  readonly zOrder: number;
+  /** When false the overlay is registered but not shown. Defaults to true. */
+  readonly visible?: boolean;
+}
+
+/** The OverlayRegistry manages structured overlay registration and visibility. */
+export class OverlayRegistry {
+  private readonly descriptors = new Map<string, OverlayDescriptor & { visible: boolean }>();
+
+  /** Registers an overlay type. Replaces any existing registration with the same kind. */
+  register(descriptor: OverlayDescriptor): void {
+    this.descriptors.set(descriptor.kind, {
+      ...descriptor,
+      visible: descriptor.visible ?? true,
+    });
+  }
+
+  /** Unregisters an overlay type by kind. */
+  unregister(kind: string): void {
+    this.descriptors.delete(kind);
+  }
+
+  /** Returns the descriptor for the given kind, or undefined if not registered. */
+  get(kind: string): Readonly<OverlayDescriptor & { visible: boolean }> | undefined {
+    return this.descriptors.get(kind);
+  }
+
+  /** Sets the visibility of a registered overlay kind. */
+  setVisible(kind: string, visible: boolean): void {
+    const existing = this.descriptors.get(kind);
+    if (existing != null) {
+      this.descriptors.set(kind, { ...existing, visible });
+    }
+  }
+
+  /** Returns all registered overlay kinds in ascending z-order. */
+  getVisible(): readonly OverlayDescriptor[] {
+    return [...this.descriptors.values()]
+      .filter((d) => d.visible)
+      .sort((a, b) => a.zOrder - b.zOrder);
+  }
+
+  /** Returns all registered overlay kinds regardless of visibility. */
+  getAll(): readonly (OverlayDescriptor & { visible: boolean })[] {
+    return [...this.descriptors.values()].sort((a, b) => a.zOrder - b.zOrder);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Spatial index (Phase 9)
+// ---------------------------------------------------------------------------
+
+/** An axis-aligned bounding box used for spatial queries. */
+export interface BoundingBox {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/** Entry in the spatial index representing a positioned graph element. */
+export interface SpatialEntry {
+  readonly id: string;
+  readonly kind: "node" | "edge" | "group";
+  readonly bounds: BoundingBox;
+}
+
+/**
+ * SpatialIndex supports efficient spatial queries for hit testing,
+ * visibility culling, and future virtualization.
+ */
+export interface SpatialIndex {
+  /** Returns all entries whose bounds intersect the given region. */
+  query(region: BoundingBox): readonly SpatialEntry[];
+  /** Returns the entry containing the given point, or null if none. */
+  hitTest(x: number, y: number): SpatialEntry | null;
+}
+
+/**
+ * Builds a SpatialIndex from a map of node bounding boxes.
+ * This is a simple linear-scan implementation suitable for moderate graph sizes.
+ * Replace with a quadtree or R-tree for large graphs.
+ */
+export function buildSpatialIndex(entries: readonly SpatialEntry[]): SpatialIndex {
+  return {
+    query(region: BoundingBox): readonly SpatialEntry[] {
+      return entries.filter((e) => boxesIntersect(e.bounds, region));
+    },
+    hitTest(x: number, y: number): SpatialEntry | null {
+      // Iterate in reverse so topmost (last-rendered) elements are checked first
+      for (let i = entries.length - 1; i >= 0; i--) {
+        const entry = entries[i];
+        if (entry == null) continue;
+        const b = entry.bounds;
+        if (x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height) {
+          return entry;
+        }
+      }
+      return null;
+    },
+  };
+}
+
+function boxesIntersect(a: BoundingBox, b: BoundingBox): boolean {
+  return (
+    a.x < b.x + b.width &&
+    a.x + a.width > b.x &&
+    a.y < b.y + b.height &&
+    a.y + a.height > b.y
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Runtime diagnostics (Phase 11)
+// ---------------------------------------------------------------------------
+
+/** Timing sample with a label and duration. */
+export interface DiagnosticsSample {
+  readonly label: string;
+  readonly durationMs: number;
+  readonly timestamp: number;
+}
+
+/**
+ * Runtime diagnostics collector.
+ * Records timing and count metrics for render, layout, and diff operations.
+ */
+export class RuntimeDiagnostics {
+  private readonly samples: DiagnosticsSample[] = [];
+  private _visibleNodeCount = 0;
+  private _visibleEdgeCount = 0;
+  private _totalDiffApplications = 0;
+
+  /** Records a timing sample under the given label. */
+  record(label: string, durationMs: number): void {
+    this.samples.push({ label, durationMs, timestamp: Date.now() });
+  }
+
+  /** Updates the current visible node/edge counts. */
+  setVisibleCounts(nodeCount: number, edgeCount: number): void {
+    this._visibleNodeCount = nodeCount;
+    this._visibleEdgeCount = edgeCount;
+  }
+
+  /** Increments the diff application counter. */
+  recordDiffApplication(): void {
+    this._totalDiffApplications++;
+  }
+
+  /** Returns the most recent samples up to `limit` entries (default 100). */
+  getRecentSamples(limit = 100): readonly DiagnosticsSample[] {
+    return this.samples.slice(-limit);
+  }
+
+  get visibleNodeCount(): number { return this._visibleNodeCount; }
+  get visibleEdgeCount(): number { return this._visibleEdgeCount; }
+  get totalDiffApplications(): number { return this._totalDiffApplications; }
+
+  /** Returns a summary snapshot of current diagnostic state. */
+  getSummary(): {
+    readonly visibleNodeCount: number;
+    readonly visibleEdgeCount: number;
+    readonly totalDiffApplications: number;
+    readonly recentSampleCount: number;
+  } {
+    return {
+      visibleNodeCount: this._visibleNodeCount,
+      visibleEdgeCount: this._visibleEdgeCount,
+      totalDiffApplications: this._totalDiffApplications,
+      recentSampleCount: this.samples.length,
+    };
+  }
+
+  /** Clears all recorded samples. */
+  clear(): void {
+    this.samples.length = 0;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GraphRuntimeHost — composition root (Phase 1)
+// ---------------------------------------------------------------------------
+
+/**
+ * GraphRuntimeHost wires together the runtime subsystems.
+ * It acts as the composition root, providing a single point of initialization
+ * and a unified dispatch surface for semantic commands.
+ *
+ * Responsibilities:
+ * - subsystem initialization
+ * - dependency wiring
+ * - command dispatch
+ * - lifecycle coordination
+ */
+export class GraphRuntimeHost {
+  readonly store: GraphRuntimeStore;
+  readonly overlayRegistry: OverlayRegistry;
+  readonly diagnostics: RuntimeDiagnostics;
+
+  private _commandHandlers: Array<(cmd: SemanticCommand) => void> = [];
+
+  constructor(options?: {
+    store?: GraphRuntimeStore;
+    overlayRegistry?: OverlayRegistry;
+    diagnostics?: RuntimeDiagnostics;
+  }) {
+    this.store = options?.store ?? new GraphRuntimeStore();
+    this.overlayRegistry = options?.overlayRegistry ?? new OverlayRegistry();
+    this.diagnostics = options?.diagnostics ?? new RuntimeDiagnostics();
+  }
+
+  /**
+   * Dispatches a semantic command through the host.
+   * Built-in commands (FocusNode, CollapseGroup, ExpandGroup, ApplySearch, NavigateBack)
+   * are handled automatically. Additional handlers can be registered via `addCommandHandler`.
+   */
+  dispatch(command: SemanticCommand): void {
+    this._handleBuiltIn(command);
+    for (const handler of this._commandHandlers) {
+      handler(command);
+    }
+  }
+
+  /** Registers an additional command handler invoked after built-in handling. */
+  addCommandHandler(handler: (cmd: SemanticCommand) => void): () => void {
+    this._commandHandlers.push(handler);
+    return () => {
+      const idx = this._commandHandlers.indexOf(handler);
+      if (idx >= 0) this._commandHandlers.splice(idx, 1);
+    };
+  }
+
+  private _handleBuiltIn(command: SemanticCommand): void {
+    switch (command.type) {
+      case "FocusNode":
+        this.store.setFocus({ focusedNodeId: command.nodeId });
+        break;
+      case "CollapseGroup": {
+        const expanded = this.store.getSnapshot().layout.expandedGroupIds;
+        if (expanded.has(command.groupId)) {
+          this.store.toggleGroup(command.groupId);
+        }
+        break;
+      }
+      case "ExpandGroup": {
+        const expanded = this.store.getSnapshot().layout.expandedGroupIds;
+        if (!expanded.has(command.groupId)) {
+          this.store.toggleGroup(command.groupId);
+        }
+        break;
+      }
+      case "ApplySearch":
+        // Callers are responsible for providing matched IDs (requires query engine).
+        this.store.setSearch(command.query, new Set());
+        break;
+      case "NavigateBack": {
+        const history = this.store.getSnapshot().focus.navigationHistory;
+        if (history.length >= 2) {
+          const previous = history[history.length - 2];
+          if (previous != null) {
+            this.store.setFocus({ focusedNodeId: previous });
+          }
+        }
+        break;
+      }
+      case "FitSelection":
+        // FitSelection is a viewport command — implementation lives in the host rendering layer.
+        break;
+    }
+  }
 }

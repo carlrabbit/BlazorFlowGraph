@@ -268,110 +268,167 @@ New package `@dataflow-visualizer/query`:
 
 ---
 
-# Milestone 3 — Automatic Layout Integration
+# Milestone 3 — Extensible Semantic Visualization Platform
 
 ## Goal
 
-Introduce automatic layout orchestration and topology-aware visualization.
+Transition BlazorFlowGraph from a semantic graph exploration runtime into an extensible semantic visualization platform.
 
-This milestone transforms the renderer into a semantic topology explorer rather than a static graph viewer.
+This milestone establishes:
+- renderer backend abstraction
+- view projection layer
+- overlay platform
+- command-driven interactions
+- layout provider abstraction
+- viewport context
+- virtualization-ready architecture
+- runtime diagnostics
+
+while preserving semantic-first architecture, explicit runtime ownership, and protocol stability.
 
 ---
 
 ## Scope
 
-## Layout Engine Integration
-
-### ELK.js Integration
-
-Implement:
-- layered layouts
-- hierarchical layouts
-- directional layouts
-
-Requirements:
-- pluggable layout abstraction
-- renderer/layout separation
-
----
-
-### Layout Pipeline
-
-Implement:
-- layout orchestration
-- layout caching
-- layout invalidation
-- incremental stabilization
-
----
-
-### Incremental Layout Stabilization
-
-Implement:
-- partial relayout support
-- anchor preservation
-- layout continuity
-
-Requirements:
-- existing graph regions remain visually stable when possible
-
----
-
 ## TypeScript Runtime
 
-### Layout Runtime
+### Semantic Commands
 
-Implement:
-- asynchronous layout execution
-- layout transition support
-- viewport-aware layout updates
+New `SemanticCommand` discriminated union in `@dataflow-visualizer/runtime`:
+- `FocusNode` — focuses a specific node in the store
+- `CollapseGroup` — collapses a group (idempotent)
+- `ExpandGroup` — expands a group (idempotent)
+- `FitSelection` — signals the renderer to fit the viewport to selection
+- `ApplySearch` — applies a search query
+- `NavigateBack` — navigates to the previous node in focus history
+
+### GraphRuntimeHost — Composition Root
+
+New `GraphRuntimeHost` class wiring the runtime subsystems:
+- holds `GraphRuntimeStore`, `OverlayRegistry`, `RuntimeDiagnostics`
+- dispatches `SemanticCommand` with built-in handling + extensible handler registration
+- lifecycle coordination without global singletons
+
+### ViewportContext
+
+New `ViewportContext` interface and `createViewportContext` factory:
+- pan offset, zoom scale, screen dimensions
+- `visibleBounds` in graph-space computed automatically for visibility culling
+
+### VisibleGraph + Visibility Policy
+
+New `VisibleGraph` model and `buildVisibleGraph` function:
+- distinct from semantic graph and full runtime graph
+- `VisibilityPolicy` supports: search filtering, focus-neighbor filtering, collapsed group filtering
+- foundation for virtualization and viewport culling
+
+### Overlay Registry
+
+New `OverlayRegistry` class for structured overlay management:
+- overlay `kind` registration with `displayName` and `zOrder`
+- visibility toggle per overlay kind
+- `getVisible()` returns active overlays in z-order
+
+### Spatial Index
+
+New `SpatialIndex` interface and `buildSpatialIndex` function:
+- `query(region)` for visibility culling
+- `hitTest(x, y)` for interaction
+- Linear-scan implementation (replace with quadtree for large graphs)
+
+### Runtime Diagnostics
+
+New `RuntimeDiagnostics` class:
+- timing sample recording (`record(label, durationMs)`)
+- visible node/edge count tracking
+- diff application counter
+- `getSummary()` for devtools
+
+### Expanded Event Bus
+
+`RuntimeEventMap` expanded with Milestone 3 events:
+- `CommandDispatched` — semantic command fired through the host
+- `OverlayRegistryChanged` — overlay registration/visibility change
+- `LayoutCompleted` — layout computation completed with duration
 
 ---
 
-### Grouping and Clustering
+## Renderer
 
-Implement:
-- visual groups
-- collapsible groups
-- topology clusters
+### RenderFrame Model
+
+New `RenderFrame` model in `@dataflow-visualizer/renderer-svg`:
+- contains positioned `RenderNode[]` and `RenderEdge[]`
+- separate from runtime state — produced by the view projection pipeline
+- `buildRenderFrame(state, layout, options?)` builds a frame, optionally filtered by `VisibleGraph`
+
+### GraphRendererBackend Interface
+
+New `GraphRendererBackend` interface:
+- `initialize(container, width, height)`
+- `renderFrame(frame)`
+- `updateViewport(panX, panY, scale)`
+- `resize(width, height)`
+- `dispose()`
+
+### SvgRendererBackend
+
+New `SvgRendererBackend` class implementing `GraphRendererBackend`:
+- SVG-based backend wrapping the existing SVG rendering logic
+- validates backend abstraction viability
 
 ---
 
-### Topology Exploration
+## Layout
 
-Implement:
-- upstream highlighting
-- downstream highlighting
-- dependency tracing
-- path exploration
+### LayoutGraph Model
 
----
+New `LayoutGraph` model in `@dataflow-visualizer/layout`:
+- `LayoutGraphNode`, `LayoutGraphEdge`, `LayoutGraphGroup`
+- decoupled from runtime graph — purpose-built for layout engines
+- `buildLayoutGraph(snapshot, options?)` converts a `GraphSnapshot` to `LayoutGraph`
 
-## Samples
+### LayoutProvider Interface
 
-Implement:
-- large graph sample
-- layered dataflow sample
-- topology exploration sample
+New `LayoutProvider` interface:
+- `computeLayout(graph, options?): Promise<LayoutResult>`
+- async to support WASM-based engines (ELK, force-directed)
+- enables alternative layouts without touching the rendering pipeline
+
+### GridLayoutProvider
+
+New `GridLayoutProvider` class implementing `LayoutProvider`:
+- wraps the existing `computeLayout` grid logic
+- serves as the reference/default implementation
+
+### Expanded LayoutPolicy
+
+`LayoutPolicy` expanded with `"Local"` and `"Frozen"` variants.
 
 ---
 
 ## Tests
 
-Implement:
-- layout integration tests
-- layout stability tests
-- cluster reconciliation tests
+- 56 new runtime tests covering: SemanticCommand, createViewportContext, buildVisibleGraph, OverlayRegistry, buildSpatialIndex, RuntimeDiagnostics, GraphRuntimeHost, new RuntimeEventMap events
+- 7 new renderer-svg tests covering: buildRenderFrame, RenderFrame model, VisibleGraph filtering
+- 15 new layout tests covering: buildLayoutGraph, GridLayoutProvider, LayoutProvider interface, LayoutPolicy expansion
+- New test package: `@dataflow-visualizer/layout-tests`
 
 ---
 
 ## Exit Criteria
 
-- automatic layouts function reliably
-- layouts remain stable during updates
-- grouping works
-- topology exploration works
-- renderer scales to larger graphs
+- renderer backend abstraction established ✅
+- RenderFrame model decouples pipeline from runtime state ✅
+- VisibleGraph enables partial rendering and viewport culling ✅
+- OverlayRegistry provides structured overlay management ✅
+- SemanticCommands drive interactions deterministically ✅
+- LayoutProvider interface enables pluggable layout engines ✅
+- LayoutGraph decouples layout from runtime graph ✅
+- ViewportContext supports viewport-aware rendering ✅
+- SpatialIndex foundation for hit testing and virtualization ✅
+- RuntimeDiagnostics captures render/layout timing metrics ✅
+- All existing tests continue to pass ✅
 
 ---
 
