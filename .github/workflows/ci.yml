@@ -26,6 +26,14 @@ jobs:
       - name: Build
         run: dotnet build BlazorFlowGraph.slnx --no-restore --configuration Release
 
+      - name: Pack NuGet packages
+        run: |
+          dotnet pack src/DotNet/Diagram.Protocol/Diagram.Protocol.csproj --no-build --configuration Release --output artifacts/nuget
+          dotnet pack src/DotNet/Diagram.Semantics/Diagram.Semantics.csproj --no-build --configuration Release --output artifacts/nuget
+          dotnet pack src/DotNet/Diagram.Projection/Diagram.Projection.csproj --no-build --configuration Release --output artifacts/nuget
+          dotnet pack src/DotNet/Diagram.Diffing/Diagram.Diffing.csproj --no-build --configuration Release --output artifacts/nuget
+          dotnet pack src/DotNet/Diagram.Blazor/Diagram.Blazor.csproj --no-build --configuration Release --output artifacts/nuget
+
       - name: Test — Diagram.Protocol
         run: dotnet run --no-build --project tests/DotNet/Diagram.Protocol.Tests --configuration Release -- --report-trx --results-directory TestResults
 
@@ -44,6 +52,15 @@ jobs:
         with:
           name: dotnet-test-results
           path: "TestResults/*.trx"
+
+      - name: Upload NuGet artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: |
+            artifacts/nuget/*.nupkg
+            artifacts/nuget/*.snupkg
 
   build-typescript:
     name: Build & Typecheck TypeScript

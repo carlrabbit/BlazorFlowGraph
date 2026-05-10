@@ -4,6 +4,8 @@
     <AssemblyName>Diagram.Diffing</AssemblyName>
     <RootNamespace>Diagram.Diffing</RootNamespace>
     <Description>Incremental update (diff) generation for the dataflow visualizer.</Description>
+    <IsPackable>true</IsPackable>
+    <PackageId>Diagram.Diffing</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

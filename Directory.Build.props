@@ -11,4 +11,20 @@
 
     <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageProjectUrl>https://github.com/carlrabbit/BlazorFlowGraph</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/carlrabbit/BlazorFlowGraph</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageLicenseExpression>Unlicense</PackageLicenseExpression>
+    <PackageReadmeFile>Nuget.md</PackageReadmeFile>
+    <PackageTags>blazor;dataflow;graph;visualization</PackageTags>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)Nuget.md" Pack="true" PackagePath="/" Link="Nuget.md" />
+  </ItemGroup>
 </Project>
