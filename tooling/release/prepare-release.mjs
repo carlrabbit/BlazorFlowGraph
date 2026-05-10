@@ -35,10 +35,16 @@ function ensureCommitIsOnMain() {
     );
   }
 
-  execFileSync("git", ["fetch", "--no-tags", "origin", "main:refs/remotes/origin/main"], {
-    cwd: repositoryRoot,
-    stdio: "inherit",
-  });
+  try {
+    execFileSync("git", ["fetch", "--no-tags", "origin", "main:refs/remotes/origin/main"], {
+      cwd: repositoryRoot,
+      stdio: "inherit",
+    });
+  } catch {
+    throw new Error(
+      "Failed to fetch origin/main, which is required to validate that the release commit comes from main."
+    );
+  }
 
   try {
     execFileSync("git", ["merge-base", "--is-ancestor", gitSha, "refs/remotes/origin/main"], {
