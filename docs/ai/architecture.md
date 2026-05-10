@@ -65,12 +65,12 @@ Avoid pushing rendering, reconciliation, or layout algorithms into Razor compone
 
 ### .NET Projects
 
-- `Diagram.Protocol`
-- `Diagram.Semantics`
-- `Diagram.Projection`
-- `Diagram.Diffing`
-- `Diagram.Blazor`
-- `Diagram.Blazor.Server`
+- `BlazorFlowGraph.Protocol`
+- `BlazorFlowGraph.Semantics`
+- `BlazorFlowGraph.Projection`
+- `BlazorFlowGraph.Diffing`
+- `BlazorFlowGraph.Blazor`
+- `BlazorFlowGraph.Blazor.Server`
 
 ### TypeScript Packages
 
@@ -192,7 +192,7 @@ The `@dataflow-visualizer/query` package provides topology traversal:
 
 ## Persistence
 
-`GraphViewState` (.NET: `Diagram.Protocol/GraphViewState.cs`) captures browser-side view state for deep links and saved views: viewport, expanded groups, selected nodes, focused node.
+`GraphViewState` (.NET: `BlazorFlowGraph.Protocol/GraphViewState.cs`) captures browser-side view state for deep links and saved views: viewport, expanded groups, selected nodes, focused node.
 
 ## Planned Direction
 

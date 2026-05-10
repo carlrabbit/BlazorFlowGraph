@@ -92,10 +92,10 @@ pnpm build
 pnpm test
 
 # .NET tests (TUnit projects run as executables)
-dotnet run --no-build --project tests/DotNet/Diagram.Protocol.Tests --configuration Release
-dotnet run --no-build --project tests/DotNet/Diagram.Diffing.Tests --configuration Release
-dotnet run --no-build --project tests/DotNet/Diagram.Projection.Tests --configuration Release
-dotnet run --no-build --project tests/DotNet/Diagram.Semantics.Tests --configuration Release
+dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Protocol.Tests --configuration Release
+dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Diffing.Tests --configuration Release
+dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Projection.Tests --configuration Release
+dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Semantics.Tests --configuration Release
 ```
 
 ### TypeScript Typecheck

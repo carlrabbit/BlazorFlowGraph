@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <AssemblyName>BlazorFlowGraph.Blazor.Server</AssemblyName>
+    <RootNamespace>BlazorFlowGraph.Blazor.Server</RootNamespace>
+    <Description>Server integration and hosting for the Blazor dataflow visualizer.</Description>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../BlazorFlowGraph.Blazor/BlazorFlowGraph.Blazor.csproj" />
+    <ProjectReference Include="../BlazorFlowGraph.Projection/BlazorFlowGraph.Projection.csproj" />
+    <ProjectReference Include="../BlazorFlowGraph.Semantics/BlazorFlowGraph.Semantics.csproj" />
+  </ItemGroup>
+
+</Project>

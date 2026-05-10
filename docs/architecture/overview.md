@@ -4,12 +4,12 @@ This document provides a high-level overview of the Dataflow Visualizer architec
 
 ## Components
 
-- **Diagram.Protocol** — Shared graph contracts (nodes, edges, diffs)
-- **Diagram.Semantics** — Domain annotations and semantic extraction
-- **Diagram.Projection** — Projects semantic models into graph snapshots
-- **Diagram.Diffing** — Computes incremental diffs between snapshots
-- **Diagram.Blazor** — Razor components
-- **Diagram.Blazor.Server** — optional server-side DI registration helpers
+- **BlazorFlowGraph.Protocol** — Shared graph contracts (nodes, edges, diffs)
+- **BlazorFlowGraph.Semantics** — Domain annotations and semantic extraction
+- **BlazorFlowGraph.Projection** — Projects semantic models into graph snapshots
+- **BlazorFlowGraph.Diffing** — Computes incremental diffs between snapshots
+- **BlazorFlowGraph.Blazor** — Razor components
+- **BlazorFlowGraph.Blazor.Server** — optional server-side DI registration helpers
 
 ## TypeScript Runtime
 
@@ -25,7 +25,7 @@ This document provides a high-level overview of the Dataflow Visualizer architec
 
 ```
 .NET semantic model
-  → Diagram.Projection (ReflectionGraphProjector)
+  → BlazorFlowGraph.Projection (ReflectionGraphProjector)
   → GraphSnapshot / GraphDiff
   → Blazor component / JS interop
   → @dataflow-visualizer/interop (DotNetBridge)

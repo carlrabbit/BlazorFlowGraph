@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>BlazorFlowGraph.Projection</AssemblyName>
+    <RootNamespace>BlazorFlowGraph.Projection</RootNamespace>
+    <Description>Semantic-to-visual projection for the dataflow visualizer.</Description>
+    <IsPackable>true</IsPackable>
+    <PackageId>BlazorFlowGraph.Projection</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../BlazorFlowGraph.Semantics/BlazorFlowGraph.Semantics.csproj" />
+    <ProjectReference Include="../BlazorFlowGraph.Protocol/BlazorFlowGraph.Protocol.csproj" />
+  </ItemGroup>
+
+</Project>

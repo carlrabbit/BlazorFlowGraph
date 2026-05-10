@@ -43,7 +43,7 @@ jobs:
         run: pnpm build
 
       - name: Refresh packaged browser bundle
-        run: cp src/TypeScript/packages/host/dist/browser.iife.js src/DotNet/Diagram.Blazor/wwwroot/js/dataflow-visualizer.js
+        run: cp src/TypeScript/packages/host/dist/browser.iife.js src/DotNet/BlazorFlowGraph.Blazor/wwwroot/js/dataflow-visualizer.js
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4

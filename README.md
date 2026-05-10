@@ -64,7 +64,7 @@ The project prioritizes:
 
 At the repository level, this is currently implemented as:
 
-- `.NET`: `Diagram.Protocol`, `Diagram.Semantics`, `Diagram.Projection`, `Diagram.Diffing`, `Diagram.Blazor`, and `Diagram.Blazor.Server`
+- `.NET`: `BlazorFlowGraph.Protocol`, `BlazorFlowGraph.Semantics`, `BlazorFlowGraph.Projection`, `BlazorFlowGraph.Diffing`, `BlazorFlowGraph.Blazor`, and `BlazorFlowGraph.Blazor.Server`
 - `TypeScript`: `@dataflow-visualizer/protocol`, `@dataflow-visualizer/runtime`, `@dataflow-visualizer/renderer-svg`, `@dataflow-visualizer/layout`, `@dataflow-visualizer/interop`, and `@dataflow-visualizer/host`
 
 For a more detailed breakdown, see [`docs/architecture/overview.md`](docs/architecture/overview.md).
@@ -163,12 +163,12 @@ At least initially, the project does not aim to become:
 ```text
 src/
   DotNet/
-    Diagram.Blazor/
-    Diagram.Blazor.Server/
-    Diagram.Diffing/
-    Diagram.Projection/
-    Diagram.Protocol/
-    Diagram.Semantics/
+    BlazorFlowGraph.Blazor/
+    BlazorFlowGraph.Blazor.Server/
+    BlazorFlowGraph.Diffing/
+    BlazorFlowGraph.Projection/
+    BlazorFlowGraph.Protocol/
+    BlazorFlowGraph.Semantics/
   TypeScript/
     packages/
       host/
@@ -242,7 +242,7 @@ builder.Services.AddDataflowVisualizer();
 Render a graph:
 
 ```razor
-@using Diagram.Blazor
+@using BlazorFlowGraph.Blazor
 
 <DataflowGraph Snapshot="@snapshot" Width="1200" Height="800" />
 ```
@@ -250,7 +250,7 @@ Render a graph:
 Bootstrap the browser host:
 
 ```html
-<script src="_content/Diagram.Blazor/js/dataflow-visualizer.js"></script>
+<script src="_content/BlazorFlowGraph.Blazor/js/dataflow-visualizer.js"></script>
 ```
 
 See [`docs/integration/guide.md`](docs/integration/guide.md) for more detail.
@@ -291,10 +291,10 @@ pnpm test
 .NET test projects use Microsoft Testing Platform and are run as executables:
 
 ```bash
-dotnet run --no-build --project tests/DotNet/Diagram.Protocol.Tests --configuration Release
-dotnet run --no-build --project tests/DotNet/Diagram.Diffing.Tests --configuration Release
-dotnet run --no-build --project tests/DotNet/Diagram.Projection.Tests --configuration Release
-dotnet run --no-build --project tests/DotNet/Diagram.Semantics.Tests --configuration Release
+dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Protocol.Tests --configuration Release
+dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Diffing.Tests --configuration Release
+dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Projection.Tests --configuration Release
+dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Semantics.Tests --configuration Release
 ```
 
 ### NuGet Packaging

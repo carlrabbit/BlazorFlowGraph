@@ -1,6 +1,6 @@
-using Diagram.Diffing;
-using Diagram.Projection;
-using Diagram.Semantics;
+using BlazorFlowGraph.Diffing;
+using BlazorFlowGraph.Projection;
+using BlazorFlowGraph.Semantics;
 
 var builder = WebApplication.CreateBuilder(args);
 

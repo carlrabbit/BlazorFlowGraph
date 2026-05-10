@@ -8,7 +8,7 @@ This repository publishes the reusable .NET libraries as NuGet packages:
 - `BlazorFlowGraph.Diffing`
 - `BlazorFlowGraph.Blazor`
 
-`Diagram.Blazor.Server` is intentionally not packaged because it is a `Microsoft.NET.Sdk.Web` host-oriented project.
+`BlazorFlowGraph.Blazor.Server` is intentionally not packaged because it is a `Microsoft.NET.Sdk.Web` host-oriented project.
 
 ## Best Practices Used in This Repository
 
@@ -31,11 +31,11 @@ This repository publishes the reusable .NET libraries as NuGet packages:
 ```bash
 dotnet restore BlazorFlowGraph.slnx
 dotnet build BlazorFlowGraph.slnx --configuration Release
-dotnet pack src/DotNet/Diagram.Protocol/Diagram.Protocol.csproj --no-build --configuration Release --output artifacts/nuget
-dotnet pack src/DotNet/Diagram.Semantics/Diagram.Semantics.csproj --no-build --configuration Release --output artifacts/nuget
-dotnet pack src/DotNet/Diagram.Projection/Diagram.Projection.csproj --no-build --configuration Release --output artifacts/nuget
-dotnet pack src/DotNet/Diagram.Diffing/Diagram.Diffing.csproj --no-build --configuration Release --output artifacts/nuget
-dotnet pack src/DotNet/Diagram.Blazor/Diagram.Blazor.csproj --no-build --configuration Release --output artifacts/nuget
+dotnet pack src/DotNet/BlazorFlowGraph.Protocol/BlazorFlowGraph.Protocol.csproj --no-build --configuration Release --output artifacts/nuget
+dotnet pack src/DotNet/BlazorFlowGraph.Semantics/BlazorFlowGraph.Semantics.csproj --no-build --configuration Release --output artifacts/nuget
+dotnet pack src/DotNet/BlazorFlowGraph.Projection/BlazorFlowGraph.Projection.csproj --no-build --configuration Release --output artifacts/nuget
+dotnet pack src/DotNet/BlazorFlowGraph.Diffing/BlazorFlowGraph.Diffing.csproj --no-build --configuration Release --output artifacts/nuget
+dotnet pack src/DotNet/BlazorFlowGraph.Blazor/BlazorFlowGraph.Blazor.csproj --no-build --configuration Release --output artifacts/nuget
 ```
 
 ## Publishing Example

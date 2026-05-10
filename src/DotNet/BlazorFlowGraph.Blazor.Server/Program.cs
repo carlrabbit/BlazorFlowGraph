@@ -1,15 +1,11 @@
-using BlazorFlowGraph.Diffing;
-using BlazorFlowGraph.Projection;
-using BlazorFlowGraph.Semantics;
+using BlazorFlowGraph.Blazor.Server;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Register dataflow visualizer services
-builder.Services.AddSingleton<IGraphProjector, ReflectionGraphProjector>();
-builder.Services.AddSingleton<IGraphDiffer, GraphDiffer>();
+builder.Services.AddDataflowVisualizer();
 
 var app = builder.Build();
 
@@ -23,7 +19,7 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
-app.MapRazorComponents<MinimalViewer.Components.App>()
+app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
