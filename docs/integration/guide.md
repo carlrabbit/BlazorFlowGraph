@@ -2,9 +2,14 @@
 
 ## Registering Services
 
+Repository samples reference `Diagram.Blazor` directly and register the projector/differ services explicitly:
+
 ```csharp
-builder.Services.AddDataflowVisualizer();
+builder.Services.AddSingleton<IGraphProjector, ReflectionGraphProjector>();
+builder.Services.AddSingleton<IGraphDiffer, GraphDiffer>();
 ```
+
+If your host references `Diagram.Blazor.Server`, `AddDataflowVisualizer()` wraps those registrations for you.
 
 ## Using the Blazor Component
 
@@ -16,16 +21,17 @@ builder.Services.AddDataflowVisualizer();
 
 ## JavaScript Bootstrap
 
-In your Blazor app, include the host bundle and call `registerGlobals()`:
+Load the committed browser bundle before the component renders. The bundle auto-registers `window.DataflowVisualizer`:
 
 ```html
-<script type="module">
-  import { registerGlobals } from '/js/dataflow-visualizer-host.js';
-  registerGlobals();
-</script>
+<script src="_content/Diagram.Blazor/js/dataflow-visualizer.js"></script>
 ```
 
-## Sending Updates from .NET
+## Sending Graph Data
+
+`DataflowGraph` handles `DataflowVisualizer.mount(...)` on first render and sends a full snapshot whenever its `Snapshot` parameter version changes.
+
+If you are building a custom bridge instead of using `DataflowGraph`, you can still call the global API directly:
 
 ```csharp
 // Full snapshot (initial load)

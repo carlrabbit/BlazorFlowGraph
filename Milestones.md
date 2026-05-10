@@ -432,6 +432,46 @@ New `GridLayoutProvider` class implementing `LayoutProvider`:
 
 ---
 
+# Milestone 4 — Deferred Platform Completion
+
+## Goal
+
+Collect the deferred Milestone 3 work and the next open topics already called out in the repository documentation before moving on to broader extensions.
+
+This milestone focuses on:
+- completing deferred Milestone 3 platform work
+- hardening rendering and layout extension points
+- improving accessibility, sample coverage, and large-graph readiness
+
+---
+
+## Scope
+
+### Deferred from merged pull requests
+
+- node composition regions and style tokens deferred in PR #13
+- accessibility work deferred in PR #13
+- playground/sample expansion deferred in PR #13
+
+### Open topics from the current documentation
+
+- add an ELK-backed `LayoutProvider` implementation on top of `LayoutGraph`
+- mature group and overlay rendering beyond the current extension-point stubs
+- build viewport culling and virtualization on top of `VisibleGraph` and `SpatialIndex`
+- add overview/minimap and coordinated multi-view capabilities on `ViewportContext`
+- expand overlay-driven inspection plus richer search/filtering workflows on top of the Milestone 2 query/runtime foundations
+
+---
+
+## Exit Criteria
+
+- the deferred Milestone 3 items are implemented or explicitly re-scoped
+- the layout pipeline remains provider-based and ready for non-grid engines
+- rendering/runtime boundaries remain intact while group and overlay rendering mature
+- docs and samples reflect the supported integration path and current platform capabilities
+
+---
+
 # Potential Extensions
 
 The following extensions align with the project's goals and architectural direction.

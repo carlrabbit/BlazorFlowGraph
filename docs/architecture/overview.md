@@ -9,14 +9,15 @@ This document provides a high-level overview of the Dataflow Visualizer architec
 - **Diagram.Projection** — Projects semantic models into graph snapshots
 - **Diagram.Diffing** — Computes incremental diffs between snapshots
 - **Diagram.Blazor** — Razor components
-- **Diagram.Blazor.Server** — Server integration and DI registration
+- **Diagram.Blazor.Server** — optional server-side DI registration helpers
 
 ## TypeScript Runtime
 
 - **protocol** — TypeScript DTOs mirroring the .NET contracts
-- **runtime** — Graph state reconciliation engine
-- **renderer-svg** — SVG rendering
-- **layout** — ELK-based automatic layout
+- **runtime** — graph reconciliation, visibility projection, viewport context, diagnostics, and command handling
+- **query** — topology indexing and traversal helpers
+- **renderer-svg** — SVG rendering plus `RenderFrame` / backend abstractions
+- **layout** — `LayoutGraph`, `LayoutProvider`, and the placeholder grid layout implementation
 - **interop** — .NET/Blazor bridge
 - **host** — Runtime bootstrap
 
@@ -26,9 +27,11 @@ This document provides a high-level overview of the Dataflow Visualizer architec
 .NET semantic model
   → Diagram.Projection (ReflectionGraphProjector)
   → GraphSnapshot / GraphDiff
-  → Blazor JS Interop
+  → Blazor component / JS interop
   → @dataflow-visualizer/interop (DotNetBridge)
-  → @dataflow-visualizer/runtime (applySnapshot / applyDiff)
-  → @dataflow-visualizer/renderer-svg (renderToSvg)
+  → @dataflow-visualizer/runtime (GraphRuntimeStore snapshot/diff reconciliation)
+  → buildVisibleGraph(...)
+  → @dataflow-visualizer/layout (GridLayoutProvider today; ELK planned through LayoutProvider)
+  → @dataflow-visualizer/renderer-svg (buildRenderFrame → SvgRendererBackend.renderFrame)
   → DOM / SVG
 ```
