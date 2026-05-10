@@ -5,7 +5,7 @@
     <RootNamespace>Diagram.Protocol</RootNamespace>
     <Description>Shared graph contracts and protocol types for the dataflow visualizer.</Description>
     <IsPackable>true</IsPackable>
-    <PackageId>Diagram.Protocol</PackageId>
+    <PackageId>BlazorFlowGraph.Protocol</PackageId>
   </PropertyGroup>
 
 </Project>

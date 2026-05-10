@@ -6,7 +6,7 @@
     <Description>Razor components for the dataflow visualizer.</Description>
     <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
     <IsPackable>true</IsPackable>
-    <PackageId>Diagram.Blazor</PackageId>
+    <PackageId>BlazorFlowGraph.Blazor</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

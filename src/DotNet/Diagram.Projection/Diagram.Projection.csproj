@@ -5,7 +5,7 @@
     <RootNamespace>Diagram.Projection</RootNamespace>
     <Description>Semantic-to-visual projection for the dataflow visualizer.</Description>
     <IsPackable>true</IsPackable>
-    <PackageId>Diagram.Projection</PackageId>
+    <PackageId>BlazorFlowGraph.Projection</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
