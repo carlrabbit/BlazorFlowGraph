@@ -18,7 +18,7 @@
     <RepositoryType>git</RepositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageLicenseExpression>Unlicense</PackageLicenseExpression>
-    <PackageReadmeFile>NugetReadme.md</PackageReadmeFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>blazor;dataflow;graph;visualization</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
