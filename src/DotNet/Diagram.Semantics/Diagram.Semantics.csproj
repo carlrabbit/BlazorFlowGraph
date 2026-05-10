@@ -5,7 +5,7 @@
     <RootNamespace>Diagram.Semantics</RootNamespace>
     <Description>Domain annotations and semantic extraction for the dataflow visualizer.</Description>
     <IsPackable>true</IsPackable>
-    <PackageId>Diagram.Semantics</PackageId>
+    <PackageId>BlazorFlowGraph.Semantics</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

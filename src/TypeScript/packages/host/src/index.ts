@@ -7,8 +7,14 @@ import { computeLayout } from "@dataflow-visualizer/layout";
 import { renderInnerSvg } from "@dataflow-visualizer/renderer-svg";
 import type { GraphSnapshot } from "@dataflow-visualizer/protocol";
 
+declare const __BLAZORFLOWGRAPH_VERSION__: string;
+
 export type { GraphSnapshot };
 export { bridge };
+export const version =
+  typeof __BLAZORFLOWGRAPH_VERSION__ === "undefined"
+    ? "0.0.0-dev"
+    : __BLAZORFLOWGRAPH_VERSION__;
 
 export interface HostOptions {
   /** CSS selector or element id (with #) for the container element. */
@@ -205,6 +211,7 @@ export function registerGlobals(): void {
   >();
 
   w["DataflowVisualizer"] = {
+    version,
     receiveSnapshot: (snapshot: GraphSnapshot) =>
       bridge.receiveSnapshot(snapshot),
     receiveDiff: bridge.receiveDiff.bind(bridge),

@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*.*.*.*"
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Release version in vX.X.X.X format"
+        required: true
+        type: string
 
 jobs:
   publish-nuget:
@@ -13,14 +19,31 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Validate tag format
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Tag '$TAG' is invalid. Expected format: vX.X.X.X"
-            exit 1
-          fi
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Prepare release
+        id: release
+        env:
+          INPUT_RELEASE_VERSION: ${{ inputs.release_version }}
+        run: node tooling/release/prepare-release.mjs
+
+      - name: Install TypeScript dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build TypeScript packages
+        run: pnpm build
+
+      - name: Refresh packaged browser bundle
+        run: cp src/TypeScript/packages/host/dist/browser.iife.js src/DotNet/Diagram.Blazor/wwwroot/js/dataflow-visualizer.js
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -31,9 +54,21 @@ jobs:
         run: dotnet restore BlazorFlowGraph.slnx
 
       - name: Build
-        run: dotnet build BlazorFlowGraph.slnx --no-restore --configuration Release
+        env:
+          RELEASE_VERSION: ${{ steps.release.outputs.release_version }}
+          RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
+        run: |
+          dotnet build BlazorFlowGraph.slnx --no-restore --configuration Release \
+            /p:Version="$RELEASE_VERSION" \
+            /p:PackageVersion="$RELEASE_VERSION" \
+            /p:AssemblyVersion="$RELEASE_VERSION" \
+            /p:FileVersion="$RELEASE_VERSION" \
+            /p:InformationalVersion="$RELEASE_TAG"
 
       - name: Pack NuGet packages
+        env:
+          RELEASE_VERSION: ${{ steps.release.outputs.release_version }}
+          RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
         run: |
           while IFS= read -r project; do
             is_packable="$(dotnet msbuild "$project" -nologo -getProperty:IsPackable)"
@@ -43,7 +78,12 @@ jobs:
             fi
 
             echo "Packing project: $project"
-            if ! dotnet pack "$project" --no-build --configuration Release --output artifacts/nuget; then
+            if ! dotnet pack "$project" --no-build --configuration Release --output artifacts/nuget \
+              /p:Version="$RELEASE_VERSION" \
+              /p:PackageVersion="$RELEASE_VERSION" \
+              /p:AssemblyVersion="$RELEASE_VERSION" \
+              /p:FileVersion="$RELEASE_VERSION" \
+              /p:InformationalVersion="$RELEASE_TAG"; then
               echo "Failed to pack project: $project"
               exit 1
             fi
@@ -76,7 +116,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: nuget-packages-${{ github.ref_name }}
+          name: nuget-packages-${{ steps.release.outputs.release_tag }}
           path: |
             artifacts/nuget/*.nupkg
             artifacts/nuget/*.snupkg

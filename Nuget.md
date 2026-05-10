@@ -2,11 +2,11 @@
 
 This repository publishes the reusable .NET libraries as NuGet packages:
 
-- `Diagram.Protocol`
-- `Diagram.Semantics`
-- `Diagram.Projection`
-- `Diagram.Diffing`
-- `Diagram.Blazor`
+- `BlazorFlowGraph.Protocol`
+- `BlazorFlowGraph.Semantics`
+- `BlazorFlowGraph.Projection`
+- `BlazorFlowGraph.Diffing`
+- `BlazorFlowGraph.Blazor`
 
 `Diagram.Blazor.Server` is intentionally not packaged because it is a `Microsoft.NET.Sdk.Web` host-oriented project.
 
@@ -19,7 +19,8 @@ This repository publishes the reusable .NET libraries as NuGet packages:
 3. **Ship symbols**  
    `.snupkg` symbol packages are enabled for debugging and source navigation.
 4. **Publish only from release tags**  
-   The publish workflow only runs for tags matching `vX.X.X.X`.
+   The publish workflow only runs for tags matching `vX.X.X.X` that point at `main`, or by manual dispatch with a required `vX.X.X.X` input.
+   The resolved release version is applied to the packed .NET assemblies/packages and to the generated TypeScript browser bundle before packing.
    NuGet pack/publish validation is release-triggered and is no longer part of the default `CI` workflow.
    Use the local packing commands below before tagging to validate package output early.
 5. **Include package readme**  
@@ -45,6 +46,7 @@ git push origin v1.0.0.0
 ```
 
 The `NuGet Publish` workflow handles pack + push using `NUGET_API_KEY`.
+You can also trigger it manually from GitHub Actions by supplying a `release_version` value like `v1.0.0.0`.
 
 ## Manual Setup Required (cannot be fully automated in this PR)
 
