@@ -250,10 +250,7 @@ Render a graph:
 Bootstrap the browser host:
 
 ```html
-<script type="module">
-  import { registerGlobals } from '/js/dataflow-visualizer-host.js';
-  registerGlobals();
-</script>
+<script src="_content/Diagram.Blazor/js/dataflow-visualizer.js"></script>
 ```
 
 See [`docs/integration/guide.md`](docs/integration/guide.md) for more detail.

@@ -1,12 +1,25 @@
 # Layout Architecture
 
-The layout package integrates with ELK (Eclipse Layout Kernel) to provide automatic graph layout.
+The layout package provides the pluggable layout boundary for the browser runtime.
 
 ## Current Implementation
 
-A simple grid layout is provided as a placeholder. Replace with ELK for production use.
+- `LayoutGraph` is the layout-specific input model built from `GraphSnapshot`
+- `LayoutProvider` is the async interface implemented by layout engines
+- `GridLayoutProvider` is the current default/reference implementation
+- `computeLayout(...)` remains the simple built-in grid helper used by the reference provider
 
-## ELK Integration (Planned)
+```typescript
+const graph = buildLayoutGraph(snapshot);
+const provider = new GridLayoutProvider();
+const layout = await provider.computeLayout(graph);
+```
+
+## Planned Direction
+
+ELK remains the planned production layout engine, but it should plug into the existing `LayoutProvider` interface rather than changing the rendering pipeline or runtime ownership boundaries.
+
+## ELK Integration Sketch
 
 ```typescript
 import ELK from 'elkjs/lib/elk.bundled.js';
