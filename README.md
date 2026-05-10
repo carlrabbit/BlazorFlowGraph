@@ -297,6 +297,10 @@ dotnet run --no-build --project tests/DotNet/Diagram.Projection.Tests --configur
 dotnet run --no-build --project tests/DotNet/Diagram.Semantics.Tests --configuration Release
 ```
 
+### NuGet Packaging
+
+NuGet packaging and publishing guidance is documented in [`Nuget.md`](Nuget.md).
+
 ## Vision
 
 BlazorFlowGraph aims to provide a robust semantic visualization platform for modern .NET applications where graph structures evolve dynamically and must remain comprehensible at scale.
