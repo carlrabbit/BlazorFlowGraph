@@ -257,6 +257,41 @@ export function computeLayout(
 // ---------------------------------------------------------------------------
 
 /**
+ * Minimal interface for an elkjs ELK instance, capturing only the `layout` method
+ * used by `ElkLayoutProvider`. This avoids importing the full elkjs type definitions
+ * into the compiled output while preserving type-safe call sites.
+ */
+interface ElkInstance {
+  layout(graph: unknown): Promise<ElkLayoutResult>;
+}
+
+/** Minimal subset of the ELK layout result used by ElkLayoutProvider. */
+interface ElkLayoutResult {
+  children?: Array<{
+    id: string;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+  }>;
+  edges?: Array<{
+    id: string;
+    sections?: Array<{
+      startPoint: { x: number; y: number };
+      endPoint: { x: number; y: number };
+    }>;
+  }>;
+}
+
+/** Lazily constructs an ELK instance from the elkjs dynamic import. */
+async function createElkInstance(): Promise<ElkInstance> {
+  const mod = await import("elkjs/lib/elk.bundled.js");
+  // elkjs exports its constructor as the default export.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call
+  return new (mod.default as new () => ElkInstance)();
+}
+
+/**
  * ElkLayoutProvider implements LayoutProvider using the Eclipse Layout Kernel (ELK).
  *
  * ELK provides production-quality hierarchical layout algorithms (layered, force,
@@ -274,22 +309,18 @@ export function computeLayout(
  */
 export class ElkLayoutProvider implements LayoutProvider {
   private readonly defaultAlgorithm: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private elkInstance: any | null = null;
+  private elkInstance: ElkInstance | null = null;
 
   constructor(options?: { algorithm?: string }) {
     this.defaultAlgorithm = options?.algorithm ?? "layered";
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async getElk(): Promise<any> {
+  private async getElk(): Promise<ElkInstance> {
     if (this.elkInstance == null) {
       // Dynamic import keeps elkjs out of the module graph unless this
       // provider is actually instantiated, supporting tree-shaking for
       // consumers that only use GridLayoutProvider.
-      const mod = await import("elkjs/lib/elk.bundled.js");
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-      this.elkInstance = new (mod.default as new () => unknown)();
+      this.elkInstance = await createElkInstance();
     }
     return this.elkInstance;
   }
@@ -320,14 +351,9 @@ export class ElkLayoutProvider implements LayoutProvider {
       })),
     };
 
-    let laid: {
-      children?: Array<{ id: string; x?: number; y?: number; width?: number; height?: number }>;
-      edges?: Array<{ id: string; sections?: Array<{ startPoint: { x: number; y: number }; endPoint: { x: number; y: number } }> }>;
-    };
+    let laid: ElkLayoutResult;
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const elk = await this.getElk();
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       laid = await elk.layout(elkGraph);
     } catch {
       // Fall back to grid layout if ELK fails (e.g. in test environments without WASM)

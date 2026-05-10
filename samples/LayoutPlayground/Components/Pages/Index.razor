@@ -39,7 +39,8 @@
     {
         var count = Math.Clamp(_nodeCount, 1, 50);
 
-        // Node kinds demonstrated in the playground
+        // Node kinds correspond to entries in the TypeScript defaultStyleTokens registry.
+        // Each kind maps to a distinct visual style (fill, stroke, corner radius).
         string[] kinds = ["default", "service", "datastore", "gateway", "queue"];
 
         var nodes = Enumerable.Range(1, count)

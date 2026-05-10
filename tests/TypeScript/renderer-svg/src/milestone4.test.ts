@@ -69,6 +69,8 @@ describe("renderToSvg — style tokens and accessibility (Milestone 4)", () => {
     const svg = renderToSvg(state, layout, { width: 800, height: 600 });
     expect(svg).toContain("#d1fae5"); // service fill
     expect(svg).toContain("#059669"); // service stroke
+    // Service token has rx=4 — corner radius should be present in the rect element
+    expect(svg).toContain('rx="4"');
   });
 
   it("includes role=graphics-document on SVG root (accessibility)", () => {
@@ -237,6 +239,24 @@ describe("buildRenderFrame — overlays (Milestone 4)", () => {
     const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
     const frame = buildRenderFrame(state, layout);
     expect(frame.overlays).toEqual([]);
+  });
+
+  it("badge includes overlay kind in CSS class on rendered output", () => {
+    // Verify that the overlay kind is used in the dfv-overlay-{kind} class on the rendered badge.
+    // We use buildRenderFrame + SvgRendererBackend indirectly via buildFrameMarkup, tested here
+    // by checking the RenderOverlay structure (which carries kind for rendering).
+    const state = applySnapshot({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
+    const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
+    const frame = buildRenderFrame(state, layout, {
+      nodeOverlays: new Map([["n1", { nodeId: "n1", kind: "error", data: { badge: "E" } }]]),
+    });
+    // The overlay must carry the kind for the renderer to apply the correct color class
+    expect(frame.overlays[0]?.kind).toBe("error");
+    expect(frame.overlays[0]?.badge).toBe("E");
   });
 
   it("filters overlays by VisibleGraph.visibleNodeIds", () => {

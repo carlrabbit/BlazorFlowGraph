@@ -205,12 +205,19 @@ export function buildRenderFrame(
     if (visible != null && !visible.visibleNodeIds.has(node.id)) continue;
     const pos = layout.nodes.get(node.id);
     if (pos == null) continue;
-    const x = Math.floor(pos.x);
-    const y = Math.floor(pos.y);
-    const w = Math.floor(pos.width ?? nodeWidth);
-    const h = Math.floor(pos.height ?? nodeHeight);
-    if (cullBounds != null && !boundsIntersect(x, y, w, h, cullBounds)) continue;
-    nodes.push({ id: node.id, label: node.label, kind: node.kind, x, y, width: w, height: h });
+    // Cull against raw (unrounded) positions first to avoid unnecessary Math.floor work
+    const w = pos.width ?? nodeWidth;
+    const h = pos.height ?? nodeHeight;
+    if (cullBounds != null && !boundsIntersect(pos.x, pos.y, w, h, cullBounds)) continue;
+    nodes.push({
+      id: node.id,
+      label: node.label,
+      kind: node.kind,
+      x: Math.floor(pos.x),
+      y: Math.floor(pos.y),
+      width: Math.floor(w),
+      height: Math.floor(h),
+    });
   }
 
   const edges: RenderEdge[] = [];
@@ -240,7 +247,10 @@ export function buildRenderFrame(
     });
   }
 
-  // Build overlay badges from provided nodeOverlays (Milestone 4)
+  // Build overlay badges from provided nodeOverlays (Milestone 4).
+  // The overlay.data map may carry an optional "badge" string key used as the
+  // badge indicator text (e.g. "!" for warnings, "E" for errors). No other
+  // data keys are consumed by the renderer.
   const overlays: RenderOverlay[] = [];
   if (options?.nodeOverlays != null) {
     for (const [nodeId, overlay] of options.nodeOverlays) {
@@ -511,6 +521,7 @@ function buildOverlayBadge(overlay: RenderOverlay, nodeWidth: number): string {
     success: "#10b981",
   };
   const color = badgeColors[overlay.kind] ?? "#6b7280";
+  // Badge text is capped at 2 characters to fit inside the 8px-radius circle badge.
   const text = overlay.badge != null ? escapeXml(overlay.badge.slice(0, 2)) : "●";
   const bx = nodeWidth - 10;
   return [
