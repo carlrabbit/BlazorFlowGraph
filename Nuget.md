@@ -20,6 +20,8 @@ This repository publishes the reusable .NET libraries as NuGet packages:
    `.snupkg` symbol packages are enabled for debugging and source navigation.
 4. **Publish only from release tags**  
    The publish workflow only runs for tags matching `vX.X.X.X`.
+   NuGet pack/publish validation is release-triggered and is no longer part of the default `CI` workflow.
+   Use the local packing commands below before tagging to validate package output early.
 5. **Include package readme**  
    This file is embedded into packages as `PackageReadmeFile`.
 

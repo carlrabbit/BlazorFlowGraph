@@ -35,11 +35,19 @@ jobs:
 
       - name: Pack NuGet packages
         run: |
-          dotnet pack src/DotNet/Diagram.Protocol/Diagram.Protocol.csproj --no-build --configuration Release --output artifacts/nuget
-          dotnet pack src/DotNet/Diagram.Semantics/Diagram.Semantics.csproj --no-build --configuration Release --output artifacts/nuget
-          dotnet pack src/DotNet/Diagram.Projection/Diagram.Projection.csproj --no-build --configuration Release --output artifacts/nuget
-          dotnet pack src/DotNet/Diagram.Diffing/Diagram.Diffing.csproj --no-build --configuration Release --output artifacts/nuget
-          dotnet pack src/DotNet/Diagram.Blazor/Diagram.Blazor.csproj --no-build --configuration Release --output artifacts/nuget
+          while IFS= read -r project; do
+            is_packable="$(dotnet msbuild "$project" -nologo -getProperty:IsPackable)"
+            if [ "$is_packable" != "true" ]; then
+              echo "Skipping non-packable project: $project"
+              continue
+            fi
+
+            echo "Packing project: $project"
+            if ! dotnet pack "$project" --no-build --configuration Release --output artifacts/nuget; then
+              echo "Failed to pack project: $project"
+              exit 1
+            fi
+          done < <(find src/DotNet -name "*.csproj" -type f | sort)
 
       - name: Publish NuGet packages
         env:
@@ -50,18 +58,22 @@ jobs:
             exit 1
           fi
 
-          dotnet nuget push "artifacts/nuget/*.nupkg" \
-            --source https://api.nuget.org/v3/index.json \
-            --api-key "$NUGET_API_KEY" \
-            --skip-duplicate
+          shopt -s nullglob
+          packages=(artifacts/nuget/*.nupkg)
+          if [ ${#packages[@]} -eq 0 ]; then
+            echo "No .nupkg files found in artifacts/nuget."
+            exit 1
+          fi
 
-          dotnet nuget push "artifacts/nuget/*.snupkg" \
-            --source https://api.nuget.org/v3/index.json \
-            --api-key "$NUGET_API_KEY" \
-            --skip-duplicate
+          for package in "${packages[@]}"; do
+            dotnet nuget push "$package" \
+              --source https://api.nuget.org/v3/index.json \
+              --api-key "$NUGET_API_KEY" \
+              --skip-duplicate
+          done
 
       - name: Upload NuGet artifacts
-        if: always()
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: nuget-packages-${{ github.ref_name }}
