@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>BlazorFlowGraph.Protocol</AssemblyName>
+    <RootNamespace>BlazorFlowGraph.Protocol</RootNamespace>
+    <Description>Shared graph contracts and protocol types for the dataflow visualizer.</Description>
+    <IsPackable>true</IsPackable>
+    <PackageId>BlazorFlowGraph.Protocol</PackageId>
+  </PropertyGroup>
+
+</Project>

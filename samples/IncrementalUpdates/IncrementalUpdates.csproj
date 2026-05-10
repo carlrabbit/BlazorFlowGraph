@@ -7,10 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/DotNet/Diagram.Blazor/Diagram.Blazor.csproj" />
-    <ProjectReference Include="../../src/DotNet/Diagram.Diffing/Diagram.Diffing.csproj" />
-    <ProjectReference Include="../../src/DotNet/Diagram.Projection/Diagram.Projection.csproj" />
-    <ProjectReference Include="../../src/DotNet/Diagram.Semantics/Diagram.Semantics.csproj" />
+    <ProjectReference Include="../../src/DotNet/BlazorFlowGraph.Blazor/BlazorFlowGraph.Blazor.csproj" />
+    <ProjectReference Include="../../src/DotNet/BlazorFlowGraph.Diffing/BlazorFlowGraph.Diffing.csproj" />
+    <ProjectReference Include="../../src/DotNet/BlazorFlowGraph.Projection/BlazorFlowGraph.Projection.csproj" />
+    <ProjectReference Include="../../src/DotNet/BlazorFlowGraph.Semantics/BlazorFlowGraph.Semantics.csproj" />
   </ItemGroup>
 
 </Project>

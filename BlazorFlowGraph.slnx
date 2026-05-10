@@ -1,18 +1,18 @@
 <Solution>
   <Folder Name="/src/" />
   <Folder Name="/src/DotNet/">
-    <Project Path="src/DotNet/Diagram.Blazor.Server/Diagram.Blazor.Server.csproj" />
-    <Project Path="src/DotNet/Diagram.Blazor/Diagram.Blazor.csproj" />
-    <Project Path="src/DotNet/Diagram.Diffing/Diagram.Diffing.csproj" />
-    <Project Path="src/DotNet/Diagram.Projection/Diagram.Projection.csproj" />
-    <Project Path="src/DotNet/Diagram.Protocol/Diagram.Protocol.csproj" />
-    <Project Path="src/DotNet/Diagram.Semantics/Diagram.Semantics.csproj" />
+    <Project Path="src/DotNet/BlazorFlowGraph.Blazor.Server/BlazorFlowGraph.Blazor.Server.csproj" />
+    <Project Path="src/DotNet/BlazorFlowGraph.Blazor/BlazorFlowGraph.Blazor.csproj" />
+    <Project Path="src/DotNet/BlazorFlowGraph.Diffing/BlazorFlowGraph.Diffing.csproj" />
+    <Project Path="src/DotNet/BlazorFlowGraph.Projection/BlazorFlowGraph.Projection.csproj" />
+    <Project Path="src/DotNet/BlazorFlowGraph.Protocol/BlazorFlowGraph.Protocol.csproj" />
+    <Project Path="src/DotNet/BlazorFlowGraph.Semantics/BlazorFlowGraph.Semantics.csproj" />
   </Folder>
   <Folder Name="/tests/" />
   <Folder Name="/tests/DotNet/">
-    <Project Path="tests/DotNet/Diagram.Diffing.Tests/Diagram.Diffing.Tests.csproj" />
-    <Project Path="tests/DotNet/Diagram.Projection.Tests/Diagram.Projection.Tests.csproj" />
-    <Project Path="tests/DotNet/Diagram.Protocol.Tests/Diagram.Protocol.Tests.csproj" />
-    <Project Path="tests/DotNet/Diagram.Semantics.Tests/Diagram.Semantics.Tests.csproj" />
+    <Project Path="tests/DotNet/BlazorFlowGraph.Diffing.Tests/BlazorFlowGraph.Diffing.Tests.csproj" />
+    <Project Path="tests/DotNet/BlazorFlowGraph.Projection.Tests/BlazorFlowGraph.Projection.Tests.csproj" />
+    <Project Path="tests/DotNet/BlazorFlowGraph.Protocol.Tests/BlazorFlowGraph.Protocol.Tests.csproj" />
+    <Project Path="tests/DotNet/BlazorFlowGraph.Semantics.Tests/BlazorFlowGraph.Semantics.Tests.csproj" />
   </Folder>
 </Solution>

@@ -1,4 +1,4 @@
-using Diagram.Protocol;
+using BlazorFlowGraph.Protocol;
 
 namespace LargeGraphStress;
 

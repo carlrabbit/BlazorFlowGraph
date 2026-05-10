@@ -26,17 +26,17 @@ jobs:
       - name: Build
         run: dotnet build BlazorFlowGraph.slnx --no-restore --configuration Release
 
-      - name: Test — Diagram.Protocol
-        run: dotnet run --no-build --project tests/DotNet/Diagram.Protocol.Tests --configuration Release -- --report-trx --results-directory TestResults
+      - name: Test — BlazorFlowGraph.Protocol
+        run: dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Protocol.Tests --configuration Release -- --report-trx --results-directory TestResults
 
-      - name: Test — Diagram.Diffing
-        run: dotnet run --no-build --project tests/DotNet/Diagram.Diffing.Tests --configuration Release -- --report-trx --results-directory TestResults
+      - name: Test — BlazorFlowGraph.Diffing
+        run: dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Diffing.Tests --configuration Release -- --report-trx --results-directory TestResults
 
-      - name: Test — Diagram.Projection
-        run: dotnet run --no-build --project tests/DotNet/Diagram.Projection.Tests --configuration Release -- --report-trx --results-directory TestResults
+      - name: Test — BlazorFlowGraph.Projection
+        run: dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Projection.Tests --configuration Release -- --report-trx --results-directory TestResults
 
-      - name: Test — Diagram.Semantics
-        run: dotnet run --no-build --project tests/DotNet/Diagram.Semantics.Tests --configuration Release -- --report-trx --results-directory TestResults
+      - name: Test — BlazorFlowGraph.Semantics
+        run: dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Semantics.Tests --configuration Release -- --report-trx --results-directory TestResults
 
       - name: Upload test results
         if: always()

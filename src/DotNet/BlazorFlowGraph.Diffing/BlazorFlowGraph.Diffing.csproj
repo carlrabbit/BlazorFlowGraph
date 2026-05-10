@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>BlazorFlowGraph.Diffing</AssemblyName>
+    <RootNamespace>BlazorFlowGraph.Diffing</RootNamespace>
+    <Description>Incremental update (diff) generation for the dataflow visualizer.</Description>
+    <IsPackable>true</IsPackable>
+    <PackageId>BlazorFlowGraph.Diffing</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../BlazorFlowGraph.Protocol/BlazorFlowGraph.Protocol.csproj" />
+  </ItemGroup>
+
+</Project>

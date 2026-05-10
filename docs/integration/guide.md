@@ -2,19 +2,19 @@
 
 ## Registering Services
 
-Repository samples reference `Diagram.Blazor` directly and register the projector/differ services explicitly:
+Repository samples reference `BlazorFlowGraph.Blazor` directly and register the projector/differ services explicitly:
 
 ```csharp
 builder.Services.AddSingleton<IGraphProjector, ReflectionGraphProjector>();
 builder.Services.AddSingleton<IGraphDiffer, GraphDiffer>();
 ```
 
-If your host references `Diagram.Blazor.Server`, `AddDataflowVisualizer()` wraps those registrations for you.
+If your host references `BlazorFlowGraph.Blazor.Server`, `AddDataflowVisualizer()` wraps those registrations for you.
 
 ## Using the Blazor Component
 
 ```razor
-@using Diagram.Blazor
+@using BlazorFlowGraph.Blazor
 
 <DataflowGraph Snapshot="@snapshot" Width="1200" Height="800" />
 ```
@@ -24,7 +24,7 @@ If your host references `Diagram.Blazor.Server`, `AddDataflowVisualizer()` wraps
 Load the committed browser bundle before the component renders. The bundle auto-registers `window.DataflowVisualizer`:
 
 ```html
-<script src="_content/Diagram.Blazor/js/dataflow-visualizer.js"></script>
+<script src="_content/BlazorFlowGraph.Blazor/js/dataflow-visualizer.js"></script>
 ```
 
 ## Sending Graph Data

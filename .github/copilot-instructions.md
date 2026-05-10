@@ -250,12 +250,12 @@ src/TypeScript/packages/
 
 ```text
 src/DotNet/
-  Diagram.Semantics/
-  Diagram.Projection/
-  Diagram.Protocol/
-  Diagram.Diffing/
-  Diagram.Blazor/
-  Diagram.Blazor.Server/
+  BlazorFlowGraph.Semantics/
+  BlazorFlowGraph.Projection/
+  BlazorFlowGraph.Protocol/
+  BlazorFlowGraph.Diffing/
+  BlazorFlowGraph.Blazor/
+  BlazorFlowGraph.Blazor.Server/
 ```
 
 ---
