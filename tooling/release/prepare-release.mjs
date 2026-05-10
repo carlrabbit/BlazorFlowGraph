@@ -30,7 +30,9 @@ function resolveReleaseTag() {
 function ensureCommitIsOnMain() {
   const gitSha = process.env.GITHUB_SHA;
   if (!gitSha) {
-    throw new Error("GITHUB_SHA is required to validate the release source commit.");
+    throw new Error(
+      "GITHUB_SHA is required in GitHub Actions so the release workflow can verify that the selected commit is reachable from origin/main."
+    );
   }
 
   execFileSync("git", ["fetch", "--no-tags", "origin", "main:refs/remotes/origin/main"], {

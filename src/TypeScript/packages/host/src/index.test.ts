@@ -4,16 +4,25 @@ import { registerGlobals, version } from "./index";
 
 describe("registerGlobals", () => {
   it("exposes the bundled host version on the global API", () => {
+    const originalWindowDescriptor = Object.getOwnPropertyDescriptor(globalThis, "window");
     const windowObject = {} as typeof window;
     Object.defineProperty(globalThis, "window", {
       configurable: true,
       value: windowObject,
     });
 
-    registerGlobals();
+    try {
+      registerGlobals();
 
-    expect((windowObject as unknown as Record<string, unknown>).DataflowVisualizer).toMatchObject({
-      version,
-    });
+      expect((windowObject as unknown as Record<string, unknown>).DataflowVisualizer).toMatchObject({
+        version,
+      });
+    } finally {
+      if (originalWindowDescriptor == null) {
+        delete (globalThis as { window?: typeof window }).window;
+      } else {
+        Object.defineProperty(globalThis, "window", originalWindowDescriptor);
+      }
+    }
   });
 });
