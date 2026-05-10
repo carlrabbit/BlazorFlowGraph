@@ -1,6 +1,6 @@
 {
   "name": "@dataflow-visualizer/query",
-  "version": "0.1.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Topology query engine for the dataflow visualizer",
   "type": "module",

@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, writeFileSync, appendFileSync } from "node:fs";
+import { appendFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -58,36 +58,6 @@ function ensureCommitIsOnMain() {
   }
 }
 
-function updatePackageJsonVersions(relativeDirectory, version) {
-  const directory = join(repositoryRoot, relativeDirectory);
-  if (!existsSync(directory)) {
-    return;
-  }
-
-  for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    if (!entry.isDirectory()) {
-      continue;
-    }
-
-    const packageJsonPath = join(directory, entry.name, "package.json");
-    if (!existsSync(packageJsonPath)) {
-      continue;
-    }
-
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
-    if (typeof packageJson.version !== "string" || packageJson.version.length === 0) {
-      throw new Error(`Package version is missing or invalid in ${relativeDirectory}/${entry.name}/package.json.`);
-    }
-
-    const previousVersion = packageJson.version;
-    packageJson.version = version;
-    writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
-    console.log(
-      `Updated ${relativeDirectory}/${entry.name}/package.json ${previousVersion} -> ${version}`
-    );
-  }
-}
-
 function writeOutputs(outputs) {
   const outputPath = process.env.GITHUB_OUTPUT;
   if (!outputPath) {
@@ -103,8 +73,6 @@ const releaseTag = resolveReleaseTag();
 const releaseVersion = normalizeReleaseVersion(releaseTag);
 
 ensureCommitIsOnMain();
-updatePackageJsonVersions("src/TypeScript/packages", releaseVersion);
-updatePackageJsonVersions("tests/TypeScript", releaseVersion);
 
 writeOutputs({
   release_tag: releaseTag,
