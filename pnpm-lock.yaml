@@ -137,6 +137,22 @@ importers:
         specifier: ^3.1.3
         version: 3.2.4
 
+  tests/TypeScript/layout:
+    dependencies:
+      '@dataflow-visualizer/layout':
+        specifier: workspace:*
+        version: link:../../../src/TypeScript/packages/layout
+      '@dataflow-visualizer/protocol':
+        specifier: workspace:*
+        version: link:../../../src/TypeScript/packages/protocol
+    devDependencies:
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.1.3
+        version: 3.2.4
+
   tests/TypeScript/protocol:
     dependencies:
       '@dataflow-visualizer/protocol':
