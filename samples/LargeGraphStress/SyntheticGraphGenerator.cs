@@ -23,13 +23,20 @@ public static class SyntheticGraphGenerator
         int version = 0,
         int? seed = null)
     {
+        nodes = Math.Max(nodes, 0);
+        edgeDensity = Math.Clamp(edgeDensity, 0d, 1d);
+
+        if (nodes == 0)
+            return new GraphSnapshot(version, [], []);
+
         var random = seed.HasValue ? new Random(seed.Value) : new Random();
+        string[] kinds = ["default", "service", "datastore", "gateway", "queue"];
 
         var nodeList = Enumerable.Range(0, nodes)
             .Select(i => new GraphNode(
                 new NodeId($"node-{i}"),
                 $"Node {i}",
-                "generated"))
+                kinds[i % kinds.Length]))
             .ToList();
 
         var edgeList = new List<GraphEdge>();
