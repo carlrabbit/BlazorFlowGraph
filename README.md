@@ -254,6 +254,7 @@ Bootstrap the browser host:
 ```
 
 See [`docs/integration/guide.md`](docs/integration/guide.md) for more detail.
+For a catalog of the repository samples, see [`samples.md`](samples.md).
 
 ## Development
 

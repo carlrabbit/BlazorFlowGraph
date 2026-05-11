@@ -8,7 +8,6 @@ builder.WebHost.UseStaticWebAssets();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Register dataflow visualizer services
 builder.Services.AddSingleton<IGraphProjector, ReflectionGraphProjector>();
 builder.Services.AddSingleton<IGraphDiffer, GraphDiffer>();
 
@@ -24,7 +23,7 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
-app.MapRazorComponents<MinimalViewer.Components.App>()
+app.MapRazorComponents<LargeGraphStress.Components.App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();

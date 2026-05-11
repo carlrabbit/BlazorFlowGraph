@@ -1,0 +1,58 @@
+@page "/"
+@rendermode Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveServer
+@using System.Diagnostics
+@using BlazorFlowGraph.Blazor
+@using BlazorFlowGraph.Protocol
+
+<h1>Large Graph Stress</h1>
+
+<div class="controls">
+    <label>
+        Nodes:&nbsp;
+        <input type="number" min="25" max="400" @bind="_nodeCount" />
+    </label>
+    <label>
+        Density:&nbsp;
+        <input type="number" min="0.001" max="0.050" step="0.001" @bind="_edgeDensity" />
+    </label>
+    <label>
+        Seed:&nbsp;
+        <input type="number" min="1" @bind="_seed" />
+    </label>
+    <button @onclick="Generate">Generate</button>
+    <button @onclick="ShuffleSeed">Shuffle seed</button>
+    <span class="hint">
+        Version @_snapshot?.Version &bull; @(_snapshot?.Nodes.Count ?? 0) nodes &bull; @(_snapshot?.Edges.Count ?? 0) edges &bull; Generated in @_lastGenerationMs ms
+    </span>
+</div>
+
+<DataflowGraph Snapshot="@_snapshot" Width="1100" Height="620" />
+
+@code {
+    private int _nodeCount = 180;
+    private double _edgeDensity = 0.020;
+    private int _seed = 42;
+    private int _version;
+    private long _lastGenerationMs;
+    private GraphSnapshot? _snapshot;
+
+    protected override void OnInitialized() => Generate();
+
+    private void Generate()
+    {
+        var stopwatch = Stopwatch.StartNew();
+        _snapshot = SyntheticGraphGenerator.GenerateGraph(
+            nodes: Math.Clamp(_nodeCount, 25, 400),
+            edgeDensity: Math.Clamp(_edgeDensity, 0.001, 0.050),
+            version: ++_version,
+            seed: _seed);
+        stopwatch.Stop();
+        _lastGenerationMs = stopwatch.ElapsedMilliseconds;
+    }
+
+    private void ShuffleSeed()
+    {
+        _seed = Random.Shared.Next(1, 10_000);
+        Generate();
+    }
+}

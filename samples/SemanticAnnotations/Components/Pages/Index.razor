@@ -1,0 +1,203 @@
+@page "/"
+@rendermode Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveServer
+@using BlazorFlowGraph.Blazor
+@using BlazorFlowGraph.Projection
+@using BlazorFlowGraph.Protocol
+@using BlazorFlowGraph.Semantics
+@inject IGraphProjector Projector
+
+<h1>Semantic Annotations</h1>
+
+<div class="controls">
+    <button @onclick="ToggleReportingWorker">@(_includeReportingWorker ? "Hide reporting worker" : "Add reporting worker")</button>
+    <button @onclick="ToggleCache">@(_includeCache ? "Remove cache edge" : "Restore cache edge")</button>
+    <button @onclick="ResetModel">Reset model</button>
+    <span class="hint">
+        Projected @_semanticObjects.Count semantic objects into @(_snapshot?.Nodes.Count ?? 0) nodes, @(_snapshot?.Edges.Count ?? 0) edges, and @(_snapshot?.Groups?.Count ?? 0) groups.
+    </span>
+</div>
+
+<div class="semantic-list">
+    <strong>Annotated model objects:</strong>
+    <ul>
+        @foreach (var description in _descriptions)
+        {
+            <li>@description</li>
+        }
+    </ul>
+</div>
+
+<DataflowGraph Snapshot="@_snapshot" Width="980" Height="560" />
+
+@code {
+    private readonly List<string> _descriptions = [];
+
+    private ApiGateway? _gateway;
+    private OrdersService? _orders;
+    private InventoryService? _inventory;
+    private OrdersDatabase? _ordersDatabase;
+    private InventoryDatabase? _inventoryDatabase;
+    private OrdersCache? _ordersCache;
+    private EventBus? _eventBus;
+    private ReportingWorker? _reportingWorker;
+    private ApplicationTier? _applicationTier;
+    private StorageTier? _storageTier;
+    private bool _includeReportingWorker = true;
+    private bool _includeCache = true;
+    private int _version;
+    private List<object> _semanticObjects = [];
+    private GraphSnapshot? _snapshot;
+
+    protected override void OnInitialized() => ResetModel();
+
+    private void ResetModel()
+    {
+        _includeReportingWorker = true;
+        _includeCache = true;
+
+        _ordersDatabase = new OrdersDatabase();
+        _inventoryDatabase = new InventoryDatabase();
+        _ordersCache = new OrdersCache();
+        _eventBus = new EventBus();
+        _orders = new OrdersService { Database = _ordersDatabase, Cache = _ordersCache };
+        _inventory = new InventoryService { Database = _inventoryDatabase, Bus = _eventBus };
+        _gateway = new ApiGateway { Orders = _orders, Inventory = _inventory };
+        _reportingWorker = new ReportingWorker { Bus = _eventBus, Database = _ordersDatabase };
+        _applicationTier = new ApplicationTier
+        {
+            Gateway = _gateway,
+            Orders = _orders,
+            Inventory = _inventory,
+            Reporting = _reportingWorker,
+        };
+        _storageTier = new StorageTier
+        {
+            OrdersDatabase = _ordersDatabase,
+            InventoryDatabase = _inventoryDatabase,
+            Cache = _ordersCache,
+            Bus = _eventBus,
+        };
+
+        Reproject();
+    }
+
+    private void ToggleReportingWorker()
+    {
+        _includeReportingWorker = !_includeReportingWorker;
+        _applicationTier!.Reporting = _includeReportingWorker ? _reportingWorker : null;
+        Reproject();
+    }
+
+    private void ToggleCache()
+    {
+        _includeCache = !_includeCache;
+        _orders!.Cache = _includeCache ? _ordersCache : null;
+        _storageTier!.Cache = _includeCache ? _ordersCache : null;
+        Reproject();
+    }
+
+    private void Reproject()
+    {
+        _semanticObjects =
+        [
+            _gateway!,
+            _orders!,
+            _inventory!,
+            _ordersDatabase!,
+            _inventoryDatabase!,
+            _eventBus!,
+        ];
+
+        if (_includeCache)
+            _semanticObjects.Add(_ordersCache!);
+
+        if (_includeReportingWorker)
+            _semanticObjects.Add(_reportingWorker!);
+
+        _semanticObjects.Add(_applicationTier!);
+        _semanticObjects.Add(_storageTier!);
+
+        _descriptions.Clear();
+        _descriptions.Add("ApiGateway routes to OrdersService and InventoryService via [SemanticEdge].");
+        _descriptions.Add("OrdersService and InventoryService are [SemanticNode] types with annotated dependencies.");
+        _descriptions.Add("ApplicationTier and StorageTier are [SemanticGroup] containers that become graph groups.");
+        _descriptions.Add(_includeReportingWorker
+            ? "ReportingWorker is included to show optional semantic nodes."
+            : "ReportingWorker is hidden to show how re-projecting removes optional nodes.");
+        _descriptions.Add(_includeCache
+            ? "OrdersService currently projects a cache dependency."
+            : "OrdersService currently projects without a cache dependency.");
+
+        _snapshot = Projector.Project(_semanticObjects, ++_version);
+    }
+
+    [SemanticNode(Label = "API Gateway", Kind = "gateway")]
+    private sealed class ApiGateway
+    {
+        [SemanticEdge(Label = "routes")]
+        public OrdersService? Orders { get; set; }
+
+        [SemanticEdge(Label = "routes")]
+        public InventoryService? Inventory { get; set; }
+    }
+
+    [SemanticNode(Label = "Orders Service", Kind = "service")]
+    private sealed class OrdersService
+    {
+        [SemanticEdge(Label = "writes")]
+        public OrdersDatabase? Database { get; set; }
+
+        [SemanticEdge(Label = "caches")]
+        public OrdersCache? Cache { get; set; }
+    }
+
+    [SemanticNode(Label = "Inventory Service", Kind = "service")]
+    private sealed class InventoryService
+    {
+        [SemanticEdge(Label = "writes")]
+        public InventoryDatabase? Database { get; set; }
+
+        [SemanticEdge(Label = "publishes")]
+        public EventBus? Bus { get; set; }
+    }
+
+    [SemanticNode(Label = "Reporting Worker", Kind = "service")]
+    private sealed class ReportingWorker
+    {
+        [SemanticEdge(Label = "subscribes")]
+        public EventBus? Bus { get; set; }
+
+        [SemanticEdge(Label = "reads")]
+        public OrdersDatabase? Database { get; set; }
+    }
+
+    [SemanticNode(Label = "Orders DB", Kind = "datastore")]
+    private sealed class OrdersDatabase;
+
+    [SemanticNode(Label = "Inventory DB", Kind = "datastore")]
+    private sealed class InventoryDatabase;
+
+    [SemanticNode(Label = "Orders Cache", Kind = "datastore")]
+    private sealed class OrdersCache;
+
+    [SemanticNode(Label = "Event Bus", Kind = "queue")]
+    private sealed class EventBus;
+
+    [SemanticGroup(Label = "Application Tier", Kind = "group")]
+    private sealed class ApplicationTier
+    {
+        public ApiGateway? Gateway { get; set; }
+        public OrdersService? Orders { get; set; }
+        public InventoryService? Inventory { get; set; }
+        public ReportingWorker? Reporting { get; set; }
+    }
+
+    [SemanticGroup(Label = "Storage Tier", Kind = "group")]
+    private sealed class StorageTier
+    {
+        public OrdersDatabase? OrdersDatabase { get; set; }
+        public InventoryDatabase? InventoryDatabase { get; set; }
+        public OrdersCache? Cache { get; set; }
+        public EventBus? Bus { get; set; }
+    }
+}

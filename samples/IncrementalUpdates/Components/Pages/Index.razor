@@ -17,24 +17,26 @@
 <DataflowGraph Snapshot="@_snapshot" Width="900" Height="480" />
 
 @code {
-    private int _nextId = 1;
-    private GraphSnapshot _snapshot = new(0, [], []);
+    private static readonly string[] NodeKinds = ["service", "datastore", "queue", "gateway"];
+
+    private int _nextId = 4;
+    private GraphSnapshot _snapshot = CreateInitialSnapshot(0);
 
     private void AddNode()
     {
         var id = new NodeId($"node-{_nextId}");
         var label = $"Node {_nextId}";
+        var kind = NodeKinds[(_nextId - 1) % NodeKinds.Length];
         _nextId++;
 
         var newNodes = _snapshot.Nodes
-            .Append(new GraphNode(id, label, "default"))
+            .Append(new GraphNode(id, label, kind))
             .ToList();
 
-        // Connect to a random existing node if available
         var newEdges = _snapshot.Edges.ToList();
         if (_snapshot.Nodes.Count > 0)
         {
-            var sourceNode = _snapshot.Nodes[Random.Shared.Next(_snapshot.Nodes.Count)];
+            var sourceNode = _snapshot.Nodes[^1];
             newEdges.Add(new GraphEdge(
                 new EdgeId($"e-{sourceNode.Id.Value}-{id.Value}"),
                 sourceNode.Id,
@@ -60,7 +62,22 @@
 
     private void Reset()
     {
-        _nextId = 1;
-        _snapshot = new GraphSnapshot(_snapshot.Version + 1, [], []);
+        _nextId = 4;
+        _snapshot = CreateInitialSnapshot(_snapshot.Version + 1);
+    }
+
+    private static GraphSnapshot CreateInitialSnapshot(int version)
+    {
+        var gateway = new GraphNode(new NodeId("node-1"), "API Gateway", "gateway");
+        var service = new GraphNode(new NodeId("node-2"), "Orders Service", "service");
+        var datastore = new GraphNode(new NodeId("node-3"), "Orders DB", "datastore");
+
+        return new GraphSnapshot(
+            version,
+            [gateway, service, datastore],
+            [
+                new GraphEdge(new EdgeId("e-node-1-node-2"), gateway.Id, service.Id, "routes"),
+                new GraphEdge(new EdgeId("e-node-2-node-3"), service.Id, datastore.Id, "writes"),
+            ]);
     }
 }

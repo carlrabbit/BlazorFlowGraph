@@ -3,6 +3,7 @@ using BlazorFlowGraph.Projection;
 using BlazorFlowGraph.Semantics;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseStaticWebAssets();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
