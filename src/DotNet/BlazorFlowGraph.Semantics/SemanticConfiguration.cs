@@ -29,12 +29,18 @@ public sealed record SemanticEdgeDefinition(
     /// <summary>
     /// Creates an edge definition from a strongly typed member expression.
     /// </summary>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="targetMember"/> does not target a property or field member.
+    /// </exception>
     public static SemanticEdgeDefinition Create<T>(Expression<Func<T, object?>> targetMember)
         => new(MemberNameResolver.GetName(targetMember));
 
     /// <summary>
     /// Creates an edge definition from a strongly typed member expression.
     /// </summary>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="targetMember"/> does not target a property or field member.
+    /// </exception>
     public static SemanticEdgeDefinition Create<T>(Expression<Func<T, object?>> targetMember, string? label)
         => new(MemberNameResolver.GetName(targetMember), label);
 }
@@ -51,6 +57,9 @@ public sealed record SemanticGroupDefinition(
     /// <summary>
     /// Creates a group definition with strongly typed child member expressions.
     /// </summary>
+    /// <exception cref="ArgumentException">
+    /// Thrown when any expression in <paramref name="childMembers"/> does not target a property or field member.
+    /// </exception>
     public static SemanticGroupDefinition Create<T>(
         string? label = null,
         string kind = "default",

@@ -175,16 +175,17 @@ public sealed class ReflectionGraphProjector : IGraphProjector
             var properties = staticType.GetProperties(BindingFlags.Instance | BindingFlags.Public)
                                        .Where(static property => property.CanRead && property.GetIndexParameters().Length == 0)
                                        .ToArray();
+            var fields = staticType.GetFields(BindingFlags.Instance | BindingFlags.Public);
 
-            var memberReaders = new Dictionary<string, Func<object, object?>>(StringComparer.Ordinal);
+            var memberReaders = new Dictionary<string, Func<object, object?>>(properties.Length + fields.Length, StringComparer.Ordinal);
             foreach (var property in properties)
             {
                 memberReaders[property.Name] = property.GetValue;
             }
 
-            foreach (var field in staticType.GetFields(BindingFlags.Instance | BindingFlags.Public))
+            foreach (var field in fields)
             {
-                memberReaders[field.Name] = field.GetValue;
+                memberReaders.TryAdd(field.Name, field.GetValue);
             }
 
             return new ProjectorTypeMetadata(
