@@ -23,7 +23,7 @@ The diagram is a generated projection of semantic state, not the source of truth
 The .NET side owns:
 
 - semantic models
-- semantic annotations
+- semantic annotations and property-based semantic configuration
 - projection generation
 - diff generation
 - validation
@@ -56,6 +56,7 @@ Avoid pushing rendering, reconciliation, or layout algorithms into Razor compone
 ## Architectural Constraints
 
 - Keep semantic models decoupled from visualization DTOs.
+- Prefer property-based semantic configuration records on domain models over hard-wiring visualization annotations directly on types when authoring new .NET integrations.
 - Prefer incremental diffs over full graph replacement.
 - Preserve stable deterministic IDs for nodes and edges.
 - Keep semantic, rendering, and interaction concerns in separate layers.

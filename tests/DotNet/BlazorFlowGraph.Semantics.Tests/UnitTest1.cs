@@ -69,5 +69,36 @@ public class SemanticAttributesTests
         var attr = new SemanticGroupAttribute();
         await Assert.That(attr.Label).IsNull();
     }
+
+    [Test]
+    public async Task SemanticEdgeDefinition_TypedFactory_UsesMemberName()
+    {
+        var edge = SemanticEdgeDefinition.Create<ConfiguredComponent>(component => component.Dependency, "depends-on");
+        await Assert.That(edge.TargetMember).IsEqualTo(nameof(ConfiguredComponent.Dependency));
+        await Assert.That(edge.Label).IsEqualTo("depends-on");
+    }
+
+    [Test]
+    public async Task SemanticGroupDefinition_TypedFactory_UsesMemberNames()
+    {
+        var group = SemanticGroupDefinition.Create<ConfiguredGroup>(
+            label: "Configured",
+            kind: "cluster",
+            group => group.MemberA,
+            group => group.MemberB);
+
+        await Assert.That(group.ChildMembers).IsEquivalentTo([nameof(ConfiguredGroup.MemberA), nameof(ConfiguredGroup.MemberB)]);
+    }
 }
 
+public sealed class ConfiguredComponent
+{
+    public SampleComponent? Dependency { get; init; }
+}
+
+public sealed class ConfiguredGroup
+{
+    public SampleComponent? MemberA { get; init; }
+
+    public SampleComponent? MemberB { get; init; }
+}
