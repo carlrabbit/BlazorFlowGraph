@@ -20,36 +20,6 @@ public class ServiceGroup
     public ServiceB? MemberB { get; set; }
 }
 
-public class ConfiguredServiceA
-{
-    public SemanticConfiguration Visualization { get; } = new(
-        Node: new SemanticNodeDefinition(Label: "Configured Service A", Kind: "service"),
-        Edges:
-        [
-            SemanticEdgeDefinition.Create<ConfiguredServiceA>(service => service.Dependency, "calls")
-        ]);
-
-    public ConfiguredServiceB? Dependency { get; set; }
-}
-
-public class ConfiguredServiceB
-{
-    public SemanticConfiguration Visualization { get; } = new(
-        Node: new SemanticNodeDefinition(Label: "Configured Service B", Kind: "service"));
-}
-
-public class ConfiguredServiceGroup
-{
-    public SemanticConfiguration Visualization { get; } = new(
-        Group: new SemanticGroupDefinition(
-            Label: "Configured Group",
-            Kind: "cluster",
-            ChildMembers: [nameof(MemberA), nameof(MemberB)]));
-
-    public ConfiguredServiceA? MemberA { get; set; }
-    public ConfiguredServiceB? MemberB { get; set; }
-}
-
 public class ReflectionGraphProjectorTests
 {
     private readonly ReflectionGraphProjector _projector = new();
@@ -156,5 +126,35 @@ public class ReflectionGraphProjectorTests
         await Assert.That(snapshot.Groups).Count().IsEqualTo(1);
         await Assert.That(snapshot.Groups![0].Label).IsEqualTo("Configured Group");
         await Assert.That(snapshot.Groups[0].ChildNodeIds).Count().IsEqualTo(2);
+    }
+
+    private sealed class ConfiguredServiceA
+    {
+        public SemanticConfiguration Visualization { get; } = new(
+            Node: new SemanticNodeDefinition(Label: "Configured Service A", Kind: "service"),
+            Edges:
+            [
+                SemanticEdgeDefinition.Create<ConfiguredServiceA>(service => service.Dependency, "calls")
+            ]);
+
+        public ConfiguredServiceB? Dependency { get; set; }
+    }
+
+    private sealed class ConfiguredServiceB
+    {
+        public SemanticConfiguration Visualization { get; } = new(
+            Node: new SemanticNodeDefinition(Label: "Configured Service B", Kind: "service"));
+    }
+
+    private sealed class ConfiguredServiceGroup
+    {
+        public SemanticConfiguration Visualization { get; } = new(
+            Group: new SemanticGroupDefinition(
+                Label: "Configured Group",
+                Kind: "cluster",
+                ChildMembers: [nameof(MemberA), nameof(MemberB)]));
+
+        public ConfiguredServiceA? MemberA { get; set; }
+        public ConfiguredServiceB? MemberB { get; set; }
     }
 }

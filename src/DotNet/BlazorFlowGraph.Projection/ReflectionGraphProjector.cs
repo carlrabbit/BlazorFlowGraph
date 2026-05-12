@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.Reflection;
 using BlazorFlowGraph.Protocol;
 using BlazorFlowGraph.Semantics;
 
@@ -20,6 +22,8 @@ public interface IGraphProjector
 /// </summary>
 public sealed class ReflectionGraphProjector : IGraphProjector
 {
+    private static readonly ConcurrentDictionary<Type, ProjectorTypeMetadata> TypeMetadataCache = new();
+
     /// <inheritdoc />
     public GraphSnapshot Project(IEnumerable<object> semanticObjects, int version = 0)
     {
@@ -70,7 +74,7 @@ public sealed class ReflectionGraphProjector : IGraphProjector
                 continue;
 
             var childIds = new List<NodeId>();
-            var childMembers = groupConfig.ChildMembers ?? type.GetProperties().Select(static property => property.Name).ToArray();
+            var childMembers = groupConfig.ChildMembers ?? GetTypeMetadata(type).PropertyNames;
             foreach (var childMember in childMembers)
             {
                 if (!TryGetMemberValue(type, obj, childMember, out var value))
@@ -105,10 +109,7 @@ public sealed class ReflectionGraphProjector : IGraphProjector
     }
 
     private static SemanticConfiguration? GetSemanticConfiguration(Type type, object obj)
-        => type.GetProperties()
-               .Where(static property => property.CanRead && property.GetIndexParameters().Length == 0)
-               .FirstOrDefault(static property => typeof(SemanticConfiguration).IsAssignableFrom(property.PropertyType))
-               ?.GetValue(obj) as SemanticConfiguration;
+        => GetTypeMetadata(type).SemanticConfigurationProperty?.GetValue(obj) as SemanticConfiguration;
 
     private static SemanticNodeDefinition? ResolveNodeDefinition(Type type, SemanticConfiguration? config)
     {
@@ -158,21 +159,42 @@ public sealed class ReflectionGraphProjector : IGraphProjector
 
     private static bool TryGetMemberValue(Type type, object obj, string memberName, out object? value)
     {
-        var property = type.GetProperty(memberName);
-        if (property is not null)
+        if (GetTypeMetadata(type).MemberReaders.TryGetValue(memberName, out var reader))
         {
-            value = property.GetValue(obj);
-            return true;
-        }
-
-        var field = type.GetField(memberName);
-        if (field is not null)
-        {
-            value = field.GetValue(obj);
+            value = reader(obj);
             return true;
         }
 
         value = null;
         return false;
     }
+
+    private static ProjectorTypeMetadata GetTypeMetadata(Type type)
+        => TypeMetadataCache.GetOrAdd(type, static staticType =>
+        {
+            var properties = staticType.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                                       .Where(static property => property.CanRead && property.GetIndexParameters().Length == 0)
+                                       .ToArray();
+
+            var memberReaders = new Dictionary<string, Func<object, object?>>(StringComparer.Ordinal);
+            foreach (var property in properties)
+            {
+                memberReaders[property.Name] = property.GetValue;
+            }
+
+            foreach (var field in staticType.GetFields(BindingFlags.Instance | BindingFlags.Public))
+            {
+                memberReaders[field.Name] = field.GetValue;
+            }
+
+            return new ProjectorTypeMetadata(
+                properties.FirstOrDefault(static property => typeof(SemanticConfiguration).IsAssignableFrom(property.PropertyType)),
+                properties.Select(static property => property.Name).ToArray(),
+                memberReaders);
+        });
+
+    private sealed record ProjectorTypeMetadata(
+        PropertyInfo? SemanticConfigurationProperty,
+        IReadOnlyList<string> PropertyNames,
+        IReadOnlyDictionary<string, Func<object, object?>> MemberReaders);
 }

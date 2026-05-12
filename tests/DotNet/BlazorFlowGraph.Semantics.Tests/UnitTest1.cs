@@ -89,16 +89,16 @@ public class SemanticAttributesTests
 
         await Assert.That(group.ChildMembers).IsEquivalentTo([nameof(ConfiguredGroup.MemberA), nameof(ConfiguredGroup.MemberB)]);
     }
-}
 
-public sealed class ConfiguredComponent
-{
-    public SampleComponent? Dependency { get; init; }
-}
+    private sealed class ConfiguredComponent
+    {
+        public SampleComponent? Dependency { get; init; }
+    }
 
-public sealed class ConfiguredGroup
-{
-    public SampleComponent? MemberA { get; init; }
+    private sealed class ConfiguredGroup
+    {
+        public SampleComponent? MemberA { get; init; }
 
-    public SampleComponent? MemberB { get; init; }
+        public SampleComponent? MemberB { get; init; }
+    }
 }
