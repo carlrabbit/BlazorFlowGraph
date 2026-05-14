@@ -1,67 +1,40 @@
 # ADR 0004 — Renderer Backend Abstraction
 
-## Status
+**Status:** Accepted
 
-Accepted
+# Context
 
-## Context
+The repository needed a rendering abstraction that separates render-surface implementation from runtime state and view projection.
 
-Milestone 3 introduces a renderer backend abstraction to decouple the rendering surface from the runtime and render pipeline.
+Before this decision, SVG rendering logic was directly coupled to the host rendering loop, which made alternative backends difficult to introduce without changing pipeline logic.
 
-Prior to Milestone 3, the SVG renderer was directly integrated into the host's rendering loop:
-- `renderInnerSvg` produced an HTML string that was injected into a `<g>` element
-- the host directly managed the `<svg>` element lifecycle
-- there was no abstraction between "what to render" and "how to render it"
+# Decision
 
-This created implicit coupling that would make introducing alternative rendering backends (Canvas, WebGL) difficult without touching the pipeline or host logic.
+Introduce a formal `GraphRendererBackend` interface and a `RenderFrame` contract between runtime projection and backend rendering.
 
-## Decision
+The chosen structure is:
 
-Introduce a formal `GraphRendererBackend` interface in `@dataflow-visualizer/renderer-svg`:
+- `buildRenderFrame(...)` produces a backend-ready rendering contract
+- `GraphRendererBackend` defines the rendering surface lifecycle
+- `SvgRendererBackend` is the first implementation of the interface
+- visibility filtering happens before a backend receives data
 
-```typescript
-interface GraphRendererBackend {
-  initialize(container: Element, width: number, height: number): void;
-  renderFrame(frame: RenderFrame): void;
-  updateViewport(panX: number, panY: number, scale: number): void;
-  resize(width: number, height: number): void;
-  dispose(): void;
-}
-```
+# Consequences
 
-Introduce a `RenderFrame` model as the stable data contract backends receive:
+- rendering backends become replaceable without changing runtime or host orchestration
+- render-frame construction and backend rendering remain independently testable
+- backends must not reach into raw runtime state directly
+- future Canvas or WebGL work has a clear extension point
 
-```typescript
-interface RenderFrame {
-  nodes: readonly RenderNode[];
-  edges: readonly RenderEdge[];
-  canvasWidth: number;
-  canvasHeight: number;
-}
-```
+# Alternatives Considered
 
-Introduce `buildRenderFrame(state, layout, options?)` as the view projection step that produces `RenderFrame` from a `GraphState` (optionally filtered by `VisibleGraph`).
+- keeping the SVG renderer embedded in the host, which would preserve implicit coupling
+- letting each backend define its own input model, which would fragment the render pipeline
+- moving backend selection into Blazor component logic, which would thicken the hosting layer
 
-The primary SVG implementation is `SvgRendererBackend`, which implements `GraphRendererBackend`.
+# Related Documents
 
-## Consequences
-
-### Benefits
-
-- Backends are replaceable without changing the pipeline or runtime.
-- `RenderFrame` is independently testable without a DOM.
-- `buildRenderFrame` is independently testable without a backend.
-- Alternative backends (Canvas, WebGL) implement `GraphRendererBackend` as the only integration point.
-- `VisibleGraph` filtering is cleanly expressed before frame construction — backends never see hidden elements.
-
-### Constraints
-
-- Backends must not access runtime state directly — they receive `RenderFrame` only.
-- The `RenderFrame` contract is stable and should not expose implementation details of any specific backend.
-- New backends implement `GraphRendererBackend`; they do not fork or duplicate the render pipeline.
-
-## Related
-
-- `docs/decisions/0001-svg-first.md` — SVG remains primary; this ADR adds abstraction above it.
-- `docs/ai/rendering.md` — rendering constraints and pipeline documentation.
-- `src/TypeScript/packages/renderer-svg/src/index.ts` — implementation.
+- [`../architecture/browser-runtime.md`](../architecture/browser-runtime.md)
+- [`../rendering/model.md`](../rendering/model.md)
+- [`0001-svg-first.md`](0001-svg-first.md)
+- [`../ai/rendering.md`](../ai/rendering.md)

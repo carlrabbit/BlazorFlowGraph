@@ -54,7 +54,7 @@ Prefer this structure:
 Before adding or updating an AI spec, verify consistency with:
 
 - `README.md`
-- `docs/architecture/overview.md`
+- `docs/architecture/system-overview.md`
 - `docs/protocol/contracts.md`
 - `docs/rendering/model.md`
 - relevant ADRs under `docs/decisions/`

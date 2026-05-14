@@ -205,7 +205,7 @@ The `@dataflow-visualizer/query` package provides topology traversal:
 ## Related Docs
 
 - `README.md`
-- `docs/architecture/overview.md`
+- `docs/architecture/system-overview.md`
 - `docs/decisions/0001-svg-first.md`
 - `docs/decisions/0002-elk-layout.md`
 - `docs/decisions/0003-diff-protocol.md`

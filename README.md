@@ -1,245 +1,62 @@
 # BlazorFlowGraph
 
-BlazorFlowGraph is a dataflow visualization framework for .NET and Blazor applications using the interactive server render mode.
+BlazorFlowGraph is a semantic dataflow visualization framework for .NET and Blazor applications.
 
-The project focuses on visualizing evolving semantic systems and data flows rather than building a generic diagram editor.
+The repository focuses on semantic graph projection, incremental synchronization, automatic layout, and browser-side rendering rather than generic diagram editing.
 
-The current architecture combines:
+## Documentation Map
 
-- a .NET semantic backend
-- a TypeScript browser runtime
-- incremental graph synchronization
-- automatic layout infrastructure
-- browser-side interaction and rendering
+Start here:
 
-## Goals
+- [`docs/TERMINOLOGY.md`](docs/TERMINOLOGY.md) — canonical project vocabulary
+- [`docs/architecture/system-overview.md`](docs/architecture/system-overview.md) — runtime boundaries and subsystem responsibilities
+- [`docs/WORKFLOWS.md`](docs/WORKFLOWS.md) — workflow intent index
+- [`docs/TBPS.md`](docs/TBPS.md) — reusable task best practices
+- [`docs/agent-context/project-context.md`](docs/agent-context/project-context.md) — concise repository context
+- [`docs/milestones/README.md`](docs/milestones/README.md) — milestone document structure
+- [`docs/decisions/`](docs/decisions) — accepted architectural decisions
+- [`Milestones.md`](Milestones.md) — capability roadmap and milestone progression
 
-BlazorFlowGraph is designed for scenarios such as:
+Specialized references:
 
-- dataflow visualization
-- workflow topology exploration
-- event pipeline inspection
-- distributed system dependency graphs
-- ETL and process visualization
-- runtime architecture maps
-- semantic graph exploration
-
-The project prioritizes:
-
-- incremental updates
-- automatic layouts
-- stable viewport and selection persistence
-- scalable graph rendering
-- semantic overlays
-- server-authoritative graph models
-
-## Architecture Overview
-
-```text
-+---------------------------------------------------+
-| .NET Semantic Backend                             |
-|---------------------------------------------------|
-| Domain Model                                      |
-| Semantic Extraction                               |
-| Projection Generation                             |
-| Diff Computation                                  |
-| Validation                                        |
-+------------------------+--------------------------+
-                         |
-                    Graph Projection
-                         |
-                    Incremental Diffs
-                         |
-+------------------------v--------------------------+
-| TypeScript Visualization Runtime                  |
-|---------------------------------------------------|
-| Rendering                                         |
-| Layout                                            |
-| Reconciliation                                    |
-| Viewport Management                               |
-| Selection/Search/Grouping                         |
-| Interaction Runtime                               |
-+---------------------------------------------------+
-```
-
-At the repository level, this is currently implemented as:
-
-- `.NET`: `BlazorFlowGraph.Protocol`, `BlazorFlowGraph.Semantics`, `BlazorFlowGraph.Projection`, `BlazorFlowGraph.Diffing`, `BlazorFlowGraph.Blazor`, and `BlazorFlowGraph.Blazor.Server`
-- `TypeScript`: `@dataflow-visualizer/protocol`, `@dataflow-visualizer/runtime`, `@dataflow-visualizer/renderer-svg`, `@dataflow-visualizer/layout`, `@dataflow-visualizer/interop`, and `@dataflow-visualizer/host`
-
-For a more detailed breakdown, see [`docs/architecture/overview.md`](docs/architecture/overview.md).
-
-## Design Principles
-
-### Semantic-First
-
-The visualization is a projection of an authoritative semantic model.
-
-The diagram is not the source of truth.
-
-### Incremental Synchronization
-
-Graphs are updated using diffs rather than full rerenders whenever possible.
-
-This enables:
-
-- stable interaction state
-- animation continuity
-- layout preservation
-- scalable updates
-
-### Browser-Native Interaction
-
-Rendering and interaction are browser-side responsibilities.
-
-The browser runtime handles:
-
-- rendering
-- selection
-- viewport state
-- grouping
-- filtering
-- layout execution
-- reconciliation
-
-The .NET side handles:
-
-- semantic graph generation
-- diff computation
-- validation
-- orchestration
-
-### Automatic Layouts
-
-BlazorFlowGraph is optimized for automatically arranged graphs.
-
-The system is intended for topology comprehension rather than manual diagram authoring.
-
-The repository already includes a layout package and automatic layout pipeline. The current implementation is a simple placeholder grid layout, with ELK-based layout documented as the planned production direction.
-
-## Current Features and Planned Direction
-
-### Core Visualization
-
-- SVG rendering pipeline
-- incremental graph reconciliation
-- Blazor component integration
-- viewport sizing and container management
-- semantic graph snapshots and diffs
-
-### Layout
-
-- automatic layout package
-- placeholder grid layout implementation
-- layout abstraction for future strategy upgrades
-- ELK integration planned and documented
-
-### Interaction
-
-- browser-side runtime orchestration
-- Blazor-to-JavaScript interop bridge
-- foundations for selection, viewport, and graph updates
-
-### Integration
-
-- Blazor Server interactive hosting
-- .NET 10 targeting
-- Razor Class Library packaging
-- TypeScript package workspace
-
-## Non-Goals
-
-At least initially, the project does not aim to become:
-
-- a BPMN editor
-- a Visio replacement
-- a whiteboard or canvas editor
-- a freeform diagram designer
-- a collaborative editor
-- a generic workflow designer
+- [`docs/integration/guide.md`](docs/integration/guide.md) — consumer integration guidance
+- [`docs/protocol/contracts.md`](docs/protocol/contracts.md) — shared graph contract reference
+- [`docs/layout/architecture.md`](docs/layout/architecture.md) — layout engine reference
+- [`docs/rendering/model.md`](docs/rendering/model.md) — render pipeline reference
+- [`docs/research/README.md`](docs/research/README.md) — exploratory research document location
+- [`docs/ai/`](docs/ai) — AI-facing architecture, protocol, and rendering references
+- [`samples.md`](samples.md) — sample catalog with run commands and screenshots
 
 ## Repository Structure
 
 ```text
 src/
   DotNet/
-    BlazorFlowGraph.Blazor/
-    BlazorFlowGraph.Blazor.Server/
-    BlazorFlowGraph.Diffing/
-    BlazorFlowGraph.Projection/
-    BlazorFlowGraph.Protocol/
-    BlazorFlowGraph.Semantics/
   TypeScript/
-    packages/
-      host/
-      interop/
-      layout/
-      protocol/
-      renderer-svg/
-      runtime/
-
 samples/
-  IncrementalUpdates/
-  LargeGraphStress/
-  LayoutPlayground/
-  MinimalViewer/
-  SemanticAnnotations/
-
 tests/
-  DotNet/
-  E2E/
-  TypeScript/
-
 docs/
+.github/
 tooling/
 ```
 
-## Technology Stack
+## Architecture at a Glance
 
-### .NET
+- `.NET` owns semantic models, projection generation, diff generation, validation, and orchestration.
+- `TypeScript` owns rendering, layout execution, reconciliation, viewport state, and interaction state.
+- `Blazor` stays thin and acts as the hosting and integration layer.
 
-- .NET 10
-- Blazor Server interactive components
-- Razor Class Libraries
-
-### TypeScript
-
-- TypeScript
-- Vite
-- pnpm
-- Vitest
-- Playwright
-
-### Layout
-
-- current placeholder grid layout
-- ELK.js integration planned
-
-## Current Status
-
-Early architecture and prototyping phase.
-
-Current milestones in the repository include:
-
-1. semantic projection model
-2. static graph rendering
-3. incremental diff synchronization
-4. Blazor integration and JavaScript interop
-5. layout abstraction with a placeholder automatic layout
-
-For the planned milestone progression and long-term capability roadmap, see [`Milestones.md`](Milestones.md).
+Authoritative architecture details live in [`docs/architecture/system-overview.md`](docs/architecture/system-overview.md).
 
 ## Quick Start
 
-### Minimal Blazor Integration
-
-Register services:
+### Register services
 
 ```csharp
 builder.Services.AddDataflowVisualizer();
 ```
 
-Render a graph:
+### Render a graph
 
 ```razor
 @using BlazorFlowGraph.Blazor
@@ -247,18 +64,13 @@ Render a graph:
 <DataflowGraph Snapshot="@snapshot" Width="1200" Height="800" />
 ```
 
-Bootstrap the browser host:
+### Load the browser bundle
 
 ```html
 <script src="_content/BlazorFlowGraph.Blazor/js/dataflow-visualizer.js"></script>
 ```
 
-See [`docs/integration/guide.md`](docs/integration/guide.md) for more detail.
-For a catalog of the repository samples, see [`samples.md`](samples.md).
-
 ## Development
-
-For a zero-install development environment, see [`Codespace.md`](Codespace.md) for GitHub Codespace setup instructions.
 
 ### Prerequisites
 
@@ -266,7 +78,7 @@ For a zero-install development environment, see [`Codespace.md`](Codespace.md) f
 - Node.js LTS
 - Corepack enabled for pnpm
 
-### Restore Dependencies
+### Restore
 
 ```bash
 corepack enable
@@ -277,19 +89,18 @@ dotnet restore BlazorFlowGraph.slnx
 ### Build
 
 ```bash
-dotnet build BlazorFlowGraph.slnx --configuration Release
 pnpm build
+dotnet build BlazorFlowGraph.slnx --no-restore --configuration Release
 ```
 
-### Test
-
-TypeScript:
+### TypeScript checks
 
 ```bash
+pnpm typecheck
 pnpm test
 ```
 
-.NET test projects use Microsoft Testing Platform and are run as executables:
+### .NET tests
 
 ```bash
 dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Protocol.Tests --configuration Release
@@ -298,24 +109,18 @@ dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Projection.Tests --
 dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Semantics.Tests --configuration Release
 ```
 
-### NuGet Packaging
+### Additional guidance
 
-NuGet packaging and publishing guidance is documented in [`Nuget.md`](Nuget.md).
+- [`Codespace.md`](Codespace.md) — zero-install Codespaces setup
+- [`Nuget.md`](Nuget.md) — NuGet packaging and release guidance
+- [`tooling/README.md`](tooling/README.md) — repository tooling notes
 
-## Vision
+## Current Status
 
-BlazorFlowGraph aims to provide a robust semantic visualization platform for modern .NET applications where graph structures evolve dynamically and must remain comprehensible at scale.
+The repository is in an early platform-building phase with milestones covering semantic projection, incremental synchronization, layout infrastructure, renderer abstraction, and sample-driven validation.
 
-The project intentionally separates:
-
-- semantic modeling
-- graph projection
-- rendering
-- interaction
-- layout
-
-to enable long-term extensibility and maintainability.
+See [`Milestones.md`](Milestones.md) for the roadmap.
 
 ## License
 
-This project is licensed under the Unlicense. See `LICENSE`.
+This project is licensed under the Unlicense. See [`LICENSE`](LICENSE).
