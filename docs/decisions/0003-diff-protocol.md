@@ -3,20 +3,33 @@
 **Date:** 2026-05-08  
 **Status:** Accepted
 
-## Context
+# Context
 
-Sending full graph snapshots on every update is expensive for large graphs.
+Sending full graph snapshots for every update is wasteful for evolving graphs and makes it harder to preserve stable runtime state across changes.
 
-## Decision
+# Decision
 
-Use an incremental diff protocol (`GraphDiff`) alongside full snapshots.
+Use an incremental diff protocol alongside full snapshots.
 
-- The server sends a `GraphSnapshot` on initial connection
-- Subsequent updates use `GraphDiff` with `fromVersion`/`toVersion`
-- The TypeScript runtime validates version continuity before applying diffs
-- If a version gap is detected, the client requests a fresh snapshot
+- the server sends a `GraphSnapshot` for initial state
+- subsequent updates use `GraphDiff` with `fromVersion` and `toVersion`
+- the TypeScript runtime validates version continuity before applying diffs
+- a version gap triggers recovery through a fresh snapshot
 
-## Consequences
+# Consequences
 
-- Reduced network traffic for incremental updates
-- Requires version tracking on both server and client
+- network traffic and reconciliation work are reduced for incremental changes
+- both runtimes must track versions deterministically
+- stable identifiers and ordered diff generation become core protocol requirements
+
+# Alternatives Considered
+
+- snapshot-only synchronization, which would increase payload size and reduce layout and selection stability
+- ad hoc partial updates without explicit version continuity, which would weaken deterministic recovery
+- browser-authoritative mutation tracking, which would conflict with server-authoritative graph ownership
+
+# Related Documents
+
+- [`../architecture/backend-semantics.md`](../architecture/backend-semantics.md)
+- [`../protocol/contracts.md`](../protocol/contracts.md)
+- [`../ai/protocol.md`](../ai/protocol.md)

@@ -3,21 +3,35 @@
 **Date:** 2026-05-08  
 **Status:** Accepted
 
-## Context
+# Context
 
-We need a rendering strategy for the dataflow graph that works across modern browsers
-without requiring a Canvas or WebGL context.
+BlazorFlowGraph needs a browser rendering strategy that works across modern browsers without requiring Canvas-specific or WebGL-specific runtime assumptions.
 
-## Decision
+# Decision
 
-Use SVG as the primary rendering format. SVG provides:
+Use SVG as the primary rendering format.
 
-- Accessible markup
+SVG provides:
+
+- accessible markup
 - CSS styling support
-- Easy debugging in browser devtools
-- No dependency on browser-specific APIs
+- direct browser-devtools inspection
+- a portable baseline without extra rendering dependencies
 
-## Consequences
+# Consequences
 
-- Canvas or WebGL fallback may be needed for very large graphs (>10,000 nodes)
-- Animation performance may degrade at scale; addressed via incremental diff rendering
+- the current rendering backend remains SVG-first
+- very large graphs may need alternative backends or additional culling strategies later
+- incremental synchronization and render-frame separation remain important for scale
+
+# Alternatives Considered
+
+- Canvas-first rendering, which would reduce DOM output but make inspection and accessibility harder
+- WebGL-first rendering, which would increase rendering complexity before the repository needs it
+- Blazor-driven rendering, which would violate the browser-runtime ownership model
+
+# Related Documents
+
+- [`../architecture/browser-runtime.md`](../architecture/browser-runtime.md)
+- [`../rendering/model.md`](../rendering/model.md)
+- [`0004-renderer-backend.md`](0004-renderer-backend.md)

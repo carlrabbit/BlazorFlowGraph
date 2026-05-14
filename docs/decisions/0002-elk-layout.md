@@ -1,34 +1,37 @@
 # ADR 0002 — ELK Layout
 
 **Date:** 2026-05-08  
-**Status:** Accepted (Milestone 4)
+**Status:** Accepted
 
-## Context
+# Context
 
-Automatic graph layout is required for non-trivial graph topologies.
+Automatic layout is required for non-trivial semantic graph topologies, and the repository needs a production-capable layout engine that still preserves an explicit provider boundary.
 
-## Decision
+# Decision
 
-Use Eclipse Layout Kernel (ELK) via `elkjs` for automatic layout. ELK provides:
+Use Eclipse Layout Kernel through `elkjs` as the production layout engine behind the `LayoutProvider` abstraction.
 
-- Multiple layout algorithms (layered, force, mrtree, box)
-- Hierarchical grouping support
-- Active maintenance
+The implementation direction is:
 
-`ElkLayoutProvider` implements the `LayoutProvider` interface and is the recommended production layout engine.
+- `ElkLayoutProvider` implements `LayoutProvider`
+- the default algorithm is `layered`
+- `elkjs` loads lazily on first use
+- `GridLayoutProvider` remains the reference and fallback implementation
 
-## Implementation (Milestone 4)
+# Consequences
 
-`ElkLayoutProvider` in `@dataflow-visualizer/layout`:
+- the layout package supports both a lightweight default provider and a production provider
+- bundle size impact is isolated to consumers that instantiate `ElkLayoutProvider`
+- layout failures can fall back to the grid provider without breaking the rest of the pipeline
 
-- Implements `LayoutProvider` interface — drop-in replacement for `GridLayoutProvider`
-- Accepts `algorithm` option in constructor (default: `"layered"`)
-- Loads `elkjs` lazily via `import("elkjs/lib/elk.bundled.js")` on first call — keeps module graph clean for consumers using only `GridLayoutProvider`
-- Falls back to `GridLayoutProvider` when ELK fails (e.g. Node.js test environments without WASM worker)
-- Produces `LayoutResult` with integer-floored node positions and ELK edge sections
+# Alternatives Considered
 
-## Consequences
+- keeping the grid layout as the only implementation, which would limit layout quality for real graph topologies
+- coupling a layout engine directly to the runtime or renderer, which would weaken the layout boundary
+- moving layout execution into .NET, which would break browser-runtime ownership of layout behavior
 
-- `elkjs` adds ~500KB to the bundle when `ElkLayoutProvider` is instantiated; tree-shaking avoids this cost for consumers using only `GridLayoutProvider`
-- Initial layout uses `GridLayoutProvider` as the reference/fallback implementation
-- ELK is only loaded at runtime when `ElkLayoutProvider.computeLayout()` is first called
+# Related Documents
+
+- [`../architecture/browser-runtime.md`](../architecture/browser-runtime.md)
+- [`../layout/architecture.md`](../layout/architecture.md)
+- [`../ai/rendering.md`](../ai/rendering.md)
