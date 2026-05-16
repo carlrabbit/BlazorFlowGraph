@@ -241,11 +241,11 @@ export function buildRenderFrame(
     });
   }
 
-  const budgetMaxNodes = options?.budget?.maxNodes;
+  const nodeLimit = options?.budget?.maxNodes;
   const prioritizedNodeIds = options?.budget?.prioritizedNodeIds;
   const nodes =
-    budgetMaxNodes != null && budgetMaxNodes >= 0 && candidateNodes.length > budgetMaxNodes
-      ? applyNodeBudget(candidateNodes, budgetMaxNodes, prioritizedNodeIds)
+    nodeLimit != null && nodeLimit >= 0 && candidateNodes.length > nodeLimit
+      ? applyNodeBudget(candidateNodes, nodeLimit, prioritizedNodeIds)
       : candidateNodes;
   const renderedNodeIds = new Set(nodes.map((n) => n.id));
   const culledNodeCount = candidateNodes.length - nodes.length;
@@ -319,8 +319,8 @@ export function buildRenderFrame(
     canvasWidth: Math.floor(layout.width),
     canvasHeight: Math.floor(layout.height),
     budgetLimited: culledNodeCount > 0 || culledEdgeCount > 0,
-    culledNodeCount: culledNodeCount > 0 ? culledNodeCount : 0,
-    culledEdgeCount: culledEdgeCount > 0 ? culledEdgeCount : 0,
+    culledNodeCount,
+    culledEdgeCount,
   };
 }
 

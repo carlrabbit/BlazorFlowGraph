@@ -306,24 +306,21 @@ export class GraphRuntimeStore {
   ): void {
     const focusedNodeId = update.focusedNodeId !== undefined ? update.focusedNodeId : this.focus.focusedNodeId;
     const focusedGroupId = update.focusedGroupId !== undefined ? update.focusedGroupId : this.focus.focusedGroupId;
-    const shouldRecordHistory = options?.recordHistory ?? true;
+    const recordInHistory = options?.recordHistory ?? true;
 
     let navigationHistory = this.focus.navigationHistory;
     let navigationIndex = this.focus.navigationIndex;
     const nodeChanged = focusedNodeId !== this.focus.focusedNodeId;
 
-    if (nodeChanged && focusedNodeId !== null && shouldRecordHistory) {
-      const nextHistory = this.focus.navigationHistory.slice(0, this.focus.navigationIndex + 1);
-      nextHistory.push(focusedNodeId);
-      navigationHistory = nextHistory;
-      navigationIndex = nextHistory.length - 1;
-    } else if (nodeChanged && focusedNodeId !== null && !shouldRecordHistory) {
+    if (nodeChanged && focusedNodeId !== null && recordInHistory) {
+      const truncatedHistory = this.focus.navigationHistory.slice(0, this.focus.navigationIndex + 1);
+      truncatedHistory.push(focusedNodeId);
+      navigationHistory = truncatedHistory;
+      navigationIndex = truncatedHistory.length - 1;
+    } else if (nodeChanged && focusedNodeId !== null && !recordInHistory) {
       const existingIndex = this.focus.navigationHistory.lastIndexOf(focusedNodeId);
       if (existingIndex >= 0) {
         navigationIndex = existingIndex;
-      } else {
-        navigationHistory = [...this.focus.navigationHistory, focusedNodeId];
-        navigationIndex = navigationHistory.length - 1;
       }
     }
 
@@ -898,6 +895,8 @@ export interface SpatialIndexBuildOptions {
   readonly cellSize?: number;
 }
 
+const DEFAULT_SPATIAL_GRID_CELL_SIZE = 256;
+
 /**
  * Builds a SpatialIndex from a map of node bounding boxes.
  * This is a simple linear-scan implementation suitable for moderate graph sizes.
@@ -913,7 +912,7 @@ export function buildSpatialIndexWithOptions(
   options: SpatialIndexBuildOptions
 ): SpatialIndex {
   if ((options.implementation ?? "linear") === "uniform-grid") {
-    return buildUniformGridSpatialIndex(entries, options.cellSize ?? 256);
+    return buildUniformGridSpatialIndex(entries, options.cellSize ?? DEFAULT_SPATIAL_GRID_CELL_SIZE);
   }
   return buildLinearSpatialIndex(entries);
 }
@@ -950,12 +949,9 @@ function buildUniformGridSpatialIndex(entries: readonly SpatialEntry[], cellSize
     for (let gx = minX; gx <= maxX; gx++) {
       for (let gy = minY; gy <= maxY; gy++) {
         const key = `${gx},${gy}`;
-        const bucket = cellMap.get(key);
-        if (bucket == null) {
-          cellMap.set(key, [entry]);
-        } else {
-          bucket.push(entry);
-        }
+        const bucket = cellMap.get(key) ?? [];
+        bucket.push(entry);
+        cellMap.set(key, bucket);
       }
     }
   }
@@ -986,8 +982,7 @@ function buildUniformGridSpatialIndex(entries: readonly SpatialEntry[], cellSize
       const bucket = cellMap.get(`${gx},${gy}`);
       if (bucket == null) return null;
       for (let i = bucket.length - 1; i >= 0; i--) {
-        const entry = bucket[i];
-        if (entry == null) continue;
+        const entry = bucket[i]!;
         const b = entry.bounds;
         if (x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height) {
           return entry;
@@ -1046,9 +1041,7 @@ export class RuntimeDiagnostics {
     this._visibleNodeCount = nodeCount;
     this._visibleEdgeCount = edgeCount;
     this._visibleGroupCount = groupCount;
-    this._culledNodeCount = Math.max(0, this._graphNodeCount - nodeCount);
-    this._culledEdgeCount = Math.max(0, this._graphEdgeCount - edgeCount);
-    this._culledGroupCount = Math.max(0, this._graphGroupCount - groupCount);
+    this.updateCulledCounts();
   }
 
   /** Updates total graph element counts used to derive culling totals. */
@@ -1056,9 +1049,7 @@ export class RuntimeDiagnostics {
     this._graphNodeCount = nodeCount;
     this._graphEdgeCount = edgeCount;
     this._graphGroupCount = groupCount;
-    this._culledNodeCount = Math.max(0, nodeCount - this._visibleNodeCount);
-    this._culledEdgeCount = Math.max(0, edgeCount - this._visibleEdgeCount);
-    this._culledGroupCount = Math.max(0, groupCount - this._visibleGroupCount);
+    this.updateCulledCounts();
   }
 
   /** Increments the diff application counter. */
@@ -1122,6 +1113,12 @@ export class RuntimeDiagnostics {
   /** Clears all recorded samples. */
   clear(): void {
     this.samples.length = 0;
+  }
+
+  private updateCulledCounts(): void {
+    this._culledNodeCount = Math.max(0, this._graphNodeCount - this._visibleNodeCount);
+    this._culledEdgeCount = Math.max(0, this._graphEdgeCount - this._visibleEdgeCount);
+    this._culledGroupCount = Math.max(0, this._graphGroupCount - this._visibleGroupCount);
   }
 }
 
