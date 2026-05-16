@@ -269,7 +269,14 @@ export function buildRenderFrame(
       const shape = isRenderOverlayShape(shapeValue) ? shapeValue : "badge";
       const severity = typeof overlay.data?.["severity"] === "string" ? overlay.data["severity"] : undefined;
       const priority = typeof overlay.data?.["priority"] === "number" ? overlay.data["priority"] : undefined;
-      overlays.push({ nodeId, kind: overlay.kind, shape, severity, priority, badge });
+      overlays.push({
+        nodeId,
+        kind: overlay.kind,
+        shape,
+        ...(severity !== undefined ? { severity } : {}),
+        ...(priority !== undefined ? { priority } : {}),
+        ...(badge !== undefined ? { badge } : {}),
+      });
     }
   }
 

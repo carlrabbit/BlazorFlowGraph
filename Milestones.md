@@ -534,6 +534,35 @@ This milestone focuses on:
 
 ---
 
+# Milestone 6 — Semantic Overlays and Inspection Workflows
+
+## Goal
+
+Turn overlay infrastructure into a durable semantic exploration system that supports layered overlays, inspection events, and explicit search/filter behavior.
+
+## Implementation Slices
+
+- [x] Add semantic overlay, inspection workflow, search/filtering, overlay-provider, and semantic-layering specs.
+- [x] Add runtime overlay provider contract and provider registration lifecycle in `GraphRuntimeHost`.
+- [x] Extend `OverlayRegistry` with optional description and legend metadata.
+- [x] Recompute provider overlays after snapshot/diff application and command-driven runtime state changes.
+- [x] Extend render-frame overlay representation with safe default shape semantics (`badge`, `marker`, `halo`, `muted`).
+- [x] Add semantic inspection events and host inspection helpers (`NodeInspected`, `EdgeInspected`, `GroupInspected`, `SelectionInspected`, `OverlayInspected`).
+- [x] Add explicit search visibility behavior modes (`highlight`, `filter`, `isolate`).
+- [x] Add sample callback flow in `SemanticAnnotations` using `DataflowGraph` inspection callbacks.
+- [x] Expand TypeScript runtime and renderer tests for provider lifecycle, failure isolation, overlay metadata, and search/inspection behavior.
+
+## Exit Criteria
+
+- overlay semantics are specified and indexed ✅
+- overlay providers can be registered, recomputed, disabled, and inspected ✅
+- overlay failures do not break graph rendering ✅
+- inspection events allow Blazor consumers to open custom detail UI callbacks ✅
+- search/filter behavior is explicit and documented ✅
+- sample callback flow demonstrates semantic inspection behavior ✅
+
+---
+
 # Potential Extensions
 
 The following extensions align with the project's goals and architectural direction.
@@ -542,11 +571,11 @@ These are intentionally separated from the core milestones.
 
 ---
 
-# Extension — Semantic Overlays
+# Extension — Advanced Semantic Overlays
 
 ## Goals
 
-Add semantic overlays and runtime metadata visualization.
+Expand baseline semantic overlays with richer domain-specific visualization.
 
 Possible features:
 - throughput visualization

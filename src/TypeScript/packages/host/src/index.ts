@@ -192,8 +192,8 @@ export function mount(options: HostOptions): {
         emitInspection({
           targetType: "node",
           targetIds: [nodeId],
-          label: nodeEl.getAttribute("aria-label") ?? undefined,
-          kind: nodeEl.getAttribute("data-kind") ?? undefined,
+          ...(nodeEl.getAttribute("aria-label") != null ? { label: nodeEl.getAttribute("aria-label") ?? "" } : {}),
+          ...(nodeEl.getAttribute("data-kind") != null ? { kind: nodeEl.getAttribute("data-kind") ?? "" } : {}),
           topologyScope: "node",
         });
       }
@@ -207,7 +207,7 @@ export function mount(options: HostOptions): {
         emitInspection({
           targetType: "edge",
           targetIds: [edgeId],
-          label: edgeEl.getAttribute("aria-label") ?? undefined,
+          ...(edgeEl.getAttribute("aria-label") != null ? { label: edgeEl.getAttribute("aria-label") ?? "" } : {}),
           topologyScope: "edge",
         });
       }
@@ -221,7 +221,7 @@ export function mount(options: HostOptions): {
         emitInspection({
           targetType: "group",
           targetIds: [groupId],
-          label: groupEl.getAttribute("aria-label") ?? undefined,
+          ...(groupEl.getAttribute("aria-label") != null ? { label: groupEl.getAttribute("aria-label") ?? "" } : {}),
           topologyScope: "group",
         });
       }

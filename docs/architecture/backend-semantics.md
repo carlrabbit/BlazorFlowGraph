@@ -9,6 +9,7 @@ Define the responsibilities and constraints of the authoritative .NET semantic a
 - generate deterministic graph diffs
 - validate semantic and projection state before it reaches the browser runtime
 - persist or serialize view and projection state when required
+- emit semantic metadata that overlay providers can consume without mutating topology
 
 # Constraints
 
@@ -17,6 +18,7 @@ Define the responsibilities and constraints of the authoritative .NET semantic a
 - diff generation must prefer minimal ordered mutation sets
 - identifiers must remain stable and deterministic
 - protocol contracts must stay independent from Blazor component structure
+- domain semantics should flow through projection metadata and overlay data, not renderer templates
 
 # Non-Goals
 
@@ -31,6 +33,12 @@ Define the responsibilities and constraints of the authoritative .NET semantic a
 - `BlazorFlowGraph.Projection` — semantic-to-graph projection generation
 - `BlazorFlowGraph.Diffing` — graph diff computation
 - `BlazorFlowGraph.Protocol` — shared contracts and view state records
+
+Related semantic overlay and inspection behavior is specified in:
+
+- [`../specs/semantic-overlays.md`](../specs/semantic-overlays.md)
+- [`../specs/overlay-provider-contract.md`](../specs/overlay-provider-contract.md)
+- [`../specs/semantic-layering.md`](../specs/semantic-layering.md)
 
 # Related Documents
 

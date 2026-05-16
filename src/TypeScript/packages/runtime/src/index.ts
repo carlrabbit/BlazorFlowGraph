@@ -601,7 +601,7 @@ export function buildVisibleGraph(
     if (
       searchFilter != null &&
       searchFilter.size > 0 &&
-      searchVisibilityBehavior !== "highlight" &&
+      searchVisibilityBehavior === "filter" &&
       !searchFilter.has(nodeId)
     ) {
       continue;
@@ -1162,10 +1162,10 @@ export class GraphRuntimeHost {
     return {
       targetType,
       targetIds: [targetId],
-      label,
-      kind,
-      metadataSummary,
       activeOverlayKinds,
+      ...(label !== undefined ? { label } : {}),
+      ...(kind !== undefined ? { kind } : {}),
+      ...(metadataSummary !== undefined ? { metadataSummary } : {}),
     };
   }
 
