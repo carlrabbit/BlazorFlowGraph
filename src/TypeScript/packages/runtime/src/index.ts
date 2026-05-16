@@ -942,7 +942,9 @@ export class GraphRuntimeHost {
       handler(command);
     }
     this.store.eventBus.emit("CommandDispatched", { command });
-    this.recomputeOverlayProviders();
+    if (command.type !== "FitSelection") {
+      this.recomputeOverlayProviders();
+    }
   }
 
   /** Registers an additional command handler invoked after built-in handling. */
@@ -1008,8 +1010,7 @@ export class GraphRuntimeHost {
           data: snapshot.data,
           runtime: snapshot,
         });
-
-        this._overlayProviderDiagnostics.set(provider.kind, result.diagnostics ?? []);
+        const providerDiagnostics: string[] = [...(result.diagnostics ?? [])];
 
         if (result.legend != null) {
           const descriptor = this.overlayRegistry.get(provider.kind);
@@ -1020,14 +1021,27 @@ export class GraphRuntimeHost {
 
         if (result.nodeOverlays != null) {
           for (const [nodeId, overlay] of result.nodeOverlays) {
+            const existing = nodeOverlays.get(nodeId);
+            if (existing != null && existing.kind !== overlay.kind) {
+              providerDiagnostics.push(
+                `node overlay conflict on ${nodeId}: "${existing.kind}" overwritten by "${overlay.kind}"`
+              );
+            }
             nodeOverlays.set(nodeId, overlay);
           }
         }
         if (result.edgeOverlays != null) {
           for (const [edgeId, overlay] of result.edgeOverlays) {
+            const existing = edgeOverlays.get(edgeId);
+            if (existing != null && existing.kind !== overlay.kind) {
+              providerDiagnostics.push(
+                `edge overlay conflict on ${edgeId}: "${existing.kind}" overwritten by "${overlay.kind}"`
+              );
+            }
             edgeOverlays.set(edgeId, overlay);
           }
         }
+        this._overlayProviderDiagnostics.set(provider.kind, providerDiagnostics);
       } catch (error) {
         const diagnostics = [error instanceof Error ? error.message : String(error)];
         this._overlayProviderDiagnostics.set(provider.kind, diagnostics);

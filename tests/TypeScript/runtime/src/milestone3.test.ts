@@ -615,17 +615,19 @@ describe("GraphRuntimeHost — overlay providers", () => {
     host.store.setData(
       makeData([{ id: "n1", label: "A", kind: "service" }])
     );
+    const compute = vi.fn(() => ({
+      nodeOverlays: new Map([["n1", { nodeId: "n1", kind: "health", data: { badge: "!" } }]]),
+    }));
 
     const provider: OverlayProvider = {
       kind: "health",
       descriptor: { kind: "health", displayName: "Health", zOrder: 10 },
-      compute: () => ({
-        nodeOverlays: new Map([["n1", { nodeId: "n1", kind: "health", data: { badge: "!" } }]]),
-      }),
+      compute,
     };
 
     host.registerOverlayProvider(provider);
     const overlay = host.store.getSnapshot().overlays.nodeOverlays.get("n1");
+    expect(compute).toHaveBeenCalled();
     expect(host.overlayRegistry.get("health")).toBeDefined();
     expect(overlay?.kind).toBe("health");
   });
