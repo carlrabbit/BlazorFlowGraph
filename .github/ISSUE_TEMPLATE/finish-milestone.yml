@@ -1,0 +1,23 @@
+name: Finish milestone
+description: Close out milestone work and promote durable outcomes.
+title: "Finish milestone: "
+labels:
+  - planning
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Review the milestone document plus `docs/tbps/finish-milestone.md` before filling this out.
+  - type: input
+    id: milestone
+    attributes:
+      label: Milestone document
+      placeholder: docs/milestones/...
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Completed outcomes and remaining follow-ups
+    validations:
+      required: true

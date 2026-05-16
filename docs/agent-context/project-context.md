@@ -28,7 +28,18 @@ BlazorFlowGraph is a semantic dataflow visualization framework for .NET and Blaz
 ## Key References
 
 - [`../TERMINOLOGY.md`](../TERMINOLOGY.md)
+- [`../SPECS.md`](../SPECS.md)
 - [`../architecture/system-overview.md`](../architecture/system-overview.md)
 - [`../decisions/`](../decisions)
 - [`../workflows/`](../workflows)
 - [`../tbps/`](../tbps)
+
+This document is a routing/context aid. Do not treat it as a replacement for terminology, specs, architecture, decisions, workflows, or TBPs.
+
+# Authority
+
+This document is authoritative only for concise project context and routing cues for contributors and agents.
+
+# Document Contract
+
+Update this document when repository-level context or entry-point references change. Keep it synchronized with [`../../README.md`](../../README.md) and [`../../AGENTS.md`](../../AGENTS.md).

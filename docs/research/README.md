@@ -8,3 +8,7 @@ Research documents should:
 - reference the authoritative architecture or decision documents they inform
 
 Avoid treating research notes as the final source of truth after a decision is accepted.
+
+## Research Notes
+
+- [`project-setup-guide-v2.md`](project-setup-guide-v2.md) — setup rationale for the repository's V2 documentation authority alignment

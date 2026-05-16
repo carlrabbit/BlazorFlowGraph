@@ -81,3 +81,11 @@ Owns hosting, dependency injection, component composition, and .NET-to-browser i
 - [`../rendering/model.md`](../rendering/model.md)
 - [`../layout/architecture.md`](../layout/architecture.md)
 - [`../decisions/`](../decisions)
+
+# Authority
+
+This document is authoritative for repository-wide runtime boundaries, ownership splits, and the top-level architecture map.
+
+# Document Contract
+
+Update this document when runtime ownership, repository structure, or top-level data flow changes. Keep it synchronized with [`README.md`](../../README.md), [`../SPECS.md`](../SPECS.md), specialized architecture documents, and related ADRs in `docs/decisions/`.

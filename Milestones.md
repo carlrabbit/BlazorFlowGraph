@@ -2,6 +2,8 @@
 
 This document defines the planned milestone progression for BlazorFlowGraph.
 
+It remains a high-level roadmap, not the authoritative source for permanent behavior. Durable behavioral truth belongs in [`docs/SPECS.md`](docs/SPECS.md) and `docs/specs/`; structure belongs in `docs/architecture/`; rationale belongs in `docs/decisions/`.
+
 The milestones focus on:
 - semantic graph projection
 - incremental synchronization
