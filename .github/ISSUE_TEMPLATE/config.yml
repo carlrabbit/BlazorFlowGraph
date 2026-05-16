@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Repository documentation map
+    url: https://github.com/carlrabbit/BlazorFlowGraph/blob/main/README.md
+    about: Start with the repository documentation map before opening a process-driven issue.
+  - name: Specs index
+    url: https://github.com/carlrabbit/BlazorFlowGraph/blob/main/docs/SPECS.md
+    about: Check whether the behavior already has a governing spec.

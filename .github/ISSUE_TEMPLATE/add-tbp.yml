@@ -1,0 +1,27 @@
+name: Add TBP
+description: Propose a new Task Best Practice.
+title: "Add TBP: "
+labels:
+  - documentation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Review `docs/TBPS.md` and `docs/tbps/add-tbp.md` before filling this out.
+  - type: input
+    id: tbp
+    attributes:
+      label: Proposed TBP name
+      placeholder: docs/tbps/...
+    validations:
+      required: true
+  - type: textarea
+    id: recurrence
+    attributes:
+      label: Why this pattern is recurring
+    validations:
+      required: true
+  - type: textarea
+    id: related
+    attributes:
+      label: Related docs or issue forms

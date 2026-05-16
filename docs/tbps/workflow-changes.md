@@ -10,6 +10,7 @@ Define the standard process for changing repository automation without losing th
 # Required Reading
 
 - [`../WORKFLOWS.md`](../WORKFLOWS.md)
+- [`../workflows/README.md`](../workflows/README.md)
 - [`../workflows/ci-build.md`](../workflows/ci-build.md)
 - [`../workflows/publish-nuget.md`](../workflows/publish-nuget.md)
 - [`../../AGENTS.md`](../../AGENTS.md)
@@ -41,6 +42,15 @@ Define the standard process for changing repository automation without losing th
 
 # Related Documents
 
+- [`../workflows/README.md`](../workflows/README.md)
 - [`../workflows/ci-build.md`](../workflows/ci-build.md)
 - [`../workflows/publish-nuget.md`](../workflows/publish-nuget.md)
 - [`documentation-changes.md`](documentation-changes.md)
+
+# Authority
+
+This TBP is authoritative for workflow change process in this repository.
+
+# Document Contract
+
+Update this document when workflow change expectations change. Keep it synchronized with [`../WORKFLOWS.md`](../WORKFLOWS.md), [`../workflows/README.md`](../workflows/README.md), and workflow-related issue forms.

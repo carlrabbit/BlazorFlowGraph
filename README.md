@@ -9,6 +9,7 @@ The repository focuses on semantic graph projection, incremental synchronization
 Start here:
 
 - [`docs/TERMINOLOGY.md`](docs/TERMINOLOGY.md) — canonical project vocabulary
+- [`docs/SPECS.md`](docs/SPECS.md) — behavioral authority, invariants, contracts, and validation expectations
 - [`docs/architecture/system-overview.md`](docs/architecture/system-overview.md) — runtime boundaries and subsystem responsibilities
 - [`docs/WORKFLOWS.md`](docs/WORKFLOWS.md) — workflow intent index
 - [`docs/TBPS.md`](docs/TBPS.md) — reusable task best practices
@@ -26,6 +27,8 @@ Specialized references:
 - [`docs/research/README.md`](docs/research/README.md) — exploratory research document location
 - [`docs/ai/`](docs/ai) — AI-facing architecture, protocol, and rendering references
 - [`samples.md`](samples.md) — sample catalog with run commands and screenshots
+
+`docs/agent-context/` and `docs/ai/` are routing and context aids. Durable terminology, behavior, structure, rationale, workflow intent, and process guidance live in terminology, specs, architecture, decisions, workflows, and TBPs.
 
 ## Repository Structure
 

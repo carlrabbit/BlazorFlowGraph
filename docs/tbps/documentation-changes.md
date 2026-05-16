@@ -11,6 +11,7 @@ Keep repository entry points, authoritative references, and synchronization rule
 
 - [`../../README.md`](../../README.md)
 - [`../TERMINOLOGY.md`](../TERMINOLOGY.md)
+- [`../SPECS.md`](../SPECS.md)
 - [`../WORKFLOWS.md`](../WORKFLOWS.md)
 - [`../TBPS.md`](../TBPS.md)
 - [`../../AGENTS.md`](../../AGENTS.md)
@@ -35,6 +36,7 @@ Keep repository entry points, authoritative references, and synchronization rule
 - adding new guidance without updating indexes or routing files
 - duplicating the same explanation across README, workflow docs, and AI-facing docs
 - changing terminology in one file without updating `docs/TERMINOLOGY.md`
+- adding behavior guidance without routing it into `docs/SPECS.md` and `docs/specs/`
 
 # Synchronization Requirements
 
@@ -44,6 +46,15 @@ Keep repository entry points, authoritative references, and synchronization rule
 
 # Related Documents
 
+- [`../SPECS.md`](../SPECS.md)
 - [`../WORKFLOWS.md`](../WORKFLOWS.md)
 - [`../TBPS.md`](../TBPS.md)
 - [`workflow-changes.md`](workflow-changes.md)
+
+# Authority
+
+This TBP is authoritative for documentation change process in this repository.
+
+# Document Contract
+
+Update this document when documentation change workflow expectations change. Keep it synchronized with [`documentation-review.md`](documentation-review.md), [`../TBPS.md`](../TBPS.md), and documentation-related issue forms.

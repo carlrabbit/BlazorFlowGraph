@@ -1,0 +1,27 @@
+name: Create milestone
+description: Request a new milestone sequencing document.
+title: "Create milestone: "
+labels:
+  - planning
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Review `docs/milestones/README.md` and `docs/tbps/create-milestone.md` before filling this out.
+  - type: input
+    id: milestone
+    attributes:
+      label: Milestone name
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal and sequencing need
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Related specs and decisions
+      description: Link the authoritative behavior and rationale documents this milestone depends on.

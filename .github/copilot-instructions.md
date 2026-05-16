@@ -3,6 +3,7 @@
 Authoritative repository guidance lives in:
 - ../copilot-instructions.md
 - ../docs/TERMINOLOGY.md
+- ../docs/SPECS.md
 - ../docs/architecture/system-overview.md
 - ../docs/decisions/
 - ../docs/workflows/
