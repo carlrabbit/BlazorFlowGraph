@@ -83,6 +83,8 @@ Group diffs are communicated through `GraphDiff.groupOperations` (`GroupDiffOper
 
 These travel independently of the graph data and are applied through `OverlayState`.
 
+Overlay values are semantically owned data. The core protocol keeps overlay data opaque (`data` bag) and does not embed renderer-specific behavior. Runtime overlay providers may recompute these values after snapshot/diff application without mutating graph topology.
+
 ## Protocol Versioning
 
 `GraphSnapshot` carries a `protocolVersion` integer (default `1`). This allows the runtime to detect and handle forward/backward compatibility between server and client.
@@ -92,3 +94,5 @@ These travel independently of the graph data and are applied through `OverlaySta
 - `docs/protocol/contracts.md`
 - `docs/decisions/0003-diff-protocol.md`
 - `docs/ai/architecture.md`
+- `docs/specs/semantic-overlays.md`
+- `docs/specs/overlay-provider-contract.md`

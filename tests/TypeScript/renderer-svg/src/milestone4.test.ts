@@ -287,6 +287,23 @@ describe("buildRenderFrame — overlays (Milestone 4)", () => {
     expect(frame.overlays.length).toBe(1);
     expect(frame.overlays[0]?.nodeId).toBe("n1");
   });
+
+  it("maps overlay shape, severity, and priority from overlay data", () => {
+    const state = applySnapshot({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
+    const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
+    const frame = buildRenderFrame(state, layout, {
+      nodeOverlays: new Map([
+        ["n1", { nodeId: "n1", kind: "warning", data: { shape: "halo", severity: "high", priority: 50 } }],
+      ]),
+    });
+    expect(frame.overlays[0]?.shape).toBe("halo");
+    expect(frame.overlays[0]?.severity).toBe("high");
+    expect(frame.overlays[0]?.priority).toBe(50);
+  });
 });
 
 // ---------------------------------------------------------------------------

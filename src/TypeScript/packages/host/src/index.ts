@@ -23,6 +23,12 @@ export interface HostOptions {
   readonly height?: number;
   readonly nodeWidth?: number;
   readonly nodeHeight?: number;
+  /** Optional .NET object reference used for semantic inspection callbacks. */
+  readonly inspectionTarget?: {
+    invokeMethodAsync(method: string, payload: unknown): Promise<unknown>;
+  };
+  /** Method name invoked on the inspection target (defaults to "HandleInspection"). */
+  readonly inspectionMethodName?: string;
 }
 
 /** Viewport state: pan offsets and zoom scale. */
@@ -64,6 +70,8 @@ export function mount(options: HostOptions): {
     height = 600,
     nodeWidth = 120,
     nodeHeight = 40,
+    inspectionTarget,
+    inspectionMethodName = "HandleInspection",
   } = options;
 
   const elOrNull = document.querySelector(container);
@@ -119,6 +127,18 @@ export function mount(options: HostOptions): {
   const unsubscribe = bridge.subscribe(render);
   render();
 
+  function emitInspection(payload: {
+    targetType: "node" | "edge" | "group" | "selection" | "overlay";
+    targetIds: string[];
+    label?: string;
+    kind?: string;
+    topologyScope?: string;
+  }): void {
+    inspectionTarget?.invokeMethodAsync(inspectionMethodName, payload).catch(() => {
+      // Inspection callback errors should never break rendering.
+    });
+  }
+
   // --- Pan ---
   let isPanning = false;
   let panStart = { x: 0, y: 0 };
@@ -161,11 +181,59 @@ export function mount(options: HostOptions): {
     applyViewport();
   }
 
+  function onClick(e: MouseEvent): void {
+    const target = e.target as Element | null;
+    if (target == null) return;
+
+    const nodeEl = target.closest("[data-node-id]");
+    if (nodeEl != null) {
+      const nodeId = nodeEl.getAttribute("data-node-id");
+      if (nodeId != null) {
+        emitInspection({
+          targetType: "node",
+          targetIds: [nodeId],
+          ...(nodeEl.getAttribute("aria-label") != null ? { label: nodeEl.getAttribute("aria-label") ?? "" } : {}),
+          ...(nodeEl.getAttribute("data-kind") != null ? { kind: nodeEl.getAttribute("data-kind") ?? "" } : {}),
+          topologyScope: "node",
+        });
+      }
+      return;
+    }
+
+    const edgeEl = target.closest("[data-edge-id]");
+    if (edgeEl != null) {
+      const edgeId = edgeEl.getAttribute("data-edge-id");
+      if (edgeId != null) {
+        emitInspection({
+          targetType: "edge",
+          targetIds: [edgeId],
+          ...(edgeEl.getAttribute("aria-label") != null ? { label: edgeEl.getAttribute("aria-label") ?? "" } : {}),
+          topologyScope: "edge",
+        });
+      }
+      return;
+    }
+
+    const groupEl = target.closest("[data-group-id]");
+    if (groupEl != null) {
+      const groupId = groupEl.getAttribute("data-group-id");
+      if (groupId != null) {
+        emitInspection({
+          targetType: "group",
+          targetIds: [groupId],
+          ...(groupEl.getAttribute("aria-label") != null ? { label: groupEl.getAttribute("aria-label") ?? "" } : {}),
+          topologyScope: "group",
+        });
+      }
+    }
+  }
+
   svg.addEventListener("pointerdown", onPointerDown);
   svg.addEventListener("pointermove", onPointerMove);
   svg.addEventListener("pointerup", onPointerUp);
   svg.addEventListener("pointercancel", onPointerUp);
   svg.addEventListener("wheel", onWheel, { passive: false });
+  svg.addEventListener("click", onClick);
 
   function fitToScreen(): void {
     if (layoutWidth <= 0 || layoutHeight <= 0) return;
@@ -191,6 +259,7 @@ export function mount(options: HostOptions): {
     svg.removeEventListener("pointerup", onPointerUp);
     svg.removeEventListener("pointercancel", onPointerUp);
     svg.removeEventListener("wheel", onWheel);
+    svg.removeEventListener("click", onClick);
     el.innerHTML = "";
   }
 

@@ -13,6 +13,11 @@ Use a spec when the repository needs durable behavioral truth. Do not use milest
 | [`specs/layout-provider-contract.md`](specs/layout-provider-contract.md) | Active | Defines async layout provider interface, LayoutGraph/LayoutResult boundaries, and failure semantics |
 | [`specs/package-and-release-contract.md`](specs/package-and-release-contract.md) | Active | Defines package boundaries and release-readiness requirements |
 | [`specs/stable-identifiers.md`](specs/stable-identifiers.md) | Active | Defines deterministic identifier requirements across projection, diffing, and browser reconciliation |
+| [`specs/semantic-overlays.md`](specs/semantic-overlays.md) | Active | Defines semantic overlay identity, targets, registry behavior, and safe rendering constraints |
+| [`specs/overlay-provider-contract.md`](specs/overlay-provider-contract.md) | Active | Defines deterministic overlay provider lifecycle, I/O boundaries, and failure isolation |
+| [`specs/inspection-workflows.md`](specs/inspection-workflows.md) | Active | Defines semantic inspection payloads, runtime events, and host callback integration |
+| [`specs/search-and-filtering.md`](specs/search-and-filtering.md) | Active | Defines explicit search/filter visibility modes and overlay-aware exploration behavior |
+| [`specs/semantic-layering.md`](specs/semantic-layering.md) | Active | Defines multi-layer semantic ownership, visibility, and conflict-resolution ordering |
 
 # Authority
 

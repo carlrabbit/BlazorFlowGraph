@@ -114,9 +114,21 @@ export interface FocusState {
 }
 
 /** Text search state. */
+export type SearchVisibilityBehavior = "highlight" | "filter" | "isolate";
+
+/** A structured filter token applied alongside free-text search. */
+export interface SearchFilter {
+  readonly key: string;
+  readonly value: unknown;
+}
+
+/** Text search state. */
 export interface SearchState {
   readonly query: string;
   readonly matchedNodeIds: ReadonlySet<NodeId>;
+  readonly activeFilters: readonly SearchFilter[];
+  readonly activeResultIndex: number;
+  readonly visibilityBehavior: SearchVisibilityBehavior;
 }
 
 /** Per-node and per-edge overlay decorations. */
@@ -132,6 +144,20 @@ export type LayoutPolicy = "Never" | "Incremental" | "Full" | "GroupLocal" | "Ma
 export interface LayoutState {
   readonly policy: LayoutPolicy;
   readonly expandedGroupIds: ReadonlySet<GroupId>;
+}
+
+/** Semantic inspection target type. */
+export type InspectionTargetType = "node" | "edge" | "group" | "selection" | "overlay";
+
+/** Runtime inspection payload emitted through semantic inspection events. */
+export interface InspectionPayload {
+  readonly targetType: InspectionTargetType;
+  readonly targetIds: readonly string[];
+  readonly label?: string;
+  readonly kind?: string;
+  readonly metadataSummary?: Readonly<Record<string, unknown>>;
+  readonly activeOverlayKinds?: readonly string[];
+  readonly topologyScope?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -152,6 +178,16 @@ export type RuntimeEventMap = {
   OverlayRegistryChanged: { readonly kind: string };
   /** Fired after a layout computation completes. */
   LayoutCompleted: { readonly durationMs: number };
+  /** Fired when a node inspection payload is requested. */
+  NodeInspected: InspectionPayload;
+  /** Fired when an edge inspection payload is requested. */
+  EdgeInspected: InspectionPayload;
+  /** Fired when a group inspection payload is requested. */
+  GroupInspected: InspectionPayload;
+  /** Fired when a selection inspection payload is requested. */
+  SelectionInspected: InspectionPayload;
+  /** Fired when an overlay inspection payload is requested. */
+  OverlayInspected: InspectionPayload;
 };
 
 export type RuntimeEventName = keyof RuntimeEventMap;
@@ -224,6 +260,9 @@ export class GraphRuntimeStore {
   private search: SearchState = {
     query: "",
     matchedNodeIds: new Set(),
+    activeFilters: [],
+    activeResultIndex: -1,
+    visibilityBehavior: "filter",
   };
 
   private overlays: OverlayState = {
@@ -272,8 +311,22 @@ export class GraphRuntimeStore {
   }
 
   /** Updates search state and fires SearchApplied. */
-  setSearch(query: string, matchedNodeIds: ReadonlySet<NodeId>): void {
-    this.search = { query, matchedNodeIds };
+  setSearch(
+    query: string,
+    matchedNodeIds: ReadonlySet<NodeId>,
+    options?: {
+      readonly activeFilters?: readonly SearchFilter[];
+      readonly activeResultIndex?: number;
+      readonly visibilityBehavior?: SearchVisibilityBehavior;
+    }
+  ): void {
+    this.search = {
+      query,
+      matchedNodeIds,
+      activeFilters: options?.activeFilters ?? [],
+      activeResultIndex: options?.activeResultIndex ?? -1,
+      visibilityBehavior: options?.visibilityBehavior ?? "filter",
+    };
     this.eventBus.emit("SearchApplied", { query, matchedNodeIds });
     this.notify();
   }
@@ -510,6 +563,8 @@ export interface VisibleGraph {
 export interface VisibilityPolicy {
   /** IDs of nodes matched by active search. Empty set means no search filter. */
   readonly searchMatchedIds?: ReadonlySet<NodeId>;
+  /** Explicit visibility behavior when search matches exist. */
+  readonly searchVisibilityBehavior?: SearchVisibilityBehavior;
   /** When non-null, only the focused node and its immediate neighbors are visible. */
   readonly focusedNodeId?: NodeId | null;
   /** Groups that are currently collapsed — their child nodes are hidden. */
@@ -525,6 +580,7 @@ export function buildVisibleGraph(
   policy?: VisibilityPolicy
 ): VisibleGraph {
   const searchFilter = policy?.searchMatchedIds;
+  const searchVisibilityBehavior = policy?.searchVisibilityBehavior ?? "filter";
   const focusedNode = policy?.focusedNodeId;
   const collapsedGroups = policy?.collapsedGroupIds ?? new Set<GroupId>();
 
@@ -542,8 +598,30 @@ export function buildVisibleGraph(
   const visibleNodeIds = new Set<NodeId>();
   for (const nodeId of data.nodes.keys()) {
     if (hiddenByGroup.has(nodeId)) continue;
-    if (searchFilter != null && searchFilter.size > 0 && !searchFilter.has(nodeId)) continue;
+    if (
+      searchFilter != null &&
+      searchFilter.size > 0 &&
+      searchVisibilityBehavior === "filter" &&
+      !searchFilter.has(nodeId)
+    ) {
+      continue;
+    }
     visibleNodeIds.add(nodeId);
+  }
+
+  if (searchFilter != null && searchFilter.size > 0 && searchVisibilityBehavior === "isolate") {
+    const isolated = new Set<NodeId>();
+    for (const matchedId of searchFilter) {
+      if (!visibleNodeIds.has(matchedId)) continue;
+      isolated.add(matchedId);
+      for (const edge of data.edges.values()) {
+        if (edge.sourceId === matchedId && visibleNodeIds.has(edge.targetId)) isolated.add(edge.targetId);
+        if (edge.targetId === matchedId && visibleNodeIds.has(edge.sourceId)) isolated.add(edge.sourceId);
+      }
+    }
+    for (const nodeId of [...visibleNodeIds]) {
+      if (!isolated.has(nodeId)) visibleNodeIds.delete(nodeId);
+    }
   }
 
   // Focus filter: restrict to focused node and neighbors (one hop)
@@ -587,6 +665,19 @@ export function buildVisibleGraph(
 // ---------------------------------------------------------------------------
 
 /** Describes a named overlay type that can be registered with the OverlayRegistry. */
+export interface OverlayLegendItem {
+  readonly value: string;
+  readonly label: string;
+  readonly color?: string;
+  readonly description?: string;
+}
+
+/** Optional legend metadata exposed for a registered overlay kind. */
+export interface OverlayLegendMetadata {
+  readonly items: readonly OverlayLegendItem[];
+}
+
+/** Describes a named overlay type that can be registered with the OverlayRegistry. */
 export interface OverlayDescriptor {
   /** Unique identifier for this overlay type. */
   readonly kind: string;
@@ -594,6 +685,10 @@ export interface OverlayDescriptor {
   readonly displayName: string;
   /** Controls z-order when multiple overlays are composed. Higher = rendered last (on top). */
   readonly zOrder: number;
+  /** Optional overlay description surfaced in UI controls and diagnostics. */
+  readonly description?: string;
+  /** Optional legend metadata surfaced in overlay controls. */
+  readonly legend?: OverlayLegendMetadata;
   /** When false the overlay is registered but not shown. Defaults to true. */
   readonly visible?: boolean;
 }
@@ -639,6 +734,36 @@ export class OverlayRegistry {
   getAll(): readonly (OverlayDescriptor & { visible: boolean })[] {
     return [...this.descriptors.values()].sort((a, b) => a.zOrder - b.zOrder);
   }
+}
+
+/** Overlay record for group targets. */
+export interface GroupOverlay {
+  readonly groupId: GroupId;
+  readonly kind: string;
+  readonly data?: Readonly<Record<string, unknown>>;
+}
+
+/** Snapshot input passed to overlay providers when recomputing overlays. */
+export interface OverlayProviderInput {
+  readonly data: GraphDataState;
+  readonly runtime: RuntimeSnapshot;
+  readonly configuration?: Readonly<Record<string, unknown>>;
+}
+
+/** Overlay values returned from a provider recomputation. */
+export interface OverlayProviderResult {
+  readonly nodeOverlays?: ReadonlyMap<NodeId, NodeOverlay>;
+  readonly edgeOverlays?: ReadonlyMap<string, EdgeOverlay>;
+  readonly groupOverlays?: ReadonlyMap<GroupId, GroupOverlay>;
+  readonly legend?: OverlayLegendMetadata;
+  readonly diagnostics?: readonly string[];
+}
+
+/** Contract implemented by semantic overlay providers. */
+export interface OverlayProvider {
+  readonly kind: string;
+  readonly descriptor: OverlayDescriptor;
+  compute(input: OverlayProviderInput): OverlayProviderResult;
 }
 
 // ---------------------------------------------------------------------------
@@ -793,6 +918,8 @@ export class GraphRuntimeHost {
   readonly diagnostics: RuntimeDiagnostics;
 
   private _commandHandlers: Array<(cmd: SemanticCommand) => void> = [];
+  private readonly _overlayProviders = new Map<string, OverlayProvider>();
+  private readonly _overlayProviderDiagnostics = new Map<string, readonly string[]>();
 
   constructor(options?: {
     store?: GraphRuntimeStore;
@@ -814,6 +941,10 @@ export class GraphRuntimeHost {
     for (const handler of this._commandHandlers) {
       handler(command);
     }
+    this.store.eventBus.emit("CommandDispatched", { command });
+    if (command.type !== "FitSelection") {
+      this.recomputeOverlayProviders();
+    }
   }
 
   /** Registers an additional command handler invoked after built-in handling. */
@@ -823,6 +954,147 @@ export class GraphRuntimeHost {
       const idx = this._commandHandlers.indexOf(handler);
       if (idx >= 0) this._commandHandlers.splice(idx, 1);
     };
+  }
+
+  /** Registers an overlay provider and recomputes overlays immediately. */
+  registerOverlayProvider(provider: OverlayProvider): () => void {
+    this._overlayProviders.set(provider.kind, provider);
+    this.overlayRegistry.register(provider.descriptor);
+    this.store.eventBus.emit("OverlayRegistryChanged", { kind: provider.kind });
+    this.recomputeOverlayProviders();
+    return () => {
+      this.unregisterOverlayProvider(provider.kind);
+    };
+  }
+
+  /** Unregisters an overlay provider by kind and recomputes overlays. */
+  unregisterOverlayProvider(kind: string): void {
+    this._overlayProviders.delete(kind);
+    this._overlayProviderDiagnostics.delete(kind);
+    this.overlayRegistry.unregister(kind);
+    this.store.eventBus.emit("OverlayRegistryChanged", { kind });
+    this.recomputeOverlayProviders();
+  }
+
+  /** Applies a full graph snapshot and recomputes provider overlays. */
+  receiveSnapshot(snapshot: GraphSnapshot): void {
+    this.store.setData(applySnapshot(snapshot));
+    this.pruneOverlayTargets();
+    this.recomputeOverlayProviders();
+  }
+
+  /** Applies an incremental diff and recomputes provider overlays. */
+  receiveDiff(diff: GraphDiff): void {
+    const currentState = this.toGraphState(this.store.getSnapshot().data);
+    const nextState = applyDiff(currentState, diff);
+    this.store.setData(nextState);
+    this.diagnostics.recordDiffApplication();
+    this.pruneOverlayTargets();
+    this.recomputeOverlayProviders();
+  }
+
+  /** Returns provider diagnostics keyed by overlay kind. */
+  getOverlayProviderDiagnostics(): ReadonlyMap<string, readonly string[]> {
+    return this._overlayProviderDiagnostics;
+  }
+
+  /** Recomputes overlays from all registered providers with failure isolation. */
+  recomputeOverlayProviders(): void {
+    const snapshot = this.store.getSnapshot();
+    const nodeOverlays = new Map<NodeId, NodeOverlay>();
+    const edgeOverlays = new Map<string, EdgeOverlay>();
+
+    for (const provider of this._overlayProviders.values()) {
+      try {
+        const result = provider.compute({
+          data: snapshot.data,
+          runtime: snapshot,
+        });
+        const providerDiagnostics: string[] = [...(result.diagnostics ?? [])];
+
+        if (result.legend != null) {
+          const descriptor = this.overlayRegistry.get(provider.kind);
+          if (descriptor != null) {
+            this.overlayRegistry.register({ ...descriptor, legend: result.legend });
+          }
+        }
+
+        if (result.nodeOverlays != null) {
+          for (const [nodeId, overlay] of result.nodeOverlays) {
+            const existing = nodeOverlays.get(nodeId);
+            if (existing != null && existing.kind !== overlay.kind) {
+              providerDiagnostics.push(
+                `node overlay conflict on ${nodeId}: "${existing.kind}" overwritten by "${overlay.kind}"`
+              );
+            }
+            nodeOverlays.set(nodeId, overlay);
+          }
+        }
+        if (result.edgeOverlays != null) {
+          for (const [edgeId, overlay] of result.edgeOverlays) {
+            const existing = edgeOverlays.get(edgeId);
+            if (existing != null && existing.kind !== overlay.kind) {
+              providerDiagnostics.push(
+                `edge overlay conflict on ${edgeId}: "${existing.kind}" overwritten by "${overlay.kind}"`
+              );
+            }
+            edgeOverlays.set(edgeId, overlay);
+          }
+        }
+        this._overlayProviderDiagnostics.set(provider.kind, providerDiagnostics);
+      } catch (error) {
+        const diagnostics = [error instanceof Error ? error.message : String(error)];
+        this._overlayProviderDiagnostics.set(provider.kind, diagnostics);
+        this.overlayRegistry.setVisible(provider.kind, false);
+      }
+    }
+
+    this.store.setOverlays({
+      nodeOverlays,
+      edgeOverlays,
+    });
+  }
+
+  /** Emits semantic inspection payload for a node target. */
+  inspectNode(nodeId: NodeId): void {
+    const node = this.store.getSnapshot().data.nodes.get(nodeId);
+    const payload = this.buildInspectionPayload("node", nodeId, node?.label, node?.kind, node?.metadata);
+    this.store.eventBus.emit("NodeInspected", payload);
+  }
+
+  /** Emits semantic inspection payload for an edge target. */
+  inspectEdge(edgeId: string): void {
+    const edge = this.store.getSnapshot().data.edges.get(edgeId);
+    const payload = this.buildInspectionPayload("edge", edgeId, edge?.label, edge?.id, undefined);
+    this.store.eventBus.emit("EdgeInspected", payload);
+  }
+
+  /** Emits semantic inspection payload for a group target. */
+  inspectGroup(groupId: GroupId): void {
+    const group = this.store.getSnapshot().data.groups.get(groupId);
+    const payload = this.buildInspectionPayload("group", groupId, group?.label, group?.kind, group?.metadata);
+    this.store.eventBus.emit("GroupInspected", payload);
+  }
+
+  /** Emits semantic inspection payload for a node selection target. */
+  inspectSelection(nodeIds: ReadonlySet<NodeId>): void {
+    const payload: InspectionPayload = {
+      targetType: "selection",
+      targetIds: [...nodeIds],
+      topologyScope: "selection",
+    };
+    this.store.eventBus.emit("SelectionInspected", payload);
+  }
+
+  /** Emits semantic inspection payload for an overlay target. */
+  inspectOverlay(kind: string, targetType: "node" | "edge" | "group", targetId: string): void {
+    const payload: InspectionPayload = {
+      targetType: "overlay",
+      targetIds: [targetId],
+      kind,
+      topologyScope: targetType,
+    };
+    this.store.eventBus.emit("OverlayInspected", payload);
   }
 
   private _handleBuiltIn(command: SemanticCommand): void {
@@ -862,5 +1134,61 @@ export class GraphRuntimeHost {
         // FitSelection is a viewport command — implementation lives in the host rendering layer.
         break;
     }
+  }
+
+  private pruneOverlayTargets(): void {
+    const snapshot = this.store.getSnapshot();
+    const current = snapshot.overlays;
+    const nodeOverlays = new Map<NodeId, NodeOverlay>();
+    for (const [nodeId, overlay] of current.nodeOverlays) {
+      if (snapshot.data.nodes.has(nodeId)) {
+        nodeOverlays.set(nodeId, overlay);
+      }
+    }
+
+    const edgeOverlays = new Map<string, EdgeOverlay>();
+    for (const [edgeId, overlay] of current.edgeOverlays) {
+      if (snapshot.data.edges.has(edgeId)) {
+        edgeOverlays.set(edgeId, overlay);
+      }
+    }
+
+    this.store.setOverlays({ nodeOverlays, edgeOverlays });
+  }
+
+  private buildInspectionPayload(
+    targetType: "node" | "edge" | "group",
+    targetId: string,
+    label?: string,
+    kind?: string,
+    metadataSummary?: Readonly<Record<string, unknown>>
+  ): InspectionPayload {
+    const snapshot = this.store.getSnapshot();
+    const activeOverlayKinds: string[] = [];
+    if (targetType === "node") {
+      const overlay = snapshot.overlays.nodeOverlays.get(targetId);
+      if (overlay != null) activeOverlayKinds.push(overlay.kind);
+    } else if (targetType === "edge") {
+      const overlay = snapshot.overlays.edgeOverlays.get(targetId);
+      if (overlay != null) activeOverlayKinds.push(overlay.kind);
+    }
+
+    return {
+      targetType,
+      targetIds: [targetId],
+      activeOverlayKinds,
+      ...(label !== undefined ? { label } : {}),
+      ...(kind !== undefined ? { kind } : {}),
+      ...(metadataSummary !== undefined ? { metadataSummary } : {}),
+    };
+  }
+
+  private toGraphState(data: GraphDataState): GraphState {
+    return {
+      version: data.version,
+      nodes: data.nodes,
+      edges: data.edges,
+      groups: data.groups,
+    };
   }
 }

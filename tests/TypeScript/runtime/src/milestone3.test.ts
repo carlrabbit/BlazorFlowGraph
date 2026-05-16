@@ -30,6 +30,7 @@ import {
   RuntimeDiagnostics,
   // GraphRuntimeHost
   GraphRuntimeHost,
+  type OverlayProvider,
   // Store
   GraphRuntimeStore,
 } from "@dataflow-visualizer/runtime";
@@ -193,6 +194,44 @@ describe("buildVisibleGraph — search filter", () => {
     const vg = buildVisibleGraph(data, { searchMatchedIds: new Set() });
     expect(vg.visibleNodeIds.size).toBe(2);
   });
+
+  it("highlight mode preserves full topology visibility", () => {
+    const data = makeData(
+      [
+        { id: "n1", label: "A", kind: "x" },
+        { id: "n2", label: "B", kind: "x" },
+      ],
+      [{ id: "e1", sourceId: "n1", targetId: "n2" }]
+    );
+    const vg = buildVisibleGraph(data, {
+      searchMatchedIds: new Set(["n1"]),
+      searchVisibilityBehavior: "highlight",
+    });
+    expect(vg.visibleNodeIds.has("n1")).toBe(true);
+    expect(vg.visibleNodeIds.has("n2")).toBe(true);
+    expect(vg.visibleEdgeIds.has("e1")).toBe(true);
+  });
+
+  it("isolate mode includes matched nodes and their immediate neighbors", () => {
+    const data = makeData(
+      [
+        { id: "n1", label: "A", kind: "x" },
+        { id: "n2", label: "B", kind: "x" },
+        { id: "n3", label: "C", kind: "x" },
+      ],
+      [
+        { id: "e1", sourceId: "n1", targetId: "n2" },
+        { id: "e2", sourceId: "n2", targetId: "n3" },
+      ]
+    );
+    const vg = buildVisibleGraph(data, {
+      searchMatchedIds: new Set(["n2"]),
+      searchVisibilityBehavior: "isolate",
+    });
+    expect(vg.visibleNodeIds.has("n1")).toBe(true);
+    expect(vg.visibleNodeIds.has("n2")).toBe(true);
+    expect(vg.visibleNodeIds.has("n3")).toBe(true);
+  });
 });
 
 describe("buildVisibleGraph — collapsed groups", () => {
@@ -316,6 +355,22 @@ describe("OverlayRegistry", () => {
     reg.register({ kind: "health", displayName: "Health v2", zOrder: 20 });
     expect(reg.get("health")?.displayName).toBe("Health v2");
     expect(reg.get("health")?.zOrder).toBe(20);
+  });
+
+  it("stores optional description and legend metadata", () => {
+    const reg = new OverlayRegistry();
+    reg.register({
+      kind: "health",
+      displayName: "Health",
+      zOrder: 10,
+      description: "Runtime health",
+      legend: {
+        items: [{ value: "warning", label: "Warning", color: "#f59e0b" }],
+      },
+    });
+    const desc = reg.get("health");
+    expect(desc?.description).toBe("Runtime health");
+    expect(desc?.legend?.items[0]?.value).toBe("warning");
   });
 });
 
@@ -554,6 +609,92 @@ describe("GraphRuntimeHost — custom command handlers", () => {
   });
 });
 
+describe("GraphRuntimeHost — overlay providers", () => {
+  it("registers providers and recomputes overlay state", () => {
+    const host = new GraphRuntimeHost();
+    host.store.setData(
+      makeData([{ id: "n1", label: "A", kind: "service" }])
+    );
+    const compute = vi.fn(() => ({
+      nodeOverlays: new Map([["n1", { nodeId: "n1", kind: "health", data: { badge: "!" } }]]),
+    }));
+
+    const provider: OverlayProvider = {
+      kind: "health",
+      descriptor: { kind: "health", displayName: "Health", zOrder: 10 },
+      compute,
+    };
+
+    host.registerOverlayProvider(provider);
+    const overlay = host.store.getSnapshot().overlays.nodeOverlays.get("n1");
+    expect(compute).toHaveBeenCalled();
+    expect(host.overlayRegistry.get("health")).toBeDefined();
+    expect(overlay?.kind).toBe("health");
+  });
+
+  it("isolates provider failures without throwing", () => {
+    const host = new GraphRuntimeHost();
+    host.store.setData(makeData([{ id: "n1", label: "A", kind: "service" }]));
+    const provider: OverlayProvider = {
+      kind: "unstable",
+      descriptor: { kind: "unstable", displayName: "Unstable", zOrder: 10 },
+      compute: () => {
+        throw new Error("boom");
+      },
+    };
+
+    expect(() => host.registerOverlayProvider(provider)).not.toThrow();
+    expect(host.overlayRegistry.get("unstable")?.visible).toBe(false);
+    expect(host.getOverlayProviderDiagnostics().get("unstable")).toEqual(["boom"]);
+  });
+
+  it("recomputes providers after snapshot updates", () => {
+    const host = new GraphRuntimeHost();
+    const provider: OverlayProvider = {
+      kind: "ownership",
+      descriptor: { kind: "ownership", displayName: "Ownership", zOrder: 10 },
+      compute: ({ data }) => ({
+        nodeOverlays: new Map(
+          [...data.nodes.keys()].map((id) => [id, { nodeId: id, kind: "ownership" }])
+        ),
+      }),
+    };
+    host.registerOverlayProvider(provider);
+    host.receiveSnapshot({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "service" }],
+      edges: [],
+    });
+    expect(host.store.getSnapshot().overlays.nodeOverlays.has("n1")).toBe(true);
+  });
+});
+
+describe("GraphRuntimeHost — inspection events", () => {
+  it("emits NodeInspected with target metadata", () => {
+    const host = new GraphRuntimeHost();
+    host.store.setData(makeData([{ id: "n1", label: "Node A", kind: "service" }]));
+    const handler = vi.fn();
+    host.store.eventBus.on("NodeInspected", handler);
+    host.inspectNode("n1");
+    expect(handler).toHaveBeenCalled();
+    expect(handler.mock.calls[0]?.[0]?.targetType).toBe("node");
+    expect(handler.mock.calls[0]?.[0]?.targetIds).toEqual(["n1"]);
+  });
+
+  it("emits OverlayInspected for overlay target context", () => {
+    const host = new GraphRuntimeHost();
+    const handler = vi.fn();
+    host.store.eventBus.on("OverlayInspected", handler);
+    host.inspectOverlay("health", "node", "n1");
+    expect(handler).toHaveBeenCalledWith({
+      targetType: "overlay",
+      targetIds: ["n1"],
+      kind: "health",
+      topologyScope: "node",
+    });
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Runtime event bus — new events
 // ---------------------------------------------------------------------------
@@ -582,5 +723,13 @@ describe("RuntimeEventMap — new Milestone 3 events", () => {
     store.eventBus.on("LayoutCompleted", handler);
     store.eventBus.emit("LayoutCompleted", { durationMs: 42 });
     expect(handler).toHaveBeenCalledWith({ durationMs: 42 });
+  });
+
+  it("store.eventBus supports NodeInspected event", () => {
+    const store = new GraphRuntimeStore();
+    const handler = vi.fn();
+    store.eventBus.on("NodeInspected", handler);
+    store.eventBus.emit("NodeInspected", { targetType: "node", targetIds: ["n1"] });
+    expect(handler).toHaveBeenCalledWith({ targetType: "node", targetIds: ["n1"] });
   });
 });

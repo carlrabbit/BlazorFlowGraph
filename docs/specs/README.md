@@ -53,8 +53,13 @@ Every spec should use this structure:
 - [`graph-diffs.md`](graph-diffs.md)
 - [`graph-snapshots.md`](graph-snapshots.md)
 - [`layout-provider-contract.md`](layout-provider-contract.md)
+- [`overlay-provider-contract.md`](overlay-provider-contract.md)
 - [`package-and-release-contract.md`](package-and-release-contract.md)
 - [`renderer-backend-contract.md`](renderer-backend-contract.md)
+- [`inspection-workflows.md`](inspection-workflows.md)
+- [`search-and-filtering.md`](search-and-filtering.md)
+- [`semantic-layering.md`](semantic-layering.md)
+- [`semantic-overlays.md`](semantic-overlays.md)
 - [`stable-identifiers.md`](stable-identifiers.md)
 
 # Authority

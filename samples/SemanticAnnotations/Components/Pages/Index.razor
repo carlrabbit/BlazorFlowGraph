@@ -27,7 +27,22 @@
     </ul>
 </div>
 
-<DataflowGraph Snapshot="@_snapshot" Width="980" Height="560" />
+<DataflowGraph Snapshot="@_snapshot" Width="980" Height="560" OnInspection="OnInspectionAsync" />
+
+@if (_lastInspection is not null)
+{
+    <div class="hint" style="margin-top:0.5rem">
+        Last inspection: <strong>@_lastInspection.TargetType</strong>
+        @if (_lastInspection.TargetIds.Count > 0)
+        {
+            <span>&nbsp;(@string.Join(", ", _lastInspection.TargetIds))</span>
+        }
+        @if (!string.IsNullOrWhiteSpace(_lastInspection.Label))
+        {
+            <span>&nbsp;- @_lastInspection.Label</span>
+        }
+    </div>
+}
 
 @code {
     private readonly List<string> _descriptions = [];
@@ -47,6 +62,7 @@
     private int _version;
     private List<object> _semanticObjects = [];
     private GraphSnapshot? _snapshot;
+    private GraphInspectionPayload? _lastInspection;
 
     protected override void OnInitialized() => ResetModel();
 
@@ -129,6 +145,13 @@
             : "OrdersService currently projects without a cache dependency.");
 
         _snapshot = Projector.Project(_semanticObjects, ++_version);
+    }
+
+    private Task OnInspectionAsync(GraphInspectionPayload payload)
+    {
+        _lastInspection = payload;
+        StateHasChanged();
+        return Task.CompletedTask;
     }
 
     [SemanticNode(Label = "API Gateway", Kind = "gateway")]

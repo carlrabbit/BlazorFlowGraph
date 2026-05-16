@@ -50,6 +50,11 @@ As of Milestone 4:
 - `"overlays"` — handled via `buildRenderFrame + buildFrameMarkup` in the backend; not supported in the stateless `renderLayer` path
 - `"labels"`, `"selection"` — floating labels are embedded in node/edge elements; selection rings are a browser-side interaction concern
 
+As of the semantic overlay and inspection milestone:
+- overlay default shapes include `badge`, `marker`, `halo`, and `muted`
+- overlay order is deterministic through explicit provider priority and registry z-order
+- renderer output remains XML-escaped for overlay text and attributes
+
 ## GraphRendererBackend
 
 The `GraphRendererBackend` interface abstracts the rendering surface:
@@ -120,6 +125,8 @@ Backends receive `RenderFrame`, not raw runtime state. This is the stable surfac
 - `viewport?: ViewportContext` — apply viewport-space culling (exclude off-screen elements)
 - `nodeOverlays?: ReadonlyMap<string, NodeOverlay>` — overlay badges to include in the frame
 - `styleTokens?: Record<string, StyleToken>` — custom style registry (passed through to `SvgRendererBackend`)
+
+Inspection flows are semantic payload events. Host integration forwards inspected targets through callback payloads instead of exposing raw DOM event details.
 
 ## Viewport Culling (Milestone 4)
 
@@ -207,3 +214,6 @@ Avoid:
 - `docs/decisions/0002-elk-layout.md`
 - `docs/decisions/0004-renderer-backend.md`
 - `docs/ai/architecture.md`
+- `docs/specs/semantic-overlays.md`
+- `docs/specs/inspection-workflows.md`
+- `docs/specs/search-and-filtering.md`

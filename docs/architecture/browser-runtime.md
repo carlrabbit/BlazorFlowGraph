@@ -27,6 +27,9 @@ Reconciliation contract details are specified in:
 - runtime treats .NET projection snapshots/diffs as authoritative semantic inputs
 - runtime preserves browser-owned state (viewport, selection, focus, search, expanded groups, overlays) across valid updates
 - unsupported protocol versions and version-discontinuous diffs are rejected via a recoverable path
+- semantic overlay providers are deterministic runtime extensions that cannot mutate topology
+- inspection events are semantic payload events (`NodeInspected`, `EdgeInspected`, `GroupInspected`, `SelectionInspected`, `OverlayInspected`) and not raw DOM events
+- search visibility behavior is explicit (`highlight`, `filter`, `isolate`) and runtime-owned
 
 # Non-Goals
 
@@ -43,6 +46,14 @@ Reconciliation contract details are specified in:
 - `@dataflow-visualizer/renderer-svg` — render frame construction and SVG backend
 - `@dataflow-visualizer/host` — browser bootstrap and runtime coordination
 - `@dataflow-visualizer/interop` — bridge to .NET/Blazor
+
+Overlay and inspection behavior details are specified in:
+
+- [`../specs/semantic-overlays.md`](../specs/semantic-overlays.md)
+- [`../specs/overlay-provider-contract.md`](../specs/overlay-provider-contract.md)
+- [`../specs/inspection-workflows.md`](../specs/inspection-workflows.md)
+- [`../specs/search-and-filtering.md`](../specs/search-and-filtering.md)
+- [`../specs/semantic-layering.md`](../specs/semantic-layering.md)
 
 # Related Documents
 

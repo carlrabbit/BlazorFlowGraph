@@ -140,11 +140,20 @@ export interface RenderGroup {
 }
 
 /** An active overlay badge to render on a node (Milestone 4). */
+export type RenderOverlayShape = "badge" | "marker" | "halo" | "muted";
+
+/** An active overlay marker to render on a node (Milestone 4+). */
 export interface RenderOverlay {
   /** Node ID this overlay targets. */
   readonly nodeId: string;
   /** Overlay kind (e.g. "warning", "error", "info"). */
   readonly kind: string;
+  /** Overlay shape hint for renderer default rendering. */
+  readonly shape?: RenderOverlayShape;
+  /** Optional severity used for sorting when overlays overlap. */
+  readonly severity?: string;
+  /** Optional visual priority override. Higher values render later. */
+  readonly priority?: number;
   /** Optional badge text or icon indicator. */
   readonly badge?: string | undefined;
 }
@@ -256,9 +265,22 @@ export function buildRenderFrame(
     for (const [nodeId, overlay] of options.nodeOverlays) {
       if (visible != null && !visible.visibleNodeIds.has(nodeId)) continue;
       const badge = typeof overlay.data?.["badge"] === "string" ? overlay.data["badge"] : undefined;
-      overlays.push({ nodeId, kind: overlay.kind, badge });
+      const shapeValue = typeof overlay.data?.["shape"] === "string" ? overlay.data["shape"] : undefined;
+      const shape = isRenderOverlayShape(shapeValue) ? shapeValue : "badge";
+      const severity = typeof overlay.data?.["severity"] === "string" ? overlay.data["severity"] : undefined;
+      const priority = typeof overlay.data?.["priority"] === "number" ? overlay.data["priority"] : undefined;
+      overlays.push({
+        nodeId,
+        kind: overlay.kind,
+        shape,
+        ...(severity !== undefined ? { severity } : {}),
+        ...(priority !== undefined ? { priority } : {}),
+        ...(badge !== undefined ? { badge } : {}),
+      });
     }
   }
+
+  overlays.sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0) || a.kind.localeCompare(b.kind));
 
   return {
     nodes,
@@ -470,7 +492,7 @@ function buildFrameMarkup(frame: RenderFrame, tokens: Record<string, StyleToken>
         ? `<text x="${midX}" y="${midY}" text-anchor="middle" font-size="10" fill="#6b7280">${edgeLabel}</text>`
         : "";
     return [
-      `<g class="dfv-edge" role="graphics-symbol" aria-label="${edgeLabel !== "" ? escapeXmlAttr(edgeLabel) : "edge"}">`,
+      `<g class="dfv-edge" data-edge-id="${escapeXmlAttr(edge.id)}" role="graphics-symbol" aria-label="${edgeLabel !== "" ? escapeXmlAttr(edgeLabel) : "edge"}">`,
       `  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#dfv-arrow)"/>`,
       labelEl,
       `</g>`,
@@ -491,18 +513,19 @@ function buildFrameMarkup(frame: RenderFrame, tokens: Record<string, StyleToken>
     const textX = Math.floor(node.width / 2);
     const textY = Math.floor(node.height / 2 + 5);
     const overlay = overlayByNode.get(node.id);
-    const badgeMarkup = overlay != null ? buildOverlayBadge(overlay, node.width) : "";
+    const overlayMarkup = overlay != null ? buildOverlayMarkup(overlay, node.width, node.height) : "";
+    const mutedOpacity = overlay?.shape === "muted" ? ` opacity="0.45"` : "";
     return [
       `<g class="dfv-node" data-node-id="${escapeXmlAttr(node.id)}" data-kind="${escapeXmlAttr(node.kind)}"`,
       `   transform="translate(${node.x},${node.y})"`,
-      `   role="graphics-symbol" aria-label="${escapeXmlAttr(node.label)}">`,
+      `   role="graphics-symbol" aria-label="${escapeXmlAttr(node.label)}"${mutedOpacity}>`,
       `  <rect width="${node.width}" height="${node.height}"`,
       `        rx="${style.rx}" ry="${style.rx}"`,
       `        fill="${escapeXmlAttr(style.fill)}"`,
       `        stroke="${escapeXmlAttr(style.stroke)}" stroke-width="${style.strokeWidth}"/>`,
       `  <text x="${textX}" y="${textY}" text-anchor="middle" font-size="12"`,
       `        fill="${escapeXmlAttr(style.textColor)}">${labelText}</text>`,
-      badgeMarkup,
+      overlayMarkup,
       `</g>`,
     ]
       .filter(Boolean)
@@ -512,24 +535,59 @@ function buildFrameMarkup(frame: RenderFrame, tokens: Record<string, StyleToken>
   return [...groupElements, ...edgeElements, ...nodeElements].filter(Boolean).join("\n");
 }
 
+/** Builds the default SVG overlay markup for a node. */
+function buildOverlayMarkup(overlay: RenderOverlay, nodeWidth: number, nodeHeight: number): string {
+  if (overlay.shape === "halo") {
+    return [
+      `<rect x="-4" y="-4" width="${nodeWidth + 8}" height="${nodeHeight + 8}"`,
+      `      rx="8" ry="8" fill="none" stroke="${resolveOverlayColor(overlay.kind)}" stroke-width="2" opacity="0.8"/>`,
+    ].join("\n");
+  }
+
+  if (overlay.shape === "marker") {
+    const color = resolveOverlayColor(overlay.kind);
+    return [
+      `<polygon points="${nodeWidth - 22},0 ${nodeWidth},0 ${nodeWidth},22" fill="${color}" opacity="0.8"/>`,
+      `<text x="${nodeWidth - 8}" y="12" text-anchor="middle" font-size="8" fill="white" font-weight="bold">${escapeXml((overlay.badge ?? "•").slice(0, 1))}</text>`,
+    ].join("\n");
+  }
+
+  if (overlay.shape === "muted") {
+    return [
+      `<rect width="${nodeWidth}" height="${nodeHeight}" rx="4" ry="4" fill="white" opacity="0.12"/>`,
+    ].join("\n");
+  }
+
+  return buildOverlayBadge(overlay, nodeWidth);
+}
+
 /** Builds a small badge overlay indicator in the top-right corner of a node. */
 function buildOverlayBadge(overlay: RenderOverlay, nodeWidth: number): string {
+  const color = resolveOverlayColor(overlay.kind);
+  const ariaLabel = overlay.severity != null ? `${overlay.kind} ${overlay.severity} indicator` : `${overlay.kind} indicator`;
+  // Badge text is capped at 2 characters to fit inside the 8px-radius circle badge.
+  const text = overlay.badge != null ? escapeXml(overlay.badge.slice(0, 2)) : "●";
+  const bx = nodeWidth - 10;
+  return [
+    `<g class="dfv-overlay dfv-overlay-${escapeXmlAttr(overlay.kind)}" aria-label="${escapeXmlAttr(ariaLabel)}">`,
+    `  <circle cx="${bx}" cy="0" r="8" fill="${color}" stroke="white" stroke-width="1"/>`,
+    `  <text x="${bx}" y="4" text-anchor="middle" font-size="8" fill="white" font-weight="bold">${text}</text>`,
+    `</g>`,
+  ].join("\n");
+}
+
+function resolveOverlayColor(kind: string): string {
   const badgeColors: Record<string, string> = {
     warning: "#f59e0b",
     error: "#ef4444",
     info: "#3b82f6",
     success: "#10b981",
   };
-  const color = badgeColors[overlay.kind] ?? "#6b7280";
-  // Badge text is capped at 2 characters to fit inside the 8px-radius circle badge.
-  const text = overlay.badge != null ? escapeXml(overlay.badge.slice(0, 2)) : "●";
-  const bx = nodeWidth - 10;
-  return [
-    `<g class="dfv-overlay dfv-overlay-${escapeXmlAttr(overlay.kind)}" aria-label="${escapeXmlAttr(overlay.kind)} indicator">`,
-    `  <circle cx="${bx}" cy="0" r="8" fill="${color}" stroke="white" stroke-width="1"/>`,
-    `  <text x="${bx}" y="4" text-anchor="middle" font-size="8" fill="white" font-weight="bold">${text}</text>`,
-    `</g>`,
-  ].join("\n");
+  return badgeColors[kind] ?? "#6b7280";
+}
+
+function isRenderOverlayShape(value: unknown): value is RenderOverlayShape {
+  return value === "badge" || value === "marker" || value === "halo" || value === "muted";
 }
 
 /**
@@ -593,7 +651,7 @@ export function renderInnerSvg(
         ? `<text x="${midX}" y="${midY}" text-anchor="middle" font-size="10" fill="#6b7280">${edgeLabel}</text>`
         : "";
     return [
-      `<g class="dfv-edge" role="graphics-symbol" aria-label="${edgeLabel !== "" ? escapeXmlAttr(edgeLabel) : "edge"}">`,
+      `<g class="dfv-edge" data-edge-id="${escapeXmlAttr(edge.id)}" role="graphics-symbol" aria-label="${edgeLabel !== "" ? escapeXmlAttr(edgeLabel) : "edge"}">`,
       `  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"`,
       `        stroke="#9ca3af" stroke-width="1.5" marker-end="url(#dfv-arrow)"/>`,
       labelEl,
@@ -676,7 +734,7 @@ function renderEdgesLayer(
         ? `<text x="${midX}" y="${midY}" text-anchor="middle" font-size="10" fill="#6b7280">${edgeLabel}</text>`
         : "";
     return [
-      `<g class="dfv-edge" role="graphics-symbol" aria-label="${edgeLabel !== "" ? escapeXmlAttr(edgeLabel) : "edge"}">`,
+      `<g class="dfv-edge" data-edge-id="${escapeXmlAttr(edge.id)}" role="graphics-symbol" aria-label="${edgeLabel !== "" ? escapeXmlAttr(edgeLabel) : "edge"}">`,
       `  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"`,
       `        stroke="#9ca3af" stroke-width="1.5" marker-end="url(#dfv-arrow)"/>`,
       labelEl,
