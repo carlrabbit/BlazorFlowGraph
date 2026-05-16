@@ -125,6 +125,7 @@ Backends receive `RenderFrame`, not raw runtime state. This is the stable surfac
 - `viewport?: ViewportContext` — apply viewport-space culling (exclude off-screen elements)
 - `nodeOverlays?: ReadonlyMap<string, NodeOverlay>` — overlay badges to include in the frame
 - `styleTokens?: Record<string, StyleToken>` — custom style registry (passed through to `SvgRendererBackend`)
+- `budget?: RenderBudget` — cap nodes/edges per frame while preserving semantic graph state
 
 Inspection flows are semantic payload events. Host integration forwards inspected targets through callback payloads instead of exposing raw DOM event details.
 
@@ -197,6 +198,8 @@ Prioritize:
 - viewport preservation
 - efficient reconciliation
 - `VisibleGraph` filtering to reduce rendered element count
+- explicit render budgeting for large-graph responsiveness
+- minimap/overview rendering as coordinated secondary views (shared data, view-local frames)
 
 Avoid:
 
@@ -217,3 +220,6 @@ Avoid:
 - `docs/specs/semantic-overlays.md`
 - `docs/specs/inspection-workflows.md`
 - `docs/specs/search-and-filtering.md`
+- `docs/specs/large-graph-visibility.md`
+- `docs/specs/progressive-rendering.md`
+- `docs/specs/minimap-overview.md`

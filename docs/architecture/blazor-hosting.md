@@ -20,6 +20,8 @@ Public package/release boundaries are specified in:
 - integration paths should stay aligned with the packaged browser bundle and supported services
 - sample applications should demonstrate the supported integration path without adding conflicting web SDK dependencies
 - package consumers should only depend on published library packages and static web assets, not test/sample internals
+- coordinated multi-view surfaces (overview/minimap + detail) must compose shared runtime graph data instead of duplicating semantic graph state
+- viewport synchronization between hosted views must flow through semantic runtime/navigation contracts
 
 # Non-Goals
 
@@ -39,3 +41,6 @@ Public package/release boundaries are specified in:
 - [`system-overview.md`](system-overview.md)
 - [`../integration/guide.md`](../integration/guide.md)
 - [`../ai/architecture.md`](../ai/architecture.md)
+- [`../specs/viewport-and-navigation.md`](../specs/viewport-and-navigation.md)
+- [`../specs/multi-view-navigation.md`](../specs/multi-view-navigation.md)
+- [`../specs/minimap-overview.md`](../specs/minimap-overview.md)

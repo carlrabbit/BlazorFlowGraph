@@ -176,6 +176,16 @@ export interface RenderFrame {
   /** Total canvas dimensions derived from the layout. */
   readonly canvasWidth: number;
   readonly canvasHeight: number;
+  readonly budgetLimited?: boolean;
+  readonly culledNodeCount?: number;
+  readonly culledEdgeCount?: number;
+}
+
+/** Progressive rendering limits applied when building a RenderFrame. */
+export interface RenderBudget {
+  readonly maxNodes?: number;
+  readonly maxEdges?: number;
+  readonly prioritizedNodeIds?: ReadonlySet<string>;
 }
 
 /** Group padding around child node bounds when computing group hull (in pixels). */
@@ -199,6 +209,8 @@ export function buildRenderFrame(
     styleTokens?: Record<string, StyleToken>;
     /** Optional node overlays from OverlayState.nodeOverlays to include in the frame. */
     nodeOverlays?: ReadonlyMap<string, NodeOverlay>;
+    /** Optional frame-level render budget for progressive rendering. */
+    budget?: RenderBudget;
   }
 ): RenderFrame {
   const nodeWidth = options?.nodeWidth ?? 120;
@@ -209,7 +221,7 @@ export function buildRenderFrame(
   // Viewport culling bounds (in graph-space) for fast element rejection
   const cullBounds = viewport?.visibleBounds;
 
-  const nodes: RenderNode[] = [];
+  const candidateNodes: RenderNode[] = [];
   for (const node of state.nodes.values()) {
     if (visible != null && !visible.visibleNodeIds.has(node.id)) continue;
     const pos = layout.nodes.get(node.id);
@@ -218,7 +230,7 @@ export function buildRenderFrame(
     const w = pos.width ?? nodeWidth;
     const h = pos.height ?? nodeHeight;
     if (cullBounds != null && !boundsIntersect(pos.x, pos.y, w, h, cullBounds)) continue;
-    nodes.push({
+    candidateNodes.push({
       id: node.id,
       label: node.label,
       kind: node.kind,
@@ -229,17 +241,34 @@ export function buildRenderFrame(
     });
   }
 
-  const edges: RenderEdge[] = [];
+  const budgetMaxNodes = options?.budget?.maxNodes;
+  const prioritizedNodeIds = options?.budget?.prioritizedNodeIds;
+  const nodes =
+    budgetMaxNodes != null && budgetMaxNodes >= 0 && candidateNodes.length > budgetMaxNodes
+      ? applyNodeBudget(candidateNodes, budgetMaxNodes, prioritizedNodeIds)
+      : candidateNodes;
+  const renderedNodeIds = new Set(nodes.map((n) => n.id));
+  const culledNodeCount = candidateNodes.length - nodes.length;
+
+  const candidateEdges: RenderEdge[] = [];
   for (const edge of state.edges.values()) {
     if (visible != null && !visible.visibleEdgeIds.has(edge.id)) continue;
+    if (!renderedNodeIds.has(edge.sourceId) || !renderedNodeIds.has(edge.targetId)) continue;
     const layoutEdge = layout.edges.get(edge.id);
     if (layoutEdge == null) continue;
-    edges.push({
+    candidateEdges.push({
       id: edge.id,
       label: edge.label,
       sections: layoutEdge.sections,
     });
   }
+
+  const budgetMaxEdges = options?.budget?.maxEdges;
+  const edges =
+    budgetMaxEdges != null && budgetMaxEdges >= 0 && candidateEdges.length > budgetMaxEdges
+      ? candidateEdges.slice(0, budgetMaxEdges)
+      : candidateEdges;
+  const culledEdgeCount = candidateEdges.length - edges.length;
 
   // Build group hulls (Milestone 4)
   const groups: RenderGroup[] = [];
@@ -289,7 +318,38 @@ export function buildRenderFrame(
     overlays,
     canvasWidth: Math.floor(layout.width),
     canvasHeight: Math.floor(layout.height),
+    budgetLimited: culledNodeCount > 0 || culledEdgeCount > 0,
+    culledNodeCount: culledNodeCount > 0 ? culledNodeCount : 0,
+    culledEdgeCount: culledEdgeCount > 0 ? culledEdgeCount : 0,
   };
+}
+
+function applyNodeBudget(
+  nodes: readonly RenderNode[],
+  maxNodes: number,
+  prioritizedNodeIds?: ReadonlySet<string>
+): RenderNode[] {
+  if (maxNodes <= 0) return [];
+  const prioritized: RenderNode[] = [];
+  const remaining: RenderNode[] = [];
+  for (const node of nodes) {
+    if (prioritizedNodeIds?.has(node.id) === true) {
+      prioritized.push(node);
+    } else {
+      remaining.push(node);
+    }
+  }
+
+  const selected: RenderNode[] = [];
+  for (const node of prioritized) {
+    if (selected.length >= maxNodes) break;
+    selected.push(node);
+  }
+  for (const node of remaining) {
+    if (selected.length >= maxNodes) break;
+    selected.push(node);
+  }
+  return selected;
 }
 
 /** Returns the bounding hull for a group from child node positions, or null if no children placed. */

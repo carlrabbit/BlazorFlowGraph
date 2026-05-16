@@ -11,8 +11,12 @@ import {
   type CollapseGroupCommand,
   type ExpandGroupCommand,
   type FitSelectionCommand,
+  type FitGraphCommand,
   type ApplySearchCommand,
   type NavigateBackCommand,
+  type NavigateForwardCommand,
+  type FocusGroupCommand,
+  type RevealElementCommand,
   type SemanticCommand,
   // ViewportContext
   createViewportContext,
@@ -24,12 +28,15 @@ import {
   OverlayRegistry,
   // SpatialIndex
   buildSpatialIndex,
+  buildSpatialIndexWithOptions,
   type BoundingBox,
   type SpatialEntry,
   // RuntimeDiagnostics
   RuntimeDiagnostics,
   // GraphRuntimeHost
   GraphRuntimeHost,
+  MultiViewCoordinator,
+  buildMinimapViewportRect,
   type OverlayProvider,
   // Store
   GraphRuntimeStore,
@@ -82,6 +89,11 @@ describe("SemanticCommand — discriminated union", () => {
     expect(cmd.type).toBe("FitSelection");
   });
 
+  it("FitGraph command has correct type literal", () => {
+    const cmd: FitGraphCommand = { type: "FitGraph" };
+    expect(cmd.type).toBe("FitGraph");
+  });
+
   it("ApplySearch command carries query string", () => {
     const cmd: ApplySearchCommand = { type: "ApplySearch", query: "hello" };
     expect(cmd.type).toBe("ApplySearch");
@@ -93,19 +105,42 @@ describe("SemanticCommand — discriminated union", () => {
     expect(cmd.type).toBe("NavigateBack");
   });
 
+  it("NavigateForward command has correct type literal", () => {
+    const cmd: NavigateForwardCommand = { type: "NavigateForward" };
+    expect(cmd.type).toBe("NavigateForward");
+  });
+
+  it("FocusGroup command has correct type literal", () => {
+    const cmd: FocusGroupCommand = { type: "FocusGroup", groupId: "g1" };
+    expect(cmd.type).toBe("FocusGroup");
+    expect(cmd.groupId).toBe("g1");
+  });
+
+  it("RevealElement command supports semantic targets", () => {
+    const cmd: RevealElementCommand = { type: "RevealElement", elementId: "n1", elementKind: "node" };
+    expect(cmd.type).toBe("RevealElement");
+    expect(cmd.elementId).toBe("n1");
+    expect(cmd.elementKind).toBe("node");
+  });
+
   it("SemanticCommand union narrowing works in switch", () => {
     const dispatch = (cmd: SemanticCommand): string => {
       switch (cmd.type) {
         case "FocusNode": return `focus:${cmd.nodeId}`;
         case "CollapseGroup": return `collapse:${cmd.groupId}`;
         case "ExpandGroup": return `expand:${cmd.groupId}`;
+        case "FocusGroup": return `focus-group:${cmd.groupId}`;
         case "FitSelection": return "fit";
+        case "FitGraph": return "fit-graph";
+        case "RevealElement": return `reveal:${cmd.elementId}`;
         case "ApplySearch": return `search:${cmd.query}`;
         case "NavigateBack": return "back";
+        case "NavigateForward": return "forward";
       }
     };
     expect(dispatch({ type: "FocusNode", nodeId: "n1" })).toBe("focus:n1");
     expect(dispatch({ type: "NavigateBack" })).toBe("back");
+    expect(dispatch({ type: "NavigateForward" })).toBe("forward");
     expect(dispatch({ type: "FitSelection" })).toBe("fit");
   });
 });
@@ -257,6 +292,20 @@ describe("buildVisibleGraph — collapsed groups", () => {
     );
     const vg = buildVisibleGraph(data, { collapsedGroupIds: new Set(["g1"]) });
     expect(vg.visibleGroupIds.has("g1")).toBe(false);
+  });
+
+  it("reports reason-coded diagnostics for hidden nodes", () => {
+    const data = makeData(
+      [
+        { id: "n1", label: "A", kind: "x" },
+        { id: "n2", label: "B", kind: "x" },
+      ],
+      [],
+      [{ id: "g1", label: "G", kind: "group", childNodeIds: ["n2"] }]
+    );
+    const vg = buildVisibleGraph(data, { collapsedGroupIds: new Set(["g1"]) });
+    expect(vg.diagnostics?.culledNodeCount).toBe(1);
+    expect(vg.diagnostics?.hiddenNodeReasonById.get("n2")).toBe("hidden-collapsed-group");
   });
 });
 
@@ -426,6 +475,14 @@ describe("buildSpatialIndex", () => {
     const index = buildSpatialIndex([]);
     expect(index.query({ x: 0, y: 0, width: 100, height: 100 }).length).toBe(0);
   });
+
+  it("uniform-grid implementation is compatible with linear semantics", () => {
+    const linear = buildSpatialIndex(entries);
+    const grid = buildSpatialIndexWithOptions(entries, { implementation: "uniform-grid", cellSize: 64 });
+    const region: BoundingBox = { x: 0, y: 0, width: 250, height: 130 };
+    expect(grid.query(region).map((e) => e.id).sort()).toEqual(linear.query(region).map((e) => e.id).sort());
+    expect(grid.hitTest(50, 20)?.id).toBe(linear.hitTest(50, 20)?.id);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -458,9 +515,13 @@ describe("RuntimeDiagnostics", () => {
 
   it("setVisibleCounts updates counts", () => {
     const diag = new RuntimeDiagnostics();
-    diag.setVisibleCounts(42, 7);
+    diag.setGraphCounts(100, 20, 5);
+    diag.setVisibleCounts(42, 7, 3);
     expect(diag.visibleNodeCount).toBe(42);
     expect(diag.visibleEdgeCount).toBe(7);
+    expect(diag.visibleGroupCount).toBe(3);
+    expect(diag.culledNodeCount).toBe(58);
+    expect(diag.culledEdgeCount).toBe(13);
   });
 
   it("recordDiffApplication increments counter", () => {
@@ -472,13 +533,17 @@ describe("RuntimeDiagnostics", () => {
 
   it("getSummary returns all counts", () => {
     const diag = new RuntimeDiagnostics();
-    diag.setVisibleCounts(10, 3);
+    diag.setGraphCounts(12, 4, 2);
+    diag.setVisibleCounts(10, 3, 1);
     diag.recordDiffApplication();
+    diag.recordDiffFailure();
     diag.record("r", 1);
     const summary = diag.getSummary();
+    expect(summary.graphNodeCount).toBe(12);
     expect(summary.visibleNodeCount).toBe(10);
     expect(summary.visibleEdgeCount).toBe(3);
     expect(summary.totalDiffApplications).toBe(1);
+    expect(summary.failedDiffApplications).toBe(1);
     expect(summary.recentSampleCount).toBe(1);
   });
 
@@ -519,6 +584,14 @@ describe("GraphRuntimeHost — FocusNode command", () => {
     const host = new GraphRuntimeHost();
     host.dispatch({ type: "FocusNode", nodeId: "n1" });
     expect(host.store.getSnapshot().focus.focusedNodeId).toBe("n1");
+  });
+});
+
+describe("GraphRuntimeHost — FocusGroup command", () => {
+  it("dispatch FocusGroup updates store focusedGroupId", () => {
+    const host = new GraphRuntimeHost();
+    host.dispatch({ type: "FocusGroup", groupId: "g1" });
+    expect(host.store.getSnapshot().focus.focusedGroupId).toBe("g1");
   });
 });
 
@@ -579,6 +652,35 @@ describe("GraphRuntimeHost — NavigateBack command", () => {
   });
 });
 
+describe("GraphRuntimeHost — NavigateForward command", () => {
+  it("dispatch NavigateForward moves to next node in history", () => {
+    const host = new GraphRuntimeHost();
+    host.dispatch({ type: "FocusNode", nodeId: "n1" });
+    host.dispatch({ type: "FocusNode", nodeId: "n2" });
+    host.dispatch({ type: "NavigateBack" });
+    host.dispatch({ type: "NavigateForward" });
+    expect(host.store.getSnapshot().focus.focusedNodeId).toBe("n2");
+  });
+});
+
+describe("GraphRuntimeHost — RevealElement command", () => {
+  it("reveal can focus hidden nodes that are outside the current visible subset", () => {
+    const host = new GraphRuntimeHost();
+    const data = makeData(
+      [
+        { id: "n1", label: "A", kind: "service" },
+        { id: "n2", label: "B", kind: "service" },
+      ],
+      [{ id: "e1", sourceId: "n1", targetId: "n2" }]
+    );
+    host.store.setData(data);
+    const visible = buildVisibleGraph(data, { searchMatchedIds: new Set(["n1"]) });
+    expect(visible.visibleNodeIds.has("n2")).toBe(false);
+    host.dispatch({ type: "RevealElement", elementId: "n2", elementKind: "node" });
+    expect(host.store.getSnapshot().focus.focusedNodeId).toBe("n2");
+  });
+});
+
 describe("GraphRuntimeHost — custom command handlers", () => {
   it("addCommandHandler receives dispatched commands", () => {
     const host = new GraphRuntimeHost();
@@ -606,6 +708,26 @@ describe("GraphRuntimeHost — custom command handlers", () => {
     host.dispatch({ type: "FitSelection" });
     expect(h1).toHaveBeenCalledOnce();
     expect(h2).toHaveBeenCalledOnce();
+  });
+});
+
+describe("GraphRuntimeHost — diagnostics integration", () => {
+  it("records failed diff applications", () => {
+    const host = new GraphRuntimeHost();
+    host.receiveSnapshot({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "service" }],
+      edges: [],
+    });
+    expect(() =>
+      host.receiveDiff({
+        fromVersion: 999,
+        toVersion: 1000,
+        nodeOperations: [],
+        edgeOperations: [],
+      })
+    ).toThrow();
+    expect(host.diagnostics.failedDiffApplications).toBe(1);
   });
 });
 
@@ -731,5 +853,36 @@ describe("RuntimeEventMap — new Milestone 3 events", () => {
     store.eventBus.on("NodeInspected", handler);
     store.eventBus.emit("NodeInspected", { targetType: "node", targetIds: ["n1"] });
     expect(handler).toHaveBeenCalledWith({ targetType: "node", targetIds: ["n1"] });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Multi-view coordination and minimap helpers
+// ---------------------------------------------------------------------------
+
+describe("MultiViewCoordinator", () => {
+  it("synchronizes linked target viewports explicitly", () => {
+    const coordinator = new MultiViewCoordinator();
+    const main = createViewportContext(0, 0, 1, 800, 600);
+    const mini = createViewportContext(0, 0, 1, 200, 150);
+    coordinator.registerView({ viewId: "main", viewport: main });
+    coordinator.registerView({ viewId: "mini", viewport: mini });
+    coordinator.linkViews("main", ["mini"]);
+
+    const next = createViewportContext(-120, -60, 2, 800, 600);
+    coordinator.updateViewport("main", next);
+    expect(coordinator.getView("mini")?.viewport.panX).toBe(-120);
+    expect(coordinator.getView("mini")?.viewport.scale).toBe(2);
+  });
+});
+
+describe("buildMinimapViewportRect", () => {
+  it("projects main viewport bounds into normalized minimap coordinates", () => {
+    const viewport = createViewportContext(-200, -100, 2, 400, 200);
+    const rect = buildMinimapViewportRect({ x: 0, y: 0, width: 1000, height: 500 }, viewport);
+    expect(rect.x).toBeGreaterThanOrEqual(0);
+    expect(rect.y).toBeGreaterThanOrEqual(0);
+    expect(rect.width).toBeGreaterThan(0);
+    expect(rect.height).toBeGreaterThan(0);
   });
 });
