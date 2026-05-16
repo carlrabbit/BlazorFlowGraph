@@ -6,7 +6,7 @@ This document is an index only. Detailed triggers, inputs, outputs, failure cond
 
 | Workflow | GitHub Actions File | Purpose |
 |---|---|---|
-| [`ci-build.md`](workflows/ci-build.md) | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Restore, build, typecheck, and test the repository on pushes and pull requests |
+| [`ci-build.md`](workflows/ci-build.md) | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Restore, build, typecheck, test, validate sample builds, and verify package generation on pushes and pull requests |
 | [`publish-nuget.md`](workflows/publish-nuget.md) | [`.github/workflows/nuget-publish.yml`](../.github/workflows/nuget-publish.yml) | Build, pack, and publish versioned NuGet packages from validated releases |
 
 # Authority

@@ -6,15 +6,13 @@ Use a spec when the repository needs durable behavioral truth. Do not use milest
 
 | Spec | Status | Purpose |
 |---|---|---|
+| [`specs/graph-snapshots.md`](specs/graph-snapshots.md) | Active | Defines graph snapshot structure, validity rules, identity fields, and protocol-version handling |
+| [`specs/graph-diffs.md`](specs/graph-diffs.md) | Active | Defines diff operation semantics, ordering rules, version continuity, and browser-state preservation |
+| [`specs/browser-runtime-reconciliation.md`](specs/browser-runtime-reconciliation.md) | Active | Defines runtime-owned state, snapshot/diff reconciliation behavior, recovery paths, and diagnostics expectations |
+| [`specs/renderer-backend-contract.md`](specs/renderer-backend-contract.md) | Active | Defines renderer backend lifecycle and RenderFrame/backend separation |
+| [`specs/layout-provider-contract.md`](specs/layout-provider-contract.md) | Active | Defines async layout provider interface, LayoutGraph/LayoutResult boundaries, and failure semantics |
+| [`specs/package-and-release-contract.md`](specs/package-and-release-contract.md) | Active | Defines package boundaries and release-readiness requirements |
 | [`specs/stable-identifiers.md`](specs/stable-identifiers.md) | Active | Defines deterministic identifier requirements across projection, diffing, and browser reconciliation |
-
-## Planned Spec Areas
-
-These areas already appear in architecture, roadmap, or protocol references and should graduate into dedicated specs as they need tighter behavioral authority:
-
-- graph snapshots and version continuity
-- graph diffs and recovery behavior
-- browser runtime reconciliation
 
 # Authority
 

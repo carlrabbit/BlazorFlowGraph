@@ -38,12 +38,44 @@ jobs:
       - name: Test — BlazorFlowGraph.Semantics
         run: dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Semantics.Tests --configuration Release -- --report-trx --results-directory TestResults
 
+      - name: Validate sample builds
+        run: |
+          while IFS= read -r sample; do
+            echo "Restoring sample: $sample"
+            dotnet restore "$sample"
+            echo "Building sample: $sample"
+            dotnet build "$sample" --no-restore --configuration Release
+          done < <(find samples -name "*.csproj" -type f | sort)
+
+      - name: Validate packable projects
+        run: |
+          mkdir -p artifacts/ci-pack
+          while IFS= read -r project; do
+            is_packable="$(dotnet msbuild "$project" -nologo -getProperty:IsPackable)"
+            if [ "$is_packable" != "true" ]; then
+              echo "Skipping non-packable project: $project"
+              continue
+            fi
+
+            echo "Packing project: $project"
+            dotnet pack "$project" --no-build --configuration Release --output artifacts/ci-pack
+          done < <(find src/DotNet -name "*.csproj" -type f | sort)
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dotnet-test-results
           path: "TestResults/*.trx"
+
+      - name: Upload package validation artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-ci-packages
+          path: |
+            artifacts/ci-pack/*.nupkg
+            artifacts/ci-pack/*.snupkg
 
   build-typescript:
     name: Build & Typecheck TypeScript

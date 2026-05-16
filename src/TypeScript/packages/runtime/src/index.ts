@@ -51,6 +51,12 @@ export function applySnapshot(snapshot: GraphSnapshot): GraphState {
 
 /** Applies a diff to an existing state. */
 export function applyDiff(state: GraphState, diff: GraphDiff): GraphState {
+  if (diff.fromVersion !== state.version) {
+    throw new Error(
+      `diff fromVersion ${diff.fromVersion} does not match current state version ${state.version}`
+    );
+  }
+
   const nodes = new Map(state.nodes);
   const edges = new Map(state.edges);
   const groups = new Map(state.groups);

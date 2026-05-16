@@ -38,6 +38,7 @@ describe("applyDiff", () => {
   it("adds nodes from diff", () => {
     const state = createEmptyState();
     const diff: GraphDiff = {
+      protocolVersion: 1,
       fromVersion: 0,
       toVersion: 1,
       nodeOperations: [
@@ -57,6 +58,7 @@ describe("applyDiff", () => {
       edges: [],
     });
     const diff: GraphDiff = {
+      protocolVersion: 1,
       fromVersion: 0,
       toVersion: 1,
       nodeOperations: [
@@ -75,6 +77,7 @@ describe("applyDiff", () => {
       edges: [],
     });
     const diff: GraphDiff = {
+      protocolVersion: 1,
       fromVersion: 0,
       toVersion: 1,
       nodeOperations: [
@@ -84,5 +87,22 @@ describe("applyDiff", () => {
     };
     const next = applyDiff(state, diff);
     expect(next.nodes.get("n1")?.label).toBe("New");
+  });
+
+  it("throws when diff.fromVersion does not match the current state version", () => {
+    const state = applySnapshot({
+      version: 3,
+      nodes: [{ id: "n1", label: "Old", kind: "default" }],
+      edges: [],
+    });
+    const diff: GraphDiff = {
+      protocolVersion: 1,
+      fromVersion: 2,
+      toVersion: 4,
+      nodeOperations: [{ type: "update", node: { id: "n1", label: "New", kind: "default" } }],
+      edgeOperations: [],
+    };
+
+    expect(() => applyDiff(state, diff)).toThrowError(/fromVersion 2 does not match current state version 3/);
   });
 });

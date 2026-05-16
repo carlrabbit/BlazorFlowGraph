@@ -73,6 +73,17 @@ public class GraphDifferTests
     }
 
     [Test]
+    public async Task Diff_ProtocolVersion_IsCopiedFromTargetSnapshot()
+    {
+        var from = new GraphSnapshot(0, [], [], ProtocolVersion: 1);
+        var to = new GraphSnapshot(1, [], [], ProtocolVersion: 2);
+
+        var diff = _differ.Diff(from, to);
+
+        await Assert.That(diff.ProtocolVersion).IsEqualTo(2);
+    }
+
+    [Test]
     public async Task Diff_BothSnapshotsNoGroups_GroupOperationsIsNull()
     {
         var diff = _differ.Diff(Empty(0), Empty(1));
@@ -133,4 +144,3 @@ public class GraphDifferTests
         await Assert.That(diff.GroupOperations).IsEmpty();
     }
 }
-

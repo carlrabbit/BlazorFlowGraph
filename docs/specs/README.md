@@ -49,13 +49,13 @@ Every spec should use this structure:
 
 ## Current Specs
 
+- [`browser-runtime-reconciliation.md`](browser-runtime-reconciliation.md)
+- [`graph-diffs.md`](graph-diffs.md)
+- [`graph-snapshots.md`](graph-snapshots.md)
+- [`layout-provider-contract.md`](layout-provider-contract.md)
+- [`package-and-release-contract.md`](package-and-release-contract.md)
+- [`renderer-backend-contract.md`](renderer-backend-contract.md)
 - [`stable-identifiers.md`](stable-identifiers.md)
-
-## Candidate Specs
-
-- graph snapshots
-- graph diffs
-- browser runtime reconciliation
 
 # Authority
 
