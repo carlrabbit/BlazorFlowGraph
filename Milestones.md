@@ -494,6 +494,46 @@ This milestone focuses on:
 
 ---
 
+# Milestone 5 — Public Contract Hardening and Release Readiness
+
+## Goal
+
+Make BlazorFlowGraph consumable as a public library by hardening the existing contract surfaces from Milestones 1–4.
+
+This milestone focuses on:
+- contract precision and indexing in `docs/specs/`
+- reconciliation and version-continuity hardening
+- backend/layout contract validation tests
+- CI release-path validation (samples + packing checks)
+- public package onboarding clarity
+
+## Non-Goals
+
+- generic diagram editor semantics
+- arbitrary node dragging/editing behavior
+- plugin marketplace design
+- runtime architecture redesign
+- Canvas/WebGL backend implementation in this milestone
+
+## Implementation Slices
+
+- [x] Add contract specs for snapshots, diffs, browser reconciliation, renderer backend, layout provider, and package/release.
+- [x] Update spec/workflow/architecture indexes to route durable behavior to authoritative documents.
+- [x] Close contract gaps in protocol/runtime interop: snapshot validation, diff version continuity checks, and protocol-versioned diffs.
+- [x] Add validation tests for snapshot validity, diff mismatch/recovery, renderer backend lifecycle contract, and deterministic layout fallback.
+- [x] Update README public onboarding with package install path and contract references.
+- [x] Harden CI workflow with sample build and packable project validation.
+
+## Exit Criteria
+
+- public contracts are documented in specs and indexed from `docs/SPECS.md` and `docs/specs/README.md` ✅
+- runtime reconciliation enforces version continuity and rejects invalid snapshot payloads via recoverable behavior ✅
+- renderer/layout/reconciliation contract tests cover release-critical behavior ✅
+- CI validates release-critical sample and packaging paths ✅
+- README provides a credible first-use path for package consumers ✅
+
+---
+
 # Potential Extensions
 
 The following extensions align with the project's goals and architectural direction.

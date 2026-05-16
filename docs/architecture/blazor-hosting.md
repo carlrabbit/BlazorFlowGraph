@@ -9,12 +9,17 @@ Define the limited hosting role of Blazor within the repository architecture.
 - bridge snapshots and diffs to the browser runtime through JS interop
 - provide sample and integration surfaces that demonstrate supported usage
 
+Public package/release boundaries are specified in:
+
+- [`../specs/package-and-release-contract.md`](../specs/package-and-release-contract.md)
+
 # Constraints
 
 - Blazor components must remain thin
 - Blazor must not own graph layout, reconciliation, or rendering logic
 - integration paths should stay aligned with the packaged browser bundle and supported services
 - sample applications should demonstrate the supported integration path without adding conflicting web SDK dependencies
+- package consumers should only depend on published library packages and static web assets, not test/sample internals
 
 # Non-Goals
 

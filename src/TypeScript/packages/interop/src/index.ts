@@ -2,7 +2,7 @@
  * Interop package — .NET / Blazor bridge for the dataflow visualizer.
  */
 
-import type { GraphSnapshot, GraphDiff } from "@dataflow-visualizer/protocol";
+import { type GraphSnapshot, type GraphDiff, validateGraphSnapshot } from "@dataflow-visualizer/protocol";
 import {
   applySnapshot,
   applyDiff,
@@ -34,6 +34,11 @@ export class DotNetBridge {
 
   /** Receives a full snapshot from the .NET side. */
   receiveSnapshot(snapshot: GraphSnapshot): void {
+    const validationErrors = validateGraphSnapshot(snapshot);
+    if (validationErrors.length > 0) {
+      console.warn(`[interop] rejected invalid snapshot: ${validationErrors.join("; ")}`);
+      return;
+    }
     this.state = applySnapshot(snapshot);
     this.store.setData(this.state);
     this.notifyListeners();

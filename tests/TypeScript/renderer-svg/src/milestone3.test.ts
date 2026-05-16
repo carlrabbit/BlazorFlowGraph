@@ -9,6 +9,7 @@ import {
   type RenderFrame,
   type RenderNode,
   type RenderEdge,
+  type GraphRendererBackend,
 } from "@dataflow-visualizer/renderer-svg";
 import { applySnapshot } from "@dataflow-visualizer/runtime";
 import type { VisibleGraph } from "@dataflow-visualizer/runtime";
@@ -174,5 +175,53 @@ describe("buildRenderFrame", () => {
     const layout = computeLayout(snapshot);
     const frame = buildRenderFrame(state, layout);
     expect(frame.edges[0]?.label).toBe("edge-label");
+  });
+});
+
+describe("GraphRendererBackend lifecycle contract", () => {
+  it("supports initialize, repeated renderFrame, viewport updates, resize, and dispose", () => {
+    const calls: string[] = [];
+    const backend: GraphRendererBackend = {
+      initialize: () => {
+        calls.push("initialize");
+      },
+      renderFrame: () => {
+        calls.push("renderFrame");
+      },
+      updateViewport: () => {
+        calls.push("updateViewport");
+      },
+      resize: () => {
+        calls.push("resize");
+      },
+      dispose: () => {
+        calls.push("dispose");
+      },
+    };
+
+    const frame: RenderFrame = {
+      nodes: [],
+      edges: [],
+      groups: [],
+      overlays: [],
+      canvasWidth: 0,
+      canvasHeight: 0,
+    };
+
+    backend.initialize({} as Element, 800, 600);
+    backend.renderFrame(frame);
+    backend.renderFrame(frame);
+    backend.updateViewport(10, 20, 1.25);
+    backend.resize(1024, 768);
+    backend.dispose();
+
+    expect(calls).toEqual([
+      "initialize",
+      "renderFrame",
+      "renderFrame",
+      "updateViewport",
+      "resize",
+      "dispose",
+    ]);
   });
 });

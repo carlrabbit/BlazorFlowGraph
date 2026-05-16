@@ -81,6 +81,6 @@ public sealed class GraphDiffer : IGraphDiffer
             }
         }
 
-        return new GraphDiff(from.Version, to.Version, nodeOps, edgeOps, groupOps);
+        return new GraphDiff(to.ProtocolVersion, from.Version, to.Version, nodeOps, edgeOps, groupOps);
     }
 }

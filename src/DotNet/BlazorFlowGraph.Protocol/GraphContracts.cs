@@ -67,11 +67,18 @@ public sealed record GroupDiffOperation(DiffOperationType Type, GraphGroup Group
 
 /// <summary>An incremental diff between two graph versions.</summary>
 public sealed record GraphDiff(
+    int ProtocolVersion,
     int FromVersion,
     int ToVersion,
     IReadOnlyList<NodeDiffOperation> NodeOperations,
     IReadOnlyList<EdgeDiffOperation> EdgeOperations,
-    IReadOnlyList<GroupDiffOperation>? GroupOperations = null);
+    IReadOnlyList<GroupDiffOperation>? GroupOperations = null)
+{
+    public GraphDiff(int FromVersion, int ToVersion, IReadOnlyList<NodeDiffOperation> NodeOperations, IReadOnlyList<EdgeDiffOperation> EdgeOperations, IReadOnlyList<GroupDiffOperation>? GroupOperations = null)
+        : this(1, FromVersion, ToVersion, NodeOperations, EdgeOperations, GroupOperations)
+    {
+    }
+}
 
 /// <summary>A semantic overlay on a node.</summary>
 public sealed record NodeOverlay(NodeId NodeId, string Kind, IReadOnlyDictionary<string, object>? Data = null);

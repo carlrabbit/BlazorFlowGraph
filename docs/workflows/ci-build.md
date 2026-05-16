@@ -1,10 +1,11 @@
 # Goal
 
-Define the repository validation workflow that restores dependencies, builds the codebase, and runs automated tests for pull requests and mainline changes.
+Define the repository validation workflow that restores dependencies, builds the codebase, runs automated tests, validates sample builds, and verifies package generation for pull requests and mainline changes.
 
 # Constraints
 
 - the workflow must validate both the .NET and TypeScript stacks
+- the workflow must validate release-critical sample and package paths
 - workflow implementation must stay aligned with documented repository commands
 - workflow YAML should stay implementation-focused and defer rationale to this document
 - test execution must reflect the repository's current test runner choices
@@ -29,6 +30,8 @@ Define the repository validation workflow that restores dependencies, builds the
 
 - build success or failure status for .NET and TypeScript
 - automated test results for .NET executable test projects and TypeScript Vitest suites
+- sample build validation status for all maintained sample apps
+- package generation validation status for packable .NET library projects
 - uploaded .NET test result artifacts when supported by workflow implementation
 
 # Trigger Conditions
@@ -42,6 +45,8 @@ Define the repository validation workflow that restores dependencies, builds the
 - .NET build fails
 - TypeScript build or typecheck fails
 - any .NET or TypeScript test suite fails
+- any sample app fails to restore/build
+- packable library projects fail to pack
 - workflow implementation drifts from the documented commands or repository structure
 
 # Synchronization Rules

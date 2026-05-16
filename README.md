@@ -53,6 +53,12 @@ Authoritative architecture details live in [`docs/architecture/system-overview.m
 
 ## Quick Start
 
+### Install package
+
+```bash
+dotnet add package BlazorFlowGraph.Blazor
+```
+
 ### Register services
 
 ```csharp
@@ -72,6 +78,15 @@ builder.Services.AddDataflowVisualizer();
 ```html
 <script src="_content/BlazorFlowGraph.Blazor/js/dataflow-visualizer.js"></script>
 ```
+
+### Public contract references
+
+- [`docs/specs/graph-snapshots.md`](docs/specs/graph-snapshots.md)
+- [`docs/specs/graph-diffs.md`](docs/specs/graph-diffs.md)
+- [`docs/specs/browser-runtime-reconciliation.md`](docs/specs/browser-runtime-reconciliation.md)
+- [`docs/specs/renderer-backend-contract.md`](docs/specs/renderer-backend-contract.md)
+- [`docs/specs/layout-provider-contract.md`](docs/specs/layout-provider-contract.md)
+- [`docs/specs/package-and-release-contract.md`](docs/specs/package-and-release-contract.md)
 
 ## Development
 

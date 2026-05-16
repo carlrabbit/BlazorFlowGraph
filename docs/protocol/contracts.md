@@ -16,6 +16,7 @@ Current fields:
 
 ### GraphDiff
 An incremental diff between two versions containing:
+- `protocolVersion`
 - `fromVersion`
 - `toVersion`
 - `nodeOperations`

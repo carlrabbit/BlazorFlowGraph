@@ -77,6 +77,7 @@ public class GraphContractsTests
         var groupOp = new GroupDiffOperation(DiffOperationType.Add, group);
         var diff = new GraphDiff(0, 1, [], [], [groupOp]);
 
+        await Assert.That(diff.ProtocolVersion).IsEqualTo(1);
         await Assert.That(diff.GroupOperations).Count().IsEqualTo(1);
         await Assert.That(diff.GroupOperations![0].Type).IsEqualTo(DiffOperationType.Add);
     }
@@ -85,7 +86,15 @@ public class GraphContractsTests
     public async Task GraphDiff_DefaultGroupOperations_IsNull()
     {
         var diff = new GraphDiff(0, 1, [], []);
+        await Assert.That(diff.ProtocolVersion).IsEqualTo(1);
         await Assert.That(diff.GroupOperations).IsNull();
+    }
+
+    [Test]
+    public async Task GraphDiff_ExplicitProtocolVersion_IsRespected()
+    {
+        var diff = new GraphDiff(2, 0, 1, [], []);
+        await Assert.That(diff.ProtocolVersion).IsEqualTo(2);
     }
 
     [Test]
@@ -127,4 +136,3 @@ public class GraphContractsTests
         await Assert.That(overlay.Data).IsNull();
     }
 }
-

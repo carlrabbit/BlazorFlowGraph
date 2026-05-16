@@ -8,6 +8,7 @@ Define the release workflow that builds versioned NuGet packages and publishes t
 - packaging must rebuild the browser bundle that is shipped with `BlazorFlowGraph.Blazor`
 - publishing must only operate on packable .NET projects
 - workflow YAML should remain implementation-focused and rely on this document for intent
+- the release flow assumes CI has already validated sample builds and package generation paths
 
 # Non-Goals
 

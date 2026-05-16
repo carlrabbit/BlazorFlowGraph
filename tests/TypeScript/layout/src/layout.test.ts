@@ -259,6 +259,30 @@ describe("ElkLayoutProvider", () => {
     expect(node).toBeDefined();
   });
 
+  it("falls back to GridLayoutProvider when ELK throws", async () => {
+    const graph: LayoutGraph = {
+      nodes: [
+        { id: "n1", width: 120, height: 40 },
+        { id: "n2", width: 120, height: 40 },
+      ],
+      edges: [{ id: "e1", sourceId: "n1", targetId: "n2" }],
+      groups: [],
+    };
+
+    const provider = new ElkLayoutProvider();
+    (provider as unknown as { elkInstance: { layout: () => Promise<unknown> } }).elkInstance = {
+      layout: async () => {
+        throw new Error("simulated elk failure");
+      },
+    };
+
+    const result = await provider.computeLayout(graph);
+    expect(result.nodes.size).toBe(2);
+    expect(result.edges.size).toBe(1);
+    expect(result.width).toBeGreaterThan(0);
+    expect(result.height).toBeGreaterThan(0);
+  });
+
   it("handles empty graph without error", async () => {
     const graph: LayoutGraph = { nodes: [], edges: [], groups: [] };
     const provider = new ElkLayoutProvider();

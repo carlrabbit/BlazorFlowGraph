@@ -11,6 +11,12 @@ Define the responsibilities and constraints of the TypeScript browser runtime.
 - manage viewport state, selection state, grouping state, overlays, and diagnostics
 - handle browser-local interaction flows without server round-trips for high-frequency input
 
+Reconciliation contract details are specified in:
+
+- [`../specs/graph-snapshots.md`](../specs/graph-snapshots.md)
+- [`../specs/graph-diffs.md`](../specs/graph-diffs.md)
+- [`../specs/browser-runtime-reconciliation.md`](../specs/browser-runtime-reconciliation.md)
+
 # Constraints
 
 - rendering stays browser-side and SVG-first today
@@ -18,6 +24,9 @@ Define the responsibilities and constraints of the TypeScript browser runtime.
 - backends receive render frames instead of raw runtime state
 - visible graph filtering should reduce unnecessary DOM work
 - runtime logic should remain framework-independent where practical
+- runtime treats .NET projection snapshots/diffs as authoritative semantic inputs
+- runtime preserves browser-owned state (viewport, selection, focus, search, expanded groups, overlays) across valid updates
+- unsupported protocol versions and version-discontinuous diffs are rejected via a recoverable path
 
 # Non-Goals
 
