@@ -563,6 +563,45 @@ Turn overlay infrastructure into a durable semantic exploration system that supp
 
 ---
 
+# Milestone 7 — Large-Graph Interaction and Multi-View Navigation
+
+## Goal
+
+Make BlazorFlowGraph credible for larger real-world dataflow graphs by hardening visibility, viewport/navigation semantics, spatial indexing, progressive rendering, minimap/overview coordination, and runtime diagnostics.
+
+## Non-Goals
+
+- do not make WebGL the default renderer
+- do not replace SVG as the default backend
+- do not optimize for arbitrary million-node graphs
+- do not add generic diagram editing
+- do not duplicate semantic graph state across minimap/multi-view surfaces
+
+## Implementation Slices
+
+- [x] Add large-graph visibility, viewport/navigation, spatial-indexing, progressive-rendering, multi-view, minimap, and runtime-diagnostics specs.
+- [x] Update spec indexes and architecture/rendering docs to route the new authority surfaces.
+- [x] Add visibility diagnostics outputs (including reason-coded culling) to visible-graph derivation.
+- [x] Extend semantic navigation commands (`FitGraph`, `RevealElement`, `FocusGroup`, `NavigateForward`) and reveal behavior for hidden targets.
+- [x] Keep spatial indexing interface-backed while allowing scalable implementations behind the same query/hit-test contract.
+- [x] Add render-budget-aware frame construction that does not mutate semantic graph state.
+- [x] Extend runtime diagnostics with graph/visible/culled counts, diff failures, and timing metrics for layout/render/spatial operations.
+- [x] Add explicit multi-view coordinator support for synchronized viewports over shared graph data.
+- [x] Add minimap/overview runtime helpers as coordinated secondary views over shared graph/layout state.
+- [x] Expand tests to cover hidden focused targets, reveal behavior, budgeted rendering, spatial-index compatibility, and multi-view/minimap synchronization.
+
+## Exit Criteria
+
+- large-graph visibility semantics are specified and indexed ✅
+- complete graph vs visible/rendered graph boundaries are explicit ✅
+- viewport navigation includes semantic reveal/focus workflows ✅
+- spatial indexing remains contract-backed and scalable-ready ✅
+- render-frame building supports viewport culling plus budgets without semantic data loss ✅
+- minimap/overview and multi-view coordination use shared graph state ✅
+- runtime diagnostics expose large-graph bottlenecks through aggregate metrics ✅
+
+---
+
 # Potential Extensions
 
 The following extensions align with the project's goals and architectural direction.

@@ -30,6 +30,9 @@ Reconciliation contract details are specified in:
 - semantic overlay providers are deterministic runtime extensions that cannot mutate topology
 - inspection events are semantic payload events (`NodeInspected`, `EdgeInspected`, `GroupInspected`, `SelectionInspected`, `OverlayInspected`) and not raw DOM events
 - search visibility behavior is explicit (`highlight`, `filter`, `isolate`) and runtime-owned
+- complete graph state is preserved separately from visible/rendered graph derivations used for culling and budgeting
+- viewport/navigation commands are semantic (`FitGraph`, `FitSelection`, `FocusNode`, `FocusGroup`, `RevealElement`, `NavigateBack`, `NavigateForward`)
+- multi-view synchronization is explicit and coordinator-driven; view-local viewport state is not implicitly overwritten
 
 # Non-Goals
 
@@ -54,6 +57,13 @@ Overlay and inspection behavior details are specified in:
 - [`../specs/inspection-workflows.md`](../specs/inspection-workflows.md)
 - [`../specs/search-and-filtering.md`](../specs/search-and-filtering.md)
 - [`../specs/semantic-layering.md`](../specs/semantic-layering.md)
+- [`../specs/large-graph-visibility.md`](../specs/large-graph-visibility.md)
+- [`../specs/viewport-and-navigation.md`](../specs/viewport-and-navigation.md)
+- [`../specs/spatial-indexing.md`](../specs/spatial-indexing.md)
+- [`../specs/progressive-rendering.md`](../specs/progressive-rendering.md)
+- [`../specs/multi-view-navigation.md`](../specs/multi-view-navigation.md)
+- [`../specs/minimap-overview.md`](../specs/minimap-overview.md)
+- [`../specs/runtime-diagnostics.md`](../specs/runtime-diagnostics.md)
 
 # Related Documents
 

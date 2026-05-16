@@ -57,10 +57,17 @@ Every spec should use this structure:
 - [`package-and-release-contract.md`](package-and-release-contract.md)
 - [`renderer-backend-contract.md`](renderer-backend-contract.md)
 - [`inspection-workflows.md`](inspection-workflows.md)
+- [`large-graph-visibility.md`](large-graph-visibility.md)
 - [`search-and-filtering.md`](search-and-filtering.md)
+- [`minimap-overview.md`](minimap-overview.md)
+- [`multi-view-navigation.md`](multi-view-navigation.md)
+- [`progressive-rendering.md`](progressive-rendering.md)
+- [`runtime-diagnostics.md`](runtime-diagnostics.md)
 - [`semantic-layering.md`](semantic-layering.md)
 - [`semantic-overlays.md`](semantic-overlays.md)
+- [`spatial-indexing.md`](spatial-indexing.md)
 - [`stable-identifiers.md`](stable-identifiers.md)
+- [`viewport-and-navigation.md`](viewport-and-navigation.md)
 
 # Authority
 

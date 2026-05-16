@@ -18,6 +18,13 @@ Use a spec when the repository needs durable behavioral truth. Do not use milest
 | [`specs/inspection-workflows.md`](specs/inspection-workflows.md) | Active | Defines semantic inspection payloads, runtime events, and host callback integration |
 | [`specs/search-and-filtering.md`](specs/search-and-filtering.md) | Active | Defines explicit search/filter visibility modes and overlay-aware exploration behavior |
 | [`specs/semantic-layering.md`](specs/semantic-layering.md) | Active | Defines multi-layer semantic ownership, visibility, and conflict-resolution ordering |
+| [`specs/large-graph-visibility.md`](specs/large-graph-visibility.md) | Active | Defines complete-graph vs visible-graph semantics and visibility derivation outputs |
+| [`specs/viewport-and-navigation.md`](specs/viewport-and-navigation.md) | Active | Defines browser-owned viewport state and semantic navigation command behavior |
+| [`specs/spatial-indexing.md`](specs/spatial-indexing.md) | Active | Defines spatial-index role, required operations, and lifecycle expectations |
+| [`specs/progressive-rendering.md`](specs/progressive-rendering.md) | Active | Defines render-budget semantics and progressive frame-priority behavior |
+| [`specs/multi-view-navigation.md`](specs/multi-view-navigation.md) | Active | Defines shared-graph, view-local state boundaries, and explicit synchronization |
+| [`specs/minimap-overview.md`](specs/minimap-overview.md) | Active | Defines minimap/overview behavior as a coordinated secondary view |
+| [`specs/runtime-diagnostics.md`](specs/runtime-diagnostics.md) | Active | Defines required runtime diagnostics metrics and exposure constraints |
 
 # Authority
 

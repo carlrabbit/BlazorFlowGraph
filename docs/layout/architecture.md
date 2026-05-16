@@ -56,3 +56,9 @@ class MyLayoutProvider implements LayoutProvider {
 ```
 
 The rendering pipeline and runtime remain unaffected by layout engine changes.
+
+## Large-Graph and Multi-View Notes
+
+- Layout output is shared semantic positioning data that may be consumed by multiple coordinated views (main viewport, minimap/overview, detail views).
+- Minimap/overview views should derive reduced-detail render frames from shared layout results instead of recomputing independent semantic graph state.
+- Spatial indexes for viewport culling and hit testing are derived from layout outputs and remain separate from graph truth.

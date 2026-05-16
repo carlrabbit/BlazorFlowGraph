@@ -391,3 +391,61 @@ describe("RenderFrame structure (Milestone 4)", () => {
     expect(Array.isArray(frame.overlays)).toBe(true);
   });
 });
+
+describe("buildRenderFrame — progressive render budget", () => {
+  it("limits rendered nodes and reports budget culling counts", () => {
+    const state = applySnapshot({
+      version: 1,
+      nodes: [
+        { id: "n1", label: "A", kind: "default" },
+        { id: "n2", label: "B", kind: "default" },
+        { id: "n3", label: "C", kind: "default" },
+      ],
+      edges: [
+        { id: "e1", sourceId: "n1", targetId: "n2" },
+        { id: "e2", sourceId: "n2", targetId: "n3" },
+      ],
+    });
+    const layout = computeLayout({
+      version: 1,
+      nodes: [
+        { id: "n1", label: "A", kind: "default" },
+        { id: "n2", label: "B", kind: "default" },
+        { id: "n3", label: "C", kind: "default" },
+      ],
+      edges: [
+        { id: "e1", sourceId: "n1", targetId: "n2" },
+        { id: "e2", sourceId: "n2", targetId: "n3" },
+      ],
+    });
+    const frame = buildRenderFrame(state, layout, { budget: { maxNodes: 2 } });
+    expect(frame.nodes.length).toBe(2);
+    expect(frame.budgetLimited).toBe(true);
+    expect(frame.culledNodeCount).toBe(1);
+  });
+
+  it("prioritizes requested nodes when applying node budgets", () => {
+    const state = applySnapshot({
+      version: 1,
+      nodes: [
+        { id: "n1", label: "A", kind: "default" },
+        { id: "n2", label: "B", kind: "default" },
+        { id: "n3", label: "C", kind: "default" },
+      ],
+      edges: [],
+    });
+    const layout = computeLayout({
+      version: 1,
+      nodes: [
+        { id: "n1", label: "A", kind: "default" },
+        { id: "n2", label: "B", kind: "default" },
+        { id: "n3", label: "C", kind: "default" },
+      ],
+      edges: [],
+    });
+    const frame = buildRenderFrame(state, layout, {
+      budget: { maxNodes: 1, prioritizedNodeIds: new Set(["n3"]) },
+    });
+    expect(frame.nodes.map((n) => n.id)).toEqual(["n3"]);
+  });
+});

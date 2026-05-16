@@ -111,6 +111,7 @@ export interface FocusState {
   readonly focusedNodeId: NodeId | null;
   readonly focusedGroupId: GroupId | null;
   readonly navigationHistory: readonly NodeId[];
+  readonly navigationIndex: number;
 }
 
 /** Text search state. */
@@ -255,6 +256,7 @@ export class GraphRuntimeStore {
     focusedNodeId: null,
     focusedGroupId: null,
     navigationHistory: [],
+    navigationIndex: -1,
   };
 
   private search: SearchState = {
@@ -298,14 +300,31 @@ export class GraphRuntimeStore {
   }
 
   /** Updates focus state and fires FocusChanged. */
-  setFocus(update: Partial<Pick<FocusState, "focusedNodeId" | "focusedGroupId">>): void {
+  setFocus(
+    update: Partial<Pick<FocusState, "focusedNodeId" | "focusedGroupId">>,
+    options?: { readonly recordHistory?: boolean }
+  ): void {
     const focusedNodeId = update.focusedNodeId !== undefined ? update.focusedNodeId : this.focus.focusedNodeId;
     const focusedGroupId = update.focusedGroupId !== undefined ? update.focusedGroupId : this.focus.focusedGroupId;
-    const navigationHistory =
-      focusedNodeId !== null && focusedNodeId !== this.focus.focusedNodeId
-        ? [...this.focus.navigationHistory, focusedNodeId]
-        : this.focus.navigationHistory;
-    this.focus = { focusedNodeId, focusedGroupId, navigationHistory };
+    const recordInHistory = options?.recordHistory ?? true;
+
+    let navigationHistory = this.focus.navigationHistory;
+    let navigationIndex = this.focus.navigationIndex;
+    const nodeChanged = focusedNodeId !== this.focus.focusedNodeId;
+
+    if (nodeChanged && focusedNodeId !== null && recordInHistory) {
+      const truncatedHistory = this.focus.navigationHistory.slice(0, this.focus.navigationIndex + 1);
+      truncatedHistory.push(focusedNodeId);
+      navigationHistory = truncatedHistory;
+      navigationIndex = truncatedHistory.length - 1;
+    } else if (nodeChanged && focusedNodeId !== null && !recordInHistory) {
+      const existingIndex = this.focus.navigationHistory.lastIndexOf(focusedNodeId);
+      if (existingIndex >= 0) {
+        navigationIndex = existingIndex;
+      }
+    }
+
+    this.focus = { focusedNodeId, focusedGroupId, navigationHistory, navigationIndex };
     this.eventBus.emit("FocusChanged", { focusedNodeId, focusedGroupId });
     this.notify();
   }
@@ -468,6 +487,11 @@ export interface FitSelectionCommand {
   readonly type: "FitSelection";
 }
 
+/** Fit the viewport to the full graph extent. */
+export interface FitGraphCommand {
+  readonly type: "FitGraph";
+}
+
 /** Apply a search query and update the search state. */
 export interface ApplySearchCommand {
   readonly type: "ApplySearch";
@@ -479,14 +503,36 @@ export interface NavigateBackCommand {
   readonly type: "NavigateBack";
 }
 
+/** Navigate forward in the focus navigation history. */
+export interface NavigateForwardCommand {
+  readonly type: "NavigateForward";
+}
+
+/** Focus a specific group, bringing it into view and making it active. */
+export interface FocusGroupCommand {
+  readonly type: "FocusGroup";
+  readonly groupId: GroupId;
+}
+
+/** Reveal a semantic element, even if currently hidden by visibility policies. */
+export interface RevealElementCommand {
+  readonly type: "RevealElement";
+  readonly elementId: string;
+  readonly elementKind?: "node" | "edge" | "group";
+}
+
 /** Discriminated union of all semantic runtime commands. */
 export type SemanticCommand =
   | FocusNodeCommand
+  | FocusGroupCommand
   | CollapseGroupCommand
   | ExpandGroupCommand
+  | FitGraphCommand
   | FitSelectionCommand
+  | RevealElementCommand
   | ApplySearchCommand
-  | NavigateBackCommand;
+  | NavigateBackCommand
+  | NavigateForwardCommand;
 
 // ---------------------------------------------------------------------------
 // Viewport context (Phase 8)
@@ -557,6 +603,28 @@ export interface VisibleGraph {
   readonly visibleNodeIds: ReadonlySet<NodeId>;
   readonly visibleEdgeIds: ReadonlySet<string>;
   readonly visibleGroupIds: ReadonlySet<GroupId>;
+  readonly diagnostics?: VisibilityDiagnostics;
+}
+
+/** Structured reason codes for why an element was excluded from the visible graph. */
+export type VisibilityReasonCode =
+  | "hidden-collapsed-group"
+  | "hidden-search-filter"
+  | "hidden-search-isolate"
+  | "hidden-focus-filter";
+
+/** Optional visibility diagnostics for large-graph tooling and stress samples. */
+export interface VisibilityDiagnostics {
+  readonly totalNodeCount: number;
+  readonly visibleNodeCount: number;
+  readonly culledNodeCount: number;
+  readonly totalEdgeCount: number;
+  readonly visibleEdgeCount: number;
+  readonly culledEdgeCount: number;
+  readonly totalGroupCount: number;
+  readonly visibleGroupCount: number;
+  readonly culledGroupCount: number;
+  readonly hiddenNodeReasonById: ReadonlyMap<NodeId, VisibilityReasonCode>;
 }
 
 /** Policies that control which elements appear in the VisibleGraph. */
@@ -586,10 +654,12 @@ export function buildVisibleGraph(
 
   // Build set of hidden node IDs from collapsed groups
   const hiddenByGroup = new Set<NodeId>();
+  const hiddenNodeReasonById = new Map<NodeId, VisibilityReasonCode>();
   for (const group of data.groups.values()) {
     if (collapsedGroups.has(group.id)) {
       for (const childId of group.childNodeIds) {
         hiddenByGroup.add(childId);
+        hiddenNodeReasonById.set(childId, "hidden-collapsed-group");
       }
     }
   }
@@ -604,6 +674,7 @@ export function buildVisibleGraph(
       searchVisibilityBehavior === "filter" &&
       !searchFilter.has(nodeId)
     ) {
+      hiddenNodeReasonById.set(nodeId, "hidden-search-filter");
       continue;
     }
     visibleNodeIds.add(nodeId);
@@ -620,7 +691,10 @@ export function buildVisibleGraph(
       }
     }
     for (const nodeId of [...visibleNodeIds]) {
-      if (!isolated.has(nodeId)) visibleNodeIds.delete(nodeId);
+      if (!isolated.has(nodeId)) {
+        visibleNodeIds.delete(nodeId);
+        hiddenNodeReasonById.set(nodeId, "hidden-search-isolate");
+      }
     }
   }
 
@@ -636,7 +710,10 @@ export function buildVisibleGraph(
       }
     }
     for (const id of [...visibleNodeIds]) {
-      if (!focusVisible.has(id)) visibleNodeIds.delete(id);
+      if (!focusVisible.has(id)) {
+        visibleNodeIds.delete(id);
+        hiddenNodeReasonById.set(id, "hidden-focus-filter");
+      }
     }
   }
 
@@ -657,7 +734,20 @@ export function buildVisibleGraph(
     }
   }
 
-  return { visibleNodeIds, visibleEdgeIds, visibleGroupIds };
+  const diagnostics: VisibilityDiagnostics = {
+    totalNodeCount: data.nodes.size,
+    visibleNodeCount: visibleNodeIds.size,
+    culledNodeCount: data.nodes.size - visibleNodeIds.size,
+    totalEdgeCount: data.edges.size,
+    visibleEdgeCount: visibleEdgeIds.size,
+    culledEdgeCount: data.edges.size - visibleEdgeIds.size,
+    totalGroupCount: data.groups.size,
+    visibleGroupCount: visibleGroupIds.size,
+    culledGroupCount: data.groups.size - visibleGroupIds.size,
+    hiddenNodeReasonById,
+  };
+
+  return { visibleNodeIds, visibleEdgeIds, visibleGroupIds, diagnostics };
 }
 
 // ---------------------------------------------------------------------------
@@ -781,7 +871,7 @@ export interface BoundingBox {
 /** Entry in the spatial index representing a positioned graph element. */
 export interface SpatialEntry {
   readonly id: string;
-  readonly kind: "node" | "edge" | "group";
+  readonly kind: "node" | "edge" | "group" | "overlay";
   readonly bounds: BoundingBox;
 }
 
@@ -796,12 +886,38 @@ export interface SpatialIndex {
   hitTest(x: number, y: number): SpatialEntry | null;
 }
 
+/** Built-in spatial index implementations. */
+export type SpatialIndexImplementation = "linear" | "uniform-grid";
+
+/** Build options for choosing a spatial-index strategy. */
+export interface SpatialIndexBuildOptions {
+  readonly implementation?: SpatialIndexImplementation;
+  readonly cellSize?: number;
+}
+
+const DEFAULT_SPATIAL_GRID_CELL_SIZE = 256;
+
 /**
  * Builds a SpatialIndex from a map of node bounding boxes.
  * This is a simple linear-scan implementation suitable for moderate graph sizes.
  * Replace with a quadtree or R-tree for large graphs.
  */
 export function buildSpatialIndex(entries: readonly SpatialEntry[]): SpatialIndex {
+  return buildSpatialIndexWithOptions(entries, {});
+}
+
+/** Builds a SpatialIndex from positioned entries using a selectable implementation. */
+export function buildSpatialIndexWithOptions(
+  entries: readonly SpatialEntry[],
+  options: SpatialIndexBuildOptions
+): SpatialIndex {
+  if ((options.implementation ?? "linear") === "uniform-grid") {
+    return buildUniformGridSpatialIndex(entries, options.cellSize ?? DEFAULT_SPATIAL_GRID_CELL_SIZE);
+  }
+  return buildLinearSpatialIndex(entries);
+}
+
+function buildLinearSpatialIndex(entries: readonly SpatialEntry[]): SpatialIndex {
   return {
     query(region: BoundingBox): readonly SpatialEntry[] {
       return entries.filter((e) => boxesIntersect(e.bounds, region));
@@ -811,6 +927,62 @@ export function buildSpatialIndex(entries: readonly SpatialEntry[]): SpatialInde
       for (let i = entries.length - 1; i >= 0; i--) {
         const entry = entries[i];
         if (entry == null) continue;
+        const b = entry.bounds;
+        if (x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height) {
+          return entry;
+        }
+      }
+      return null;
+    },
+  };
+}
+
+function buildUniformGridSpatialIndex(entries: readonly SpatialEntry[], cellSize: number): SpatialIndex {
+  const safeCell = Number.isFinite(cellSize) && cellSize > 0 ? cellSize : 256;
+  const cellMap = new Map<string, SpatialEntry[]>();
+
+  for (const entry of entries) {
+    const minX = Math.floor(entry.bounds.x / safeCell);
+    const minY = Math.floor(entry.bounds.y / safeCell);
+    const maxX = Math.floor((entry.bounds.x + entry.bounds.width) / safeCell);
+    const maxY = Math.floor((entry.bounds.y + entry.bounds.height) / safeCell);
+    for (let gx = minX; gx <= maxX; gx++) {
+      for (let gy = minY; gy <= maxY; gy++) {
+        const key = `${gx},${gy}`;
+        const bucket = cellMap.get(key) ?? [];
+        bucket.push(entry);
+        cellMap.set(key, bucket);
+      }
+    }
+  }
+
+  return {
+    query(region: BoundingBox): readonly SpatialEntry[] {
+      const minX = Math.floor(region.x / safeCell);
+      const minY = Math.floor(region.y / safeCell);
+      const maxX = Math.floor((region.x + region.width) / safeCell);
+      const maxY = Math.floor((region.y + region.height) / safeCell);
+      const results = new Map<string, SpatialEntry>();
+      for (let gx = minX; gx <= maxX; gx++) {
+        for (let gy = minY; gy <= maxY; gy++) {
+          const bucket = cellMap.get(`${gx},${gy}`);
+          if (bucket == null) continue;
+          for (const entry of bucket) {
+            if (boxesIntersect(entry.bounds, region)) {
+              results.set(entry.id, entry);
+            }
+          }
+        }
+      }
+      return [...results.values()];
+    },
+    hitTest(x: number, y: number): SpatialEntry | null {
+      const gx = Math.floor(x / safeCell);
+      const gy = Math.floor(y / safeCell);
+      const bucket = cellMap.get(`${gx},${gy}`);
+      if (bucket == null) return null;
+      for (let i = bucket.length - 1; i >= 0; i--) {
+        const entry = bucket[i]!;
         const b = entry.bounds;
         if (x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height) {
           return entry;
@@ -847,9 +1019,17 @@ export interface DiagnosticsSample {
  */
 export class RuntimeDiagnostics {
   private readonly samples: DiagnosticsSample[] = [];
+  private _graphNodeCount = 0;
+  private _graphEdgeCount = 0;
+  private _graphGroupCount = 0;
   private _visibleNodeCount = 0;
   private _visibleEdgeCount = 0;
+  private _visibleGroupCount = 0;
+  private _culledNodeCount = 0;
+  private _culledEdgeCount = 0;
+  private _culledGroupCount = 0;
   private _totalDiffApplications = 0;
+  private _failedDiffApplications = 0;
 
   /** Records a timing sample under the given label. */
   record(label: string, durationMs: number): void {
@@ -857,14 +1037,29 @@ export class RuntimeDiagnostics {
   }
 
   /** Updates the current visible node/edge counts. */
-  setVisibleCounts(nodeCount: number, edgeCount: number): void {
+  setVisibleCounts(nodeCount: number, edgeCount: number, groupCount = 0): void {
     this._visibleNodeCount = nodeCount;
     this._visibleEdgeCount = edgeCount;
+    this._visibleGroupCount = groupCount;
+    this.updateCulledCounts();
+  }
+
+  /** Updates total graph element counts used to derive culling totals. */
+  setGraphCounts(nodeCount: number, edgeCount: number, groupCount = 0): void {
+    this._graphNodeCount = nodeCount;
+    this._graphEdgeCount = edgeCount;
+    this._graphGroupCount = groupCount;
+    this.updateCulledCounts();
   }
 
   /** Increments the diff application counter. */
   recordDiffApplication(): void {
     this._totalDiffApplications++;
+  }
+
+  /** Increments the failed diff application counter. */
+  recordDiffFailure(): void {
+    this._failedDiffApplications++;
   }
 
   /** Returns the most recent samples up to `limit` entries (default 100). */
@@ -874,19 +1069,43 @@ export class RuntimeDiagnostics {
 
   get visibleNodeCount(): number { return this._visibleNodeCount; }
   get visibleEdgeCount(): number { return this._visibleEdgeCount; }
+  get visibleGroupCount(): number { return this._visibleGroupCount; }
+  get graphNodeCount(): number { return this._graphNodeCount; }
+  get graphEdgeCount(): number { return this._graphEdgeCount; }
+  get graphGroupCount(): number { return this._graphGroupCount; }
+  get culledNodeCount(): number { return this._culledNodeCount; }
+  get culledEdgeCount(): number { return this._culledEdgeCount; }
+  get culledGroupCount(): number { return this._culledGroupCount; }
   get totalDiffApplications(): number { return this._totalDiffApplications; }
+  get failedDiffApplications(): number { return this._failedDiffApplications; }
 
   /** Returns a summary snapshot of current diagnostic state. */
   getSummary(): {
+    readonly graphNodeCount: number;
+    readonly graphEdgeCount: number;
+    readonly graphGroupCount: number;
     readonly visibleNodeCount: number;
     readonly visibleEdgeCount: number;
+    readonly visibleGroupCount: number;
+    readonly culledNodeCount: number;
+    readonly culledEdgeCount: number;
+    readonly culledGroupCount: number;
     readonly totalDiffApplications: number;
+    readonly failedDiffApplications: number;
     readonly recentSampleCount: number;
   } {
     return {
+      graphNodeCount: this._graphNodeCount,
+      graphEdgeCount: this._graphEdgeCount,
+      graphGroupCount: this._graphGroupCount,
       visibleNodeCount: this._visibleNodeCount,
       visibleEdgeCount: this._visibleEdgeCount,
+      visibleGroupCount: this._visibleGroupCount,
+      culledNodeCount: this._culledNodeCount,
+      culledEdgeCount: this._culledEdgeCount,
+      culledGroupCount: this._culledGroupCount,
       totalDiffApplications: this._totalDiffApplications,
+      failedDiffApplications: this._failedDiffApplications,
       recentSampleCount: this.samples.length,
     };
   }
@@ -895,6 +1114,121 @@ export class RuntimeDiagnostics {
   clear(): void {
     this.samples.length = 0;
   }
+
+  private updateCulledCounts(): void {
+    this._culledNodeCount = Math.max(0, this._graphNodeCount - this._visibleNodeCount);
+    this._culledEdgeCount = Math.max(0, this._graphEdgeCount - this._visibleEdgeCount);
+    this._culledGroupCount = Math.max(0, this._graphGroupCount - this._visibleGroupCount);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Multi-view coordination and minimap helpers
+// ---------------------------------------------------------------------------
+
+/** Per-view runtime state for coordinated multi-view graph navigation. */
+export interface RuntimeGraphView {
+  readonly viewId: string;
+  readonly viewport: ViewportContext;
+  readonly renderBudget?: {
+    readonly maxNodes?: number;
+    readonly maxEdges?: number;
+  };
+}
+
+/** Change payload emitted when a view viewport changes. */
+export interface ViewportSyncEvent {
+  readonly sourceViewId: string;
+  readonly targetViewId: string;
+  readonly viewport: ViewportContext;
+}
+
+/** Explicit coordinator for synchronizing selected viewports over shared graph state. */
+export class MultiViewCoordinator {
+  private readonly views = new Map<string, RuntimeGraphView>();
+  private readonly syncLinks = new Map<string, Set<string>>();
+  private readonly listeners = new Set<(event: ViewportSyncEvent) => void>();
+
+  registerView(view: RuntimeGraphView): void {
+    this.views.set(view.viewId, view);
+  }
+
+  unregisterView(viewId: string): void {
+    this.views.delete(viewId);
+    this.syncLinks.delete(viewId);
+    for (const targets of this.syncLinks.values()) {
+      targets.delete(viewId);
+    }
+  }
+
+  getView(viewId: string): RuntimeGraphView | undefined {
+    return this.views.get(viewId);
+  }
+
+  getViews(): readonly RuntimeGraphView[] {
+    return [...this.views.values()];
+  }
+
+  /** Links source view updates to one or more explicit target views. */
+  linkViews(sourceViewId: string, targetViewIds: readonly string[]): void {
+    this.syncLinks.set(sourceViewId, new Set(targetViewIds));
+  }
+
+  onViewportSynchronized(listener: (event: ViewportSyncEvent) => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  updateViewport(viewId: string, viewport: ViewportContext): void {
+    const current = this.views.get(viewId);
+    if (current == null) return;
+    this.views.set(viewId, { ...current, viewport });
+    const targets = this.syncLinks.get(viewId);
+    if (targets == null) return;
+    for (const targetViewId of targets) {
+      const target = this.views.get(targetViewId);
+      if (target == null) continue;
+      this.views.set(targetViewId, { ...target, viewport });
+      const event: ViewportSyncEvent = { sourceViewId: viewId, targetViewId, viewport };
+      for (const listener of this.listeners) {
+        listener(event);
+      }
+    }
+  }
+}
+
+/** Minimap overview rectangle (normalized 0..1 coordinates over graph extent). */
+export interface MinimapViewportRect {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/** Builds a normalized minimap viewport rectangle from graph and viewport bounds. */
+export function buildMinimapViewportRect(graphBounds: GraphBounds, viewport: ViewportContext): MinimapViewportRect {
+  if (graphBounds.width <= 0 || graphBounds.height <= 0) {
+    return { x: 0, y: 0, width: 1, height: 1 };
+  }
+  const vx = (viewport.visibleBounds.x - graphBounds.x) / graphBounds.width;
+  const vy = (viewport.visibleBounds.y - graphBounds.y) / graphBounds.height;
+  const vw = viewport.visibleBounds.width / graphBounds.width;
+  const vh = viewport.visibleBounds.height / graphBounds.height;
+  return {
+    x: clamp01(vx),
+    y: clamp01(vy),
+    width: clamp01(vw),
+    height: clamp01(vh),
+  };
+}
+
+function clamp01(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  if (value < 0) return 0;
+  if (value > 1) return 1;
+  return value;
 }
 
 // ---------------------------------------------------------------------------
@@ -979,18 +1313,27 @@ export class GraphRuntimeHost {
   /** Applies a full graph snapshot and recomputes provider overlays. */
   receiveSnapshot(snapshot: GraphSnapshot): void {
     this.store.setData(applySnapshot(snapshot));
+    this.diagnostics.setGraphCounts(snapshot.nodes.length, snapshot.edges.length, snapshot.groups?.length ?? 0);
+    this.diagnostics.setVisibleCounts(snapshot.nodes.length, snapshot.edges.length, snapshot.groups?.length ?? 0);
     this.pruneOverlayTargets();
     this.recomputeOverlayProviders();
   }
 
   /** Applies an incremental diff and recomputes provider overlays. */
   receiveDiff(diff: GraphDiff): void {
-    const currentState = this.toGraphState(this.store.getSnapshot().data);
-    const nextState = applyDiff(currentState, diff);
-    this.store.setData(nextState);
-    this.diagnostics.recordDiffApplication();
-    this.pruneOverlayTargets();
-    this.recomputeOverlayProviders();
+    try {
+      const currentState = this.toGraphState(this.store.getSnapshot().data);
+      const nextState = applyDiff(currentState, diff);
+      this.store.setData(nextState);
+      this.diagnostics.recordDiffApplication();
+      this.diagnostics.setGraphCounts(nextState.nodes.size, nextState.edges.size, nextState.groups.size);
+      this.diagnostics.setVisibleCounts(nextState.nodes.size, nextState.edges.size, nextState.groups.size);
+      this.pruneOverlayTargets();
+      this.recomputeOverlayProviders();
+    } catch (error) {
+      this.diagnostics.recordDiffFailure();
+      throw error;
+    }
   }
 
   /** Returns provider diagnostics keyed by overlay kind. */
@@ -1102,6 +1445,9 @@ export class GraphRuntimeHost {
       case "FocusNode":
         this.store.setFocus({ focusedNodeId: command.nodeId });
         break;
+      case "FocusGroup":
+        this.store.setFocus({ focusedGroupId: command.groupId });
+        break;
       case "CollapseGroup": {
         const expanded = this.store.getSnapshot().layout.expandedGroupIds;
         if (expanded.has(command.groupId)) {
@@ -1121,15 +1467,45 @@ export class GraphRuntimeHost {
         this.store.setSearch(command.query, new Set());
         break;
       case "NavigateBack": {
-        const history = this.store.getSnapshot().focus.navigationHistory;
-        if (history.length >= 2) {
-          const previous = history[history.length - 2];
+        const focus = this.store.getSnapshot().focus;
+        if (focus.navigationIndex > 0) {
+          const previous = focus.navigationHistory[focus.navigationIndex - 1];
           if (previous != null) {
-            this.store.setFocus({ focusedNodeId: previous });
+            this.store.setFocus({ focusedNodeId: previous }, { recordHistory: false });
           }
         }
         break;
       }
+      case "NavigateForward": {
+        const focus = this.store.getSnapshot().focus;
+        if (focus.navigationIndex >= 0 && focus.navigationIndex < focus.navigationHistory.length - 1) {
+          const next = focus.navigationHistory[focus.navigationIndex + 1];
+          if (next != null) {
+            this.store.setFocus({ focusedNodeId: next }, { recordHistory: false });
+          }
+        }
+        break;
+      }
+      case "RevealElement": {
+        const snapshot = this.store.getSnapshot();
+        const kind = command.elementKind;
+        if ((kind === "group" || kind === undefined) && snapshot.data.groups.has(command.elementId)) {
+          this.store.setFocus({ focusedGroupId: command.elementId });
+          break;
+        }
+        if ((kind === "node" || kind === undefined) && snapshot.data.nodes.has(command.elementId)) {
+          this.store.setFocus({ focusedNodeId: command.elementId });
+          break;
+        }
+        if (kind === "edge" || kind === undefined) {
+          const edge = snapshot.data.edges.get(command.elementId);
+          if (edge != null) {
+            this.store.setFocus({ focusedNodeId: edge.targetId });
+          }
+        }
+        break;
+      }
+      case "FitGraph":
       case "FitSelection":
         // FitSelection is a viewport command — implementation lives in the host rendering layer.
         break;
