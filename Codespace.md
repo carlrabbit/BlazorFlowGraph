@@ -84,6 +84,8 @@ The app becomes available at the forwarded `localhost:5101` URL shown in the **P
 Then open the sample index on forwarded port `5100`.
 
 Use `.devcontainer/samples/devcontainer.json` when you want a Codespace variant dedicated to launching all samples automatically.
+That devcontainer starts `tooling/scripts/run-samples-all.sh` through `tooling/scripts/start-samples-all-background.sh`.
+This keeps startup non-blocking and writes logs to `/tmp/<repository-name>/run-samples-all.log` (`<repository-name>` is derived from the repository folder name by lowercasing and replacing characters outside `[a-z0-9._-]` with `-`; for this repo it resolves to `blazorflowgraph`).
 
 ### Building
 
@@ -199,6 +201,8 @@ Port forwarding works the same way — forwarded ports appear in the **Ports** p
 |---------|-----------|
 | `pnpm: command not found` | Run `corepack enable && corepack prepare pnpm@10.11.0 --activate` in the terminal. |
 | `dotnet: command not found` | The .NET feature may have failed during image build. Rebuild the Codespace via **Codespaces: Rebuild Container**. |
+| Samples did not auto-start in sample devcontainer | Check `/tmp/<repository-name>/run-samples-all.log` for startup errors and verify the launcher process with `[[ -f /tmp/<repository-name>/run-samples-all.pid ]] && kill -0 $(cat /tmp/<repository-name>/run-samples-all.pid)`. |
+| Samples are not running and no active launcher PID exists | Run `bash tooling/scripts/start-samples-all-background.sh` to start sample auto-launch manually. |
 | Port 5000 not forwarded | Start the Blazor application with `dotnet run`; VS Code detects the listening port and adds it to the **Ports** panel automatically. |
 | Build fails after a merge | Run `pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx` to update dependencies after pulling changes that modify lock files. |
 | C# IntelliSense not working | Wait for C# Dev Kit to finish indexing (progress shown in the status bar), or run **Developer: Reload Window** from the Command Palette. |

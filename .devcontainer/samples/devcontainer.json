@@ -24,7 +24,7 @@
   },
   "onCreateCommand": "corepack enable && corepack prepare pnpm@10.11.0 --activate",
   "postCreateCommand": "pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx",
-  "postStartCommand": "bash tooling/scripts/run-samples-all.sh",
+  "postStartCommand": "bash tooling/scripts/start-samples-all-background.sh",
   "forwardPorts": [5100, 5101, 5102, 5103, 5104, 5105],
   "portsAttributes": {
     "5100": {
