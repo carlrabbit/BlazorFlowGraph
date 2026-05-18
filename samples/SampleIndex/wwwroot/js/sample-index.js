@@ -15,7 +15,7 @@
       return `${current.protocol}//${current.hostname}:${port}${normalizedPath}`;
     }
 
-    const replacedHost = current.hostname.replace(/(^|-)\d+(-)/, `$1${port}$2`);
+    const replacedHost = current.hostname.replace(/(^|-)\d+(?=-|\.|$)/, `$1${port}`);
     if (replacedHost !== current.hostname) {
       return `${current.protocol}//${replacedHost}${normalizedPath}`;
     }
