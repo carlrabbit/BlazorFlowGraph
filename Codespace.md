@@ -83,7 +83,8 @@ The app becomes available at the forwarded `localhost:5101` URL shown in the **P
 
 Then open the sample index on forwarded port `5100`.
 
-Use `.devcontainer/samples/devcontainer.json` when you want a Codespace variant dedicated to launching all samples automatically.
+Use `.devcontainer/samples/devcontainer.json` when you want a Codespace variant dedicated to launching all samples automatically.  
+That devcontainer starts `tooling/scripts/run-samples-all.sh` through `tooling/scripts/start-samples-all-background.sh`, so startup stays non-blocking and logs are written to `/tmp/blazorflowgraph-run-samples-all.log`.
 
 ### Building
 
@@ -199,6 +200,7 @@ Port forwarding works the same way — forwarded ports appear in the **Ports** p
 |---------|-----------|
 | `pnpm: command not found` | Run `corepack enable && corepack prepare pnpm@10.11.0 --activate` in the terminal. |
 | `dotnet: command not found` | The .NET feature may have failed during image build. Rebuild the Codespace via **Codespaces: Rebuild Container**. |
+| Samples did not auto-start in sample devcontainer | Check `/tmp/blazorflowgraph-run-samples-all.log` for launch errors, then run `bash tooling/scripts/start-samples-all-background.sh` manually. |
 | Port 5000 not forwarded | Start the Blazor application with `dotnet run`; VS Code detects the listening port and adds it to the **Ports** panel automatically. |
 | Build fails after a merge | Run `pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx` to update dependencies after pulling changes that modify lock files. |
 | C# IntelliSense not working | Wait for C# Dev Kit to finish indexing (progress shown in the status bar), or run **Developer: Reload Window** from the Command Palette. |
