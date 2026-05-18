@@ -1,0 +1,51 @@
+{
+  "name": "BlazorFlowGraph Samples",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "10",
+      "installUsingApt": false
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22",
+      "nodeGypDependencies": false
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "EditorConfig.EditorConfig"
+      ]
+    }
+  },
+  "onCreateCommand": "corepack enable && corepack prepare pnpm@10.11.0 --activate",
+  "postCreateCommand": "pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx",
+  "postStartCommand": "bash tooling/scripts/run-samples-all.sh",
+  "forwardPorts": [5100, 5101, 5102, 5103, 5104, 5105],
+  "portsAttributes": {
+    "5100": {
+      "label": "BlazorFlowGraph Sample Index",
+      "onAutoForward": "openBrowser"
+    },
+    "5101": {
+      "label": "Minimal Viewer"
+    },
+    "5102": {
+      "label": "Incremental Updates"
+    },
+    "5103": {
+      "label": "Layout Playground"
+    },
+    "5104": {
+      "label": "Large Graph Stress"
+    },
+    "5105": {
+      "label": "Semantic Annotations"
+    }
+  },
+  "remoteUser": "vscode"
+}

@@ -25,6 +25,9 @@ Use a spec when the repository needs durable behavioral truth. Do not use milest
 | [`specs/multi-view-navigation.md`](specs/multi-view-navigation.md) | Active | Defines shared-graph, view-local state boundaries, and explicit synchronization |
 | [`specs/minimap-overview.md`](specs/minimap-overview.md) | Active | Defines minimap/overview behavior as a coordinated secondary view |
 | [`specs/runtime-diagnostics.md`](specs/runtime-diagnostics.md) | Active | Defines required runtime diagnostics metrics and exposure constraints |
+| [`specs/sample-port-registry.md`](specs/sample-port-registry.md) | Active | Defines deterministic sample port reservations and sample registry field contracts |
+| [`specs/sample-index.md`](specs/sample-index.md) | Active | Defines sample index rendering and current-origin URL resolution behavior |
+| [`specs/sample-workspace-launch.md`](specs/sample-workspace-launch.md) | Active | Defines launch-all sample tooling and sample-focused dev-container launch behavior |
 
 # Authority
 

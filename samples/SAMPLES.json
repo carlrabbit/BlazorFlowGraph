@@ -1,0 +1,52 @@
+{
+  "samples": [
+    {
+      "id": "sample-index",
+      "name": "Sample Index",
+      "description": "Static index page linking to all samples.",
+      "projectPath": "samples/SampleIndex/SampleIndex.csproj",
+      "port": 5100,
+      "path": "/"
+    },
+    {
+      "id": "minimal-viewer",
+      "name": "Minimal Viewer",
+      "description": "Smallest sample showing a rendered graph.",
+      "projectPath": "samples/MinimalViewer/MinimalViewer.csproj",
+      "port": 5101,
+      "path": "/"
+    },
+    {
+      "id": "incremental-updates",
+      "name": "Incremental Updates",
+      "description": "Demonstrates graph patching and state preservation.",
+      "projectPath": "samples/IncrementalUpdates/IncrementalUpdates.csproj",
+      "port": 5102,
+      "path": "/"
+    },
+    {
+      "id": "layout-playground",
+      "name": "Layout Playground",
+      "description": "Exercises layout policies and graph arrangement behavior.",
+      "projectPath": "samples/LayoutPlayground/LayoutPlayground.csproj",
+      "port": 5103,
+      "path": "/"
+    },
+    {
+      "id": "large-graph-stress",
+      "name": "Large Graph Stress",
+      "description": "Stress sample for larger synthetic graph topologies.",
+      "projectPath": "samples/LargeGraphStress/LargeGraphStress.csproj",
+      "port": 5104,
+      "path": "/"
+    },
+    {
+      "id": "semantic-annotations",
+      "name": "Semantic Annotations",
+      "description": "Shows annotated semantic models projected into graph views.",
+      "projectPath": "samples/SemanticAnnotations/SemanticAnnotations.csproj",
+      "port": 5105,
+      "path": "/"
+    }
+  ]
+}

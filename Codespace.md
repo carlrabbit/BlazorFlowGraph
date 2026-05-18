@@ -70,10 +70,20 @@ Forwarded ports are automatically available via a generated `*.app.github.dev` U
 ### Running a Sample
 
 ```bash
-dotnet run --project samples/MinimalViewer/MinimalViewer.csproj
+dotnet run --project samples/MinimalViewer/MinimalViewer.csproj --launch-profile Sample
 ```
 
-The app becomes available at the forwarded `localhost:5000` URL shown in the **Ports** panel.
+The app becomes available at the forwarded `localhost:5101` URL shown in the **Ports** panel.
+
+### Running All Samples
+
+```bash
+./tooling/scripts/run-samples-all.sh
+```
+
+Then open the sample index on forwarded port `5100`.
+
+Use `.devcontainer/samples.devcontainer.json` when you want a Codespace variant dedicated to launching all samples automatically.
 
 ### Building
 
