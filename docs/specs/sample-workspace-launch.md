@@ -30,6 +30,7 @@ This spec governs sample launch tooling and sample-focused dev-container integra
 - launch tooling MUST fail clearly when a required port is unavailable
 - launch tooling MUST build sample projects before running them
 - launch tooling MUST start each sample on `http://0.0.0.0:<port>`
+- sample apps MUST NOT redirect HTTP to HTTPS; sample hosting is intentionally HTTP-only
 - sample workspace dev container MUST forward each assigned sample port
 - sample workspace dev container SHOULD auto-open port `5100` (SampleIndex)
 

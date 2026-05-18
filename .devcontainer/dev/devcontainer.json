@@ -31,7 +31,7 @@
     }
   },
   "onCreateCommand": "corepack enable && corepack prepare pnpm@10.11.0 --activate",
-  "updateContentCommand": "pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx && pnpm build && dotnet build BlazorFlowGraph.slnx --configuration Release",
+  "updateContentCommand": "pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx",
   "forwardPorts": [5000, 5001],
   "portsAttributes": {
     "5000": {

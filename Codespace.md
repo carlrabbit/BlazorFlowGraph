@@ -6,7 +6,16 @@ This document describes the GitHub Codespace setup for BlazorFlowGraph, explains
 
 ## Overview
 
-GitHub Codespaces provides a cloud-hosted development environment pre-configured for this project. The default devcontainer definition in `.devcontainer/dev/devcontainer.json` installs all required tooling, restores dependencies, and builds the project so that contributors can start working immediately after opening a Codespace.
+GitHub Codespaces provides a cloud-hosted development environment pre-configured for this project. The default devcontainer definition in `.devcontainer/dev/devcontainer.json` installs all required tooling and restores dependencies so that contributors can start working immediately after opening a Codespace.
+
+There are two devcontainer variants:
+
+| Variant | Definition | Ports forwarded | Auto-starts samples |
+|---------|-----------|-----------------|---------------------|
+| **Default (development)** | `.devcontainer/dev/devcontainer.json` | `5000`, `5001` | No |
+| **Samples** | `.devcontainer/samples/devcontainer.json` | `5100`–`5105` | Yes |
+
+Use the default devcontainer for day-to-day development. Use the samples devcontainer when you want all sample apps to launch automatically on Codespace startup.
 
 ---
 
@@ -36,9 +45,9 @@ The devcontainer runs the following commands automatically:
 | Stage | Command | Runs during prebuild? |
 |-------|---------|----------------------|
 | `onCreateCommand` | `corepack enable && corepack prepare pnpm@10.11.0 --activate` | Yes |
-| `updateContentCommand` | `pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx && pnpm build && dotnet build BlazorFlowGraph.slnx --configuration Release` | Yes |
+| `updateContentCommand` | `pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx` | Yes |
 
-Because `updateContentCommand` runs during each prebuild, the Codespace cache already contains restored packages and compiled build output when you open the environment.
+Because `updateContentCommand` runs during each prebuild, the Codespace cache already contains restored packages when you open the environment. Full build validation is reserved for CI rather than devcontainer startup, so a single warning or SDK mismatch does not break container creation.
 
 ### VS Code Extensions
 
@@ -122,7 +131,7 @@ pnpm typecheck
 
 ### Use Prebuilds for Fast Startup
 
-Prebuilds cache the container image together with the output of `onCreateCommand` and `updateContentCommand`. This means restored packages and compiled binaries are already in place when the Codespace starts. Enable prebuilds (see [Manual Steps](#manual-steps-required) below) so contributors never wait for a cold build.
+Prebuilds cache the container image together with the output of `onCreateCommand` and `updateContentCommand`. This means restored packages are already in place when the Codespace starts. Enable prebuilds (see [Manual Steps](#manual-steps-required) below) so contributors never wait for a cold restore.
 
 ### Commit `pnpm-lock.yaml` and Restore with `--frozen-lockfile`
 
@@ -203,6 +212,7 @@ Port forwarding works the same way — forwarded ports appear in the **Ports** p
 | `dotnet: command not found` | The .NET feature may have failed during image build. Rebuild the Codespace via **Codespaces: Rebuild Container**. |
 | Samples did not auto-start in sample devcontainer | Check `/tmp/<repository-name>/run-samples-all.log` for startup errors and verify the launcher process with `[[ -f /tmp/<repository-name>/run-samples-all.pid ]] && kill -0 $(cat /tmp/<repository-name>/run-samples-all.pid)`. |
 | Samples are not running and no active launcher PID exists | Run `bash tooling/scripts/start-samples-all-background.sh` to start sample auto-launch manually. |
+| Sample port returns `502 Bad Gateway` | Samples build before starting and may not be ready yet. Open a terminal and run `ss -ltnp` to see which sample ports are listening. Inspect the log: `cat /tmp/blazorflowgraph/run-samples-all.log`. |
 | Port 5000 not forwarded | Start the Blazor application with `dotnet run`; VS Code detects the listening port and adds it to the **Ports** panel automatically. |
 | Build fails after a merge | Run `pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx` to update dependencies after pulling changes that modify lock files. |
 | C# IntelliSense not working | Wait for C# Dev Kit to finish indexing (progress shown in the status bar), or run **Developer: Reload Window** from the Command Palette. |
