@@ -1,0 +1,24 @@
+@page "/"
+
+<main>
+    <h1>BlazorFlowGraph Samples</h1>
+    <p class="hint">Registry-driven sample index for local development, dev containers, and workspace port-forwarding environments.</p>
+
+    <table aria-label="Registered sample applications">
+        <thead>
+            <tr>
+                <th>Sample</th>
+                <th>Description</th>
+                <th>Project path</th>
+                <th>Port</th>
+                <th>Open</th>
+            </tr>
+        </thead>
+        <tbody id="sample-table-body">
+            <tr>
+                <td colspan="5">Loading sample registry...</td>
+            </tr>
+        </tbody>
+    </table>
+    <p id="sample-index-error" class="error" hidden></p>
+</main>

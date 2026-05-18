@@ -602,6 +602,32 @@ Make BlazorFlowGraph credible for larger real-world dataflow graphs by hardening
 
 ---
 
+# Milestone 8 — Workspace Sample Launch and Sample Index
+
+## Goal
+
+Make all sample applications runnable together in workspace/dev-container environments with deterministic ports and a registry-driven sample index.
+
+## Implementation Slices
+
+- [x] Add deterministic sample port registry in `samples/SAMPLES.json` (5100-5199 range).
+- [x] Assign fixed launch profiles for all sample apps and bind to `0.0.0.0`.
+- [x] Add `samples/SampleIndex` static app that renders registry entries and computes links from current browser origin.
+- [x] Add `tooling/scripts/validate-samples-registry.sh` for duplicate/missing/out-of-range validation.
+- [x] Add `tooling/scripts/run-samples-all.sh` to validate, build, and launch all samples concurrently with cleanup on exit.
+- [x] Add `.devcontainer/samples.devcontainer.json` for sample-focused startup and port forwarding.
+- [x] Add sample workspace launch specs and update docs/indexes for durable authority routing.
+
+## Exit Criteria
+
+- every sample has deterministic fixed port assignment ✅
+- registry is authoritative for sample metadata + ports ✅
+- sample index links adapt to current host/origin + sample ports ✅
+- all samples launch concurrently from one supported command ✅
+- sample-focused dev-container launches and forwards sample ports ✅
+
+---
+
 # Potential Extensions
 
 The following extensions align with the project's goals and architectural direction.

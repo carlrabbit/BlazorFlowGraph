@@ -1,0 +1,29 @@
+@using Microsoft.AspNetCore.Components.Web
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BlazorFlowGraph Sample Index</title>
+    <base href="/" />
+    <HeadOutlet />
+    <style>
+        body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #f8fafc; color: #0f172a; }
+        main { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+        h1 { margin: 0 0 0.5rem; font-size: 1.8rem; }
+        .hint { margin: 0 0 1.5rem; color: #475569; }
+        table { width: 100%; border-collapse: collapse; background: white; border: 1px solid #e2e8f0; }
+        th, td { text-align: left; padding: 0.65rem 0.75rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        th { font-size: 0.85rem; color: #334155; background: #f1f5f9; }
+        tbody tr:last-child td { border-bottom: none; }
+        code { font-size: 0.85rem; color: #334155; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .error { color: #b91c1c; margin-top: 0.75rem; }
+    </style>
+</head>
+<body>
+    <Routes />
+    <script src="js/sample-index.js"></script>
+</body>
+</html>

@@ -139,6 +139,14 @@ dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Projection.Tests --
 dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Semantics.Tests --configuration Release
 ```
 
+### Running all samples
+
+```bash
+./tooling/scripts/run-samples-all.sh
+```
+
+Open the sample index on port `5100`.
+
 ### Additional guidance
 
 - [`Codespace.md`](Codespace.md) — zero-install Codespaces setup

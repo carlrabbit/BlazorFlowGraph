@@ -2,15 +2,24 @@
 
 This repository currently includes five runnable samples under `/samples`. They are intended to show focused slices of the BlazorFlowGraph stack rather than a single end-to-end demo application.
 
+## Running all samples
+
+```bash
+./tooling/scripts/run-samples-all.sh
+```
+
+Open the sample index on `http://localhost:5100` (or your workspace-forwarded equivalent URL).
+
 ## Sample index
 
-| Sample | Purpose | Topic | Run command |
-| --- | --- | --- | --- |
-| `MinimalViewer` | Smallest possible hosted graph viewer with a static snapshot. | Blazor hosting + graph rendering | `dotnet run --project samples/MinimalViewer/MinimalViewer.csproj` |
-| `IncrementalUpdates` | Shows the graph evolving across snapshot versions. | Diff-based reconciliation | `dotnet run --project samples/IncrementalUpdates/IncrementalUpdates.csproj` |
-| `LayoutPlayground` | Lets you vary graph size and optional grouping. | Layout stability and grouping | `dotnet run --project samples/LayoutPlayground/LayoutPlayground.csproj` |
-| `LargeGraphStress` | Generates larger synthetic graphs with density and seed controls. | Scale and performance exploration | `dotnet run --project samples/LargeGraphStress/LargeGraphStress.csproj` |
-| `SemanticAnnotations` | Projects annotated CLR objects into a graph. | Semantic modeling and reflection-based projection | `dotnet run --project samples/SemanticAnnotations/SemanticAnnotations.csproj` |
+| Sample | Purpose | Topic | Port | Run command |
+| --- | --- | --- | --- | --- |
+| `SampleIndex` | Registry-driven index linking to every sample. | Workspace discovery and launch | `5100` | `dotnet run --project samples/SampleIndex/SampleIndex.csproj --launch-profile Sample` |
+| `MinimalViewer` | Smallest possible hosted graph viewer with a static snapshot. | Blazor hosting + graph rendering | `5101` | `dotnet run --project samples/MinimalViewer/MinimalViewer.csproj --launch-profile Sample` |
+| `IncrementalUpdates` | Shows the graph evolving across snapshot versions. | Diff-based reconciliation | `5102` | `dotnet run --project samples/IncrementalUpdates/IncrementalUpdates.csproj --launch-profile Sample` |
+| `LayoutPlayground` | Lets you vary graph size and optional grouping. | Layout stability and grouping | `5103` | `dotnet run --project samples/LayoutPlayground/LayoutPlayground.csproj --launch-profile Sample` |
+| `LargeGraphStress` | Generates larger synthetic graphs with density and seed controls. | Scale and performance exploration | `5104` | `dotnet run --project samples/LargeGraphStress/LargeGraphStress.csproj --launch-profile Sample` |
+| `SemanticAnnotations` | Projects annotated CLR objects into a graph. | Semantic modeling and reflection-based projection | `5105` | `dotnet run --project samples/SemanticAnnotations/SemanticAnnotations.csproj --launch-profile Sample` |
 
 ## MinimalViewer
 
