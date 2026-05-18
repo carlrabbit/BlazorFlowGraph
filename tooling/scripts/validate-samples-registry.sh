@@ -44,10 +44,10 @@ for index, sample in enumerate(samples, start=1):
         errors.append(f"Entry {index} is missing required fields: {', '.join(missing)}")
         continue
 
-    sample_id = sample["id"]
-    project_path = sample["projectPath"]
-    port = sample["port"]
-    path_value = sample["path"]
+    sample_id = sample.get("id")
+    project_path = sample.get("projectPath")
+    port = sample.get("port")
+    path_value = sample.get("path")
 
     if not isinstance(sample_id, str) or sample_id.strip() == "":
         errors.append(f"Entry {index} has invalid id: {sample_id!r}")

@@ -15,6 +15,7 @@
       return `${current.protocol}//${current.hostname}:${port}${normalizedPath}`;
     }
 
+    // Handles forwarded host forms like app-5100.github.dev and repo-5100-preview.github.dev.
     const replacedHost = current.hostname.replace(/(^|-)\d+(?=-|\.|$)/, `$1${port}`);
     if (replacedHost !== current.hostname) {
       return `${current.protocol}//${replacedHost}${normalizedPath}`;
@@ -45,7 +46,7 @@
       const url = createSampleUrl(sample.port, sample.path);
       row.innerHTML = [
         `<td>${escapeHtml(sample.name)}</td>`,
-        `<td>${escapeHtml(sample.description ?? "")}</td>`,
+        `<td>${escapeHtml(sample.description)}</td>`,
         `<td><code>${escapeHtml(sample.projectPath)}</code></td>`,
         `<td><code>${escapeHtml(sample.port)}</code></td>`,
         `<td><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a></td>`
