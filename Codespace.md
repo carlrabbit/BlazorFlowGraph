@@ -6,7 +6,7 @@ This document describes the GitHub Codespace setup for BlazorFlowGraph, explains
 
 ## Overview
 
-GitHub Codespaces provides a cloud-hosted development environment pre-configured for this project. The devcontainer definition in `.devcontainer/devcontainer.json` installs all required tooling, restores dependencies, and builds the project so that contributors can start working immediately after opening a Codespace.
+GitHub Codespaces provides a cloud-hosted development environment pre-configured for this project. The default devcontainer definition in `.devcontainer/dev/devcontainer.json` installs all required tooling, restores dependencies, and builds the project so that contributors can start working immediately after opening a Codespace.
 
 ---
 
@@ -83,7 +83,7 @@ The app becomes available at the forwarded `localhost:5101` URL shown in the **P
 
 Then open the sample index on forwarded port `5100`.
 
-Use `.devcontainer/samples.devcontainer.json` when you want a Codespace variant dedicated to launching all samples automatically.
+Use `.devcontainer/samples/devcontainer.json` when you want a Codespace variant dedicated to launching all samples automatically.
 
 ### Building
 
@@ -177,7 +177,7 @@ To allow contributors to create Codespaces for this repository:
 
 ### 4. Review Devcontainer Feature Versions Periodically
 
-The devcontainer pins Node.js to version `22` and .NET to version `10`. When a new LTS Node.js version or a new .NET SDK version becomes the project standard, update `.devcontainer/devcontainer.json` and re-enable the prebuild to refresh the cached image.
+The default devcontainer pins Node.js to version `22` and .NET to version `10`. When a new LTS Node.js version or a new .NET SDK version becomes the project standard, update `.devcontainer/dev/devcontainer.json` and re-enable the prebuild to refresh the cached image.
 
 ---
 

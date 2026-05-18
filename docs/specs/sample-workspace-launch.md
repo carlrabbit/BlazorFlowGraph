@@ -37,7 +37,7 @@ This spec governs sample launch tooling and sample-focused dev-container integra
 
 - `samples/SAMPLES.json`
 - sample launch scripts under `tooling/scripts/`
-- `.devcontainer/samples.devcontainer.json`
+- `.devcontainer/samples/devcontainer.json`
 
 # Outputs
 
@@ -79,4 +79,4 @@ This document is authoritative for sample-all launch process and sample workspac
 
 # Document Contract
 
-Update this document when sample launch scripts or sample dev-container behavior changes. Keep it synchronized with `.devcontainer/samples.devcontainer.json`, `tooling/scripts/run-samples-all.sh`, and [`sample-port-registry.md`](sample-port-registry.md).
+Update this document when sample launch scripts or sample dev-container behavior changes. Keep it synchronized with `.devcontainer/samples/devcontainer.json`, `tooling/scripts/run-samples-all.sh`, and [`sample-port-registry.md`](sample-port-registry.md).
