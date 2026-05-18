@@ -30,7 +30,7 @@ Deliver deterministic workspace sample launching with a registry-backed sample i
 - [x] fixed launch profiles for each sample app
 - [x] `samples/SampleIndex` app that renders registry-driven links
 - [x] sample launch scripts for validation and concurrent run
-- [x] `.devcontainer/samples.devcontainer.json`
+- [x] `.devcontainer/samples/devcontainer.json`
 - [x] docs/spec updates and local usage guidance
 
 # Validation

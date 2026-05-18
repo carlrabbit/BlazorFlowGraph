@@ -615,7 +615,7 @@ Make all sample applications runnable together in workspace/dev-container enviro
 - [x] Add `samples/SampleIndex` static app that renders registry entries and computes links from current browser origin.
 - [x] Add `tooling/scripts/validate-samples-registry.sh` for duplicate/missing/out-of-range validation.
 - [x] Add `tooling/scripts/run-samples-all.sh` to validate, build, and launch all samples concurrently with cleanup on exit.
-- [x] Add `.devcontainer/samples.devcontainer.json` for sample-focused startup and port forwarding.
+- [x] Add `.devcontainer/samples/devcontainer.json` for sample-focused startup and port forwarding.
 - [x] Add sample workspace launch specs and update docs/indexes for durable authority routing.
 
 ## Exit Criteria
