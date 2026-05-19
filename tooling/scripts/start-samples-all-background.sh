@@ -39,4 +39,12 @@ fi
 
 echo "Started sample launcher in background (pid: $pid)."
 echo "Log file: $log_file"
+echo ""
+echo "Samples are starting. Build and launch may take a minute."
+echo "To check readiness:"
+echo "  ss -ltnp | grep -E '5100|5101|5102|5103|5104|5105'"
+echo "  curl -sv http://localhost:5100"
+echo "  curl -sv http://localhost:5101"
+echo "If samples do not come up, inspect the log:"
+echo "  cat $log_file"
 exit 0
