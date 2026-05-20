@@ -143,9 +143,11 @@ dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Semantics.Tests --c
 
 ```bash
 ./tooling/scripts/run-samples-all.sh
+bash tooling/scripts/run-samples-all.sh --dry-run
 ```
 
 Open the sample index on port `5100`.
+Use `.devcontainer/samples/devcontainer.json` to auto-start the fixed sample ports `5100` through `5105` in detached mode.
 
 ### Additional guidance
 

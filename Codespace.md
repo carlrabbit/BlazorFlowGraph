@@ -93,8 +93,23 @@ The app becomes available at the forwarded `localhost:5101` URL shown in the **P
 Then open the sample index on forwarded port `5100`.
 
 Use `.devcontainer/samples/devcontainer.json` when you want a Codespace variant dedicated to launching all samples automatically.
-That devcontainer starts `tooling/scripts/run-samples-all.sh` through `tooling/scripts/start-samples-all-background.sh`.
-This keeps startup non-blocking and writes logs to `/tmp/<repository-name>/run-samples-all.log` (`<repository-name>` is derived from the repository folder name by lowercasing and replacing characters outside `[a-z0-9._-]` with `-`; for this repo it resolves to `blazorflowgraph`).
+That devcontainer runs:
+
+```bash
+bash tooling/scripts/run-samples-all.sh --detach --log-file /tmp/blazor-flow-graph-samples.log
+```
+
+Detached startup is repeatable: if the full sample set is already running, the command exits successfully without starting duplicates.
+Detached sample PID files are stored under `/tmp/blazor-flow-graph-samples`, and partial detached state fails with cleanup guidance instead of launching a second inconsistent set.
+
+Run this after editing the launcher to inspect the planned restore/build/run commands without starting anything:
+
+```bash
+bash tooling/scripts/run-samples-all.sh --dry-run
+```
+
+By default, the launcher binds sample ports to `0.0.0.0` so forwarded Codespaces/devcontainer ports work reliably.
+Set `SAMPLES_BIND_HOST=127.0.0.1` when you want loopback-only local runs.
 
 ### Building
 
