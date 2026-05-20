@@ -67,7 +67,7 @@ parse_args() {
 sample_pid_file() {
   local sample_id="$1"
   local safe_id
-  safe_id="$(printf '%s' "$sample_id" | tr -c 'a-zA-Z0-9._-' '-')"
+  safe_id="$(printf '%s' "$sample_id" | tr -c 'a-zA-Z0-9_.-' '-')"
   echo "$state_dir/$safe_id.pid"
 }
 
