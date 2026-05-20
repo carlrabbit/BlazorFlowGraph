@@ -3,7 +3,7 @@
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
   "features": {
     "ghcr.io/devcontainers/features/dotnet:2": {
-      "version": "10",
+      "version": "lts",
       "installUsingApt": false
     },
     "ghcr.io/devcontainers/features/node:1": {
