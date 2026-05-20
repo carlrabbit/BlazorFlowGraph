@@ -162,7 +162,7 @@ prepare_detached_state() {
   done
 }
 
-ensure_detached_state_is_consistent() {
+detached_state_requires_launch() {
   local running_count=0
   local total_count="${#sample_entries[@]}"
   local running_samples=()
@@ -199,6 +199,8 @@ ensure_detached_state_is_consistent() {
     echo "  2. Remove the detached PID files: rm -f \"$state_dir\"/*.pid" >&2
     exit 1
   fi
+
+  return 0
 }
 
 verify_required_ports() {
@@ -304,12 +306,12 @@ if (( detach_mode )); then
 
   if (( ! dry_run )); then
     prepare_detached_state
-    if ! ensure_detached_state_is_consistent; then
+    if detached_state_requires_launch; then
+      mkdir -p "$(dirname "$log_file")"
+      touch "$log_file"
+    else
       exit 0
     fi
-
-    mkdir -p "$(dirname "$log_file")"
-    touch "$log_file"
   fi
 fi
 
