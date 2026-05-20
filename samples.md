@@ -6,9 +6,12 @@ This repository currently includes five runnable samples under `/samples`. They 
 
 ```bash
 ./tooling/scripts/run-samples-all.sh
+bash tooling/scripts/run-samples-all.sh --dry-run
 ```
 
 Open the sample index on `http://localhost:5100` (or your workspace-forwarded equivalent URL).
+The sample devcontainer entry point is `.devcontainer/samples/devcontainer.json`, which runs `bash tooling/scripts/run-samples-all.sh --detach --log-file /tmp/blazor-flow-graph-samples.log`.
+That detached launcher manages the fixed sample ports `5100` through `5105`, stores PID files under `/tmp/blazor-flow-graph-samples`, and treats an already-running complete sample set as a successful no-op.
 
 ## Sample index
 
