@@ -195,8 +195,8 @@ ensure_detached_state_is_consistent() {
       echo "  - $sample" >&2
     done
     echo "Clean up the remaining sample processes and PID files before retrying:" >&2
-    echo "  while IFS= read -r -d '' pid_file; do kill \"\$(tr -d '[:space:]' < \"\$pid_file\")\" 2>/dev/null || true; done < <(find \"$state_dir\" -maxdepth 1 -name '*.pid' -print0)" >&2
-    echo "  rm -f \"$state_dir\"/*.pid" >&2
+    echo "  1. Stop the remaining sample processes listed above, for example: kill <pid>" >&2
+    echo "  2. Remove the detached PID files: rm -f \"$state_dir\"/*.pid" >&2
     exit 1
   fi
 }
@@ -231,20 +231,20 @@ cleanup() {
 start_process() {
   local pid_file="$1"
   shift
-  local command=("$@")
+  local sample_command=("$@")
 
   if (( dry_run )); then
-    print_dry_run_command "${command[@]}"
+    print_dry_run_command "${sample_command[@]}"
     return
   fi
 
   if (( detach_mode )); then
-    nohup "${command[@]}" >>"$log_file" 2>&1 &
+    nohup "${sample_command[@]}" >>"$log_file" 2>&1 &
     echo "$!" > "$pid_file"
     return
   fi
 
-  "${command[@]}" &
+  "${sample_command[@]}" &
   pids+=("$!")
 }
 
