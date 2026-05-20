@@ -28,7 +28,7 @@ This spec governs sample launch tooling and sample-focused dev-container integra
 # Behavioral Rules
 
 - launch tooling MUST validate registry integrity before launching any sample process
-- launch tooling MUST fail clearly when a required launched sample port is unavailable
+- launch tooling MUST fail clearly when a required sample port is unavailable
 - launch tooling MUST build sample projects before running them
 - launch tooling MUST support `--detach`, `--dry-run`, and `--log-file PATH`
 - launch tooling MUST treat `--detach` as the supported non-blocking sample workspace mode

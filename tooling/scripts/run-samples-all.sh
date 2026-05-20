@@ -67,7 +67,7 @@ parse_args() {
 sample_pid_file() {
   local sample_id="$1"
   local safe_id
-  safe_id="$(printf '%s' "$sample_id" | tr -c '[:alnum:]._-' '-')"
+  safe_id="$(printf '%s' "$sample_id" | tr -c 'a-zA-Z0-9._-' '-')"
   echo "$state_dir/$safe_id.pid"
 }
 
@@ -195,7 +195,7 @@ ensure_detached_state_is_consistent() {
       echo "  - $sample" >&2
     done
     echo "Clean up the remaining sample processes and PID files before retrying:" >&2
-    echo "  for pid_file in \"$state_dir\"/*.pid; do kill \"\$(cat \"\$pid_file\")\" 2>/dev/null || true; done" >&2
+    echo "  while IFS= read -r -d '' pid_file; do kill \"\$(tr -d '[:space:]' < \"\$pid_file\")\" 2>/dev/null || true; done < <(find \"$state_dir\" -maxdepth 1 -name '*.pid' -print0)" >&2
     echo "  rm -f \"$state_dir\"/*.pid" >&2
     exit 1
   fi
