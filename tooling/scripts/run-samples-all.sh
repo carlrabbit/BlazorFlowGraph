@@ -271,7 +271,7 @@ start_samples() {
 verify_detached_samples_started() {
   local failed_samples=()
 
-  # Briefly verify detached dotnet hosts stay alive before reporting success.
+  # Briefly verify that detached dotnet hosts stay alive before reporting success.
   sleep 1
 
   for entry in "${sample_entries[@]}"; do
