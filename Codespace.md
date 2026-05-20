@@ -94,7 +94,7 @@ Then open the sample index on forwarded port `5100`.
 
 Use `.devcontainer/samples/devcontainer.json` when you want a Codespace variant dedicated to launching all samples automatically.
 That devcontainer runs `bash tooling/scripts/run-samples-all.sh --detach --log-file /tmp/blazor-flow-graph-samples.log`.
-The older `tooling/scripts/start-samples-all-background.sh` wrapper remains only so existing callers do not break; direct `--detach` mode is the supported path.
+The older `tooling/scripts/start-samples-all-background.sh` wrapper remains only so existing callers do not break; using `--detach` mode directly is the supported approach.
 
 Detached startup is repeatable: if the full sample set is already running, the command exits successfully without starting duplicates.
 Detached sample PID files are stored under `/tmp/blazor-flow-graph-samples`, and partial detached state fails with cleanup guidance instead of launching a second inconsistent set.

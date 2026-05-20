@@ -5,7 +5,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 registry_path="$repo_root/samples/SAMPLES.json"
 validate_script="$repo_root/tooling/scripts/validate-samples-registry.sh"
 bind_host="${SAMPLES_BIND_HOST:-0.0.0.0}"
-state_dir="${TMPDIR:-/tmp}/blazor-flow-graph-samples"
+state_dir="/tmp/blazor-flow-graph-samples"
 default_log_file="$state_dir/samples.log"
 detach_mode=0
 dry_run=0
@@ -134,7 +134,11 @@ PY
 read_pid_file() {
   local pid_file="$1"
   if [[ -f "$pid_file" ]]; then
-    tr -d '[:space:]' < "$pid_file"
+    local pid
+    pid="$(head -n 1 "$pid_file" | tr -d '[:space:]')"
+    if [[ "$pid" =~ ^[0-9]+$ ]]; then
+      printf '%s\n' "$pid"
+    fi
   fi
 }
 
@@ -162,7 +166,7 @@ prepare_detached_state() {
   done
 }
 
-detached_state_requires_launch() {
+should_skip_detached_launch() {
   local running_count=0
   local total_count="${#sample_entries[@]}"
   local running_samples=()
@@ -185,7 +189,7 @@ detached_state_requires_launch() {
     if [[ -n "$log_file" ]]; then
       echo "Log file: $log_file"
     fi
-    return 1
+    return 0
   fi
 
   if (( running_count > 0 )); then
@@ -200,7 +204,7 @@ detached_state_requires_launch() {
     exit 1
   fi
 
-  return 0
+  return 1
 }
 
 verify_required_ports() {
@@ -306,12 +310,12 @@ if (( detach_mode )); then
 
   if (( ! dry_run )); then
     prepare_detached_state
-    if detached_state_requires_launch; then
-      mkdir -p "$(dirname "$log_file")"
-      touch "$log_file"
-    else
+    if should_skip_detached_launch; then
       exit 0
     fi
+
+    mkdir -p "$(dirname "$log_file")"
+    touch "$log_file"
   fi
 fi
 
