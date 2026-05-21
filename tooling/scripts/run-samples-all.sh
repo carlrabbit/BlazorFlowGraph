@@ -88,22 +88,7 @@ run_command() {
 
 read_sample_entries() {
   mapfile -t sample_entries < <(
-    python3 - "$registry_path" <<'PY'
-import json
-import sys
-from pathlib import Path
-
-registry_path = Path(sys.argv[1])
-payload = json.loads(registry_path.read_text(encoding="utf-8"))
-for sample in payload["samples"]:
-    print("\t".join([
-        sample["id"],
-        sample["name"],
-        sample["projectPath"],
-        str(sample["port"]),
-        sample["path"],
-    ]))
-PY
+    jq -r '.samples[] | [.id, .name, .projectPath, (.port | tostring), .path] | @tsv' "$registry_path"
   )
 
   if [[ ${#sample_entries[@]} -eq 0 ]]; then
@@ -113,22 +98,8 @@ PY
 }
 
 is_port_available() {
-  local host="$1"
-  local port="$2"
-
-  python3 - "$host" "$port" <<'PY'
-import socket
-import sys
-
-host = sys.argv[1]
-port = int(sys.argv[2])
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    try:
-        sock.bind((host, port))
-    except OSError:
-        raise SystemExit(1)
-PY
+  local port="$1"
+  ! ss -tlnH | awk '{print $4}' | grep -qE ":${port}$"
 }
 
 read_pid_file() {
@@ -210,7 +181,7 @@ should_skip_detached_launch() {
 verify_required_ports() {
   for entry in "${sample_entries[@]}"; do
     IFS=$'\t' read -r _sample_id name _project_path port _path <<< "$entry"
-    if ! is_port_available "$bind_host" "$port"; then
+    if ! is_port_available "$port"; then
       echo "Port conflict: $name requires port $port on $bind_host, but it is already in use." >&2
       exit 1
     fi

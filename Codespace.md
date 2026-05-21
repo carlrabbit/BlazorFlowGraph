@@ -36,7 +36,6 @@ Use the default devcontainer for day-to-day development. Use the samples devcont
 |------|---------|--------------|
 | .NET SDK | 10 (latest minor) | devcontainer feature `ghcr.io/devcontainers/features/dotnet:2` |
 | Node.js | 22 LTS | devcontainer feature `ghcr.io/devcontainers/features/node:1` |
-| Python | 3.12 | devcontainer feature `ghcr.io/devcontainers/features/python:1` |
 | pnpm | 10.11.0 | Corepack (activated in `onCreateCommand`) |
 
 ### Lifecycle Commands
