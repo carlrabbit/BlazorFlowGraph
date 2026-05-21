@@ -9,6 +9,9 @@
     "ghcr.io/devcontainers/features/node:1": {
       "version": "22",
       "nodeGypDependencies": false
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12"
     }
   },
   "customizations": {
@@ -32,7 +35,7 @@
   },
   "onCreateCommand": "corepack enable && corepack prepare pnpm@10.11.0 --activate",
   "updateContentCommand": "pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx",
-  "forwardPorts": [5000, 5001],
+  "forwardPorts": [5000, 5001, 5100, 5101, 5102, 5103, 5104, 5105],
   "portsAttributes": {
     "5000": {
       "label": "Blazor HTTP",
@@ -41,6 +44,31 @@
     "5001": {
       "label": "Blazor HTTPS",
       "onAutoForward": "notify"
+    },
+    "5100": {
+      "label": "BlazorFlowGraph Sample Index",
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
+    },
+    "5101": {
+      "label": "Minimal Viewer",
+      "visibility": "public"
+    },
+    "5102": {
+      "label": "Incremental Updates",
+      "visibility": "public"
+    },
+    "5103": {
+      "label": "Layout Playground",
+      "visibility": "public"
+    },
+    "5104": {
+      "label": "Large Graph Stress",
+      "visibility": "public"
+    },
+    "5105": {
+      "label": "Semantic Annotations",
+      "visibility": "public"
     }
   },
   "remoteUser": "vscode"

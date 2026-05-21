@@ -12,7 +12,7 @@ There are two devcontainer variants:
 
 | Variant | Definition | Ports forwarded | Auto-starts samples |
 |---------|-----------|-----------------|---------------------|
-| **Default (development)** | `.devcontainer/dev/devcontainer.json` | `5000`, `5001` | No |
+| **Default (development)** | `.devcontainer/dev/devcontainer.json` | `5000`, `5001`, `5100`–`5105` | No |
 | **Samples** | `.devcontainer/samples/devcontainer.json` | `5100`–`5105` (public) | Yes |
 
 Use the default devcontainer for day-to-day development. Use the samples devcontainer when you want all sample apps to launch automatically on Codespace startup.
@@ -36,6 +36,7 @@ Use the default devcontainer for day-to-day development. Use the samples devcont
 |------|---------|--------------|
 | .NET SDK | 10 (latest minor) | devcontainer feature `ghcr.io/devcontainers/features/dotnet:2` |
 | Node.js | 22 LTS | devcontainer feature `ghcr.io/devcontainers/features/node:1` |
+| Python | 3.12 | devcontainer feature `ghcr.io/devcontainers/features/python:1` |
 | pnpm | 10.11.0 | Corepack (activated in `onCreateCommand`) |
 
 ### Lifecycle Commands
@@ -69,6 +70,12 @@ The following ports are forwarded automatically and surfaced in the **Ports** pa
 |------|---------|
 | 5000 | Blazor development server (HTTP) |
 | 5001 | Blazor development server (HTTPS) |
+| 5100 | BlazorFlowGraph Sample Index |
+| 5101 | Minimal Viewer sample |
+| 5102 | Incremental Updates sample |
+| 5103 | Layout Playground sample |
+| 5104 | Large Graph Stress sample |
+| 5105 | Semantic Annotations sample |
 
 Forwarded ports are automatically available via a generated `*.app.github.dev` URL when running a sample application.
 
