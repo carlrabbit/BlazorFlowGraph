@@ -29,22 +29,28 @@
   "portsAttributes": {
     "5100": {
       "label": "BlazorFlowGraph Sample Index",
-      "onAutoForward": "openBrowser"
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
     },
     "5101": {
-      "label": "Minimal Viewer"
+      "label": "Minimal Viewer",
+      "visibility": "public"
     },
     "5102": {
-      "label": "Incremental Updates"
+      "label": "Incremental Updates",
+      "visibility": "public"
     },
     "5103": {
-      "label": "Layout Playground"
+      "label": "Layout Playground",
+      "visibility": "public"
     },
     "5104": {
-      "label": "Large Graph Stress"
+      "label": "Large Graph Stress",
+      "visibility": "public"
     },
     "5105": {
-      "label": "Semantic Annotations"
+      "label": "Semantic Annotations",
+      "visibility": "public"
     }
   },
   "remoteUser": "vscode"
