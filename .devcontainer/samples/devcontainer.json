@@ -23,7 +23,7 @@
     }
   },
   "onCreateCommand": "corepack enable && corepack prepare pnpm@10.11.0 --activate",
-  "postCreateCommand": "pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx",
+  "updateContentCommand": "pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx",
   "postStartCommand": "bash tooling/scripts/run-samples-all.sh --detach --log-file /tmp/blazor-flow-graph-samples.log",
   "forwardPorts": [5100, 5101, 5102, 5103, 5104, 5105],
   "portsAttributes": {
