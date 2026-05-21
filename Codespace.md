@@ -13,7 +13,7 @@ There are two devcontainer variants:
 | Variant | Definition | Ports forwarded | Auto-starts samples |
 |---------|-----------|-----------------|---------------------|
 | **Default (development)** | `.devcontainer/dev/devcontainer.json` | `5000`, `5001` | No |
-| **Samples** | `.devcontainer/samples/devcontainer.json` | `5100`–`5105` | Yes |
+| **Samples** | `.devcontainer/samples/devcontainer.json` | `5100`–`5105` (public) | Yes |
 
 Use the default devcontainer for day-to-day development. Use the samples devcontainer when you want all sample apps to launch automatically on Codespace startup.
 
@@ -94,6 +94,7 @@ Then open the sample index on forwarded port `5100`.
 
 Use `.devcontainer/samples/devcontainer.json` when you want a Codespace variant dedicated to launching all samples automatically.
 That devcontainer runs `bash tooling/scripts/run-samples-all.sh --detach --log-file /tmp/blazor-flow-graph-samples.log`.
+It marks sample ports `5100` through `5105` as public so each sample and its Blazor static assets can be opened through the forwarded Codespaces URLs.
 The older `tooling/scripts/start-samples-all-background.sh` wrapper remains only so existing callers do not break; avoid it for new usage, use `--detach` mode directly, and expect the wrapper to be removable once no callers remain.
 
 Detached startup is repeatable: if the full sample set is already running, the command exits successfully without starting duplicates.

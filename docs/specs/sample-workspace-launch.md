@@ -41,6 +41,7 @@ This spec governs sample launch tooling and sample-focused dev-container integra
 - launch tooling SHOULD allow overriding the bind host for loopback-only local runs
 - sample apps MUST NOT redirect HTTP to HTTPS; sample hosting is intentionally HTTP-only
 - sample workspace dev container MUST forward each assigned sample port
+- sample workspace dev container MUST mark each forwarded sample port as public
 - sample workspace dev container MUST call `tooling/scripts/run-samples-all.sh --detach`
 - sample workspace dev container SHOULD auto-open port `5100` (SampleIndex)
 
