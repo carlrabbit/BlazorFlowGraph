@@ -7,6 +7,18 @@ obj/
 *.userprefs
 .idea/
 *.DotSettings
+TestResults/
+
+# BenchmarkDotNet
+BenchmarkDotNet.Artifacts/
+
+# Local artifacts
+artifacts/*
+!artifacts/.gitkeep
+
+# Package output
+packages/*
+!packages/.gitkeep
 
 # Node / TypeScript
 node_modules/
@@ -19,10 +31,12 @@ coverage/
 # pnpm
 .pnpm-store/
 
+# Bun
+bun.lockb
+
 # Build outputs
 wwwroot/js/
 wwwroot/css/
-TestResults/
 
 # OS
 .DS_Store

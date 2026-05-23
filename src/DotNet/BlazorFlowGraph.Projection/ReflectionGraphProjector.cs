@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Reflection;
 using BlazorFlowGraph.Protocol;
 using BlazorFlowGraph.Semantics;
 
@@ -27,40 +29,46 @@ public sealed class ReflectionGraphProjector : IGraphProjector
         var edges = new List<GraphEdge>();
         var groups = new List<GraphGroup>();
 
-        var objectList = semanticObjects as IList<object> ?? semanticObjects.ToList();
+        IList<object> objectList = semanticObjects as IList<object> ?? [.. semanticObjects];
 
         // Build a stable id lookup so group membership can reference node ids.
         var objectIds = new Dictionary<object, NodeId>(ReferenceEqualityComparer.Instance);
 
         foreach (var obj in objectList)
         {
-            var type = obj.GetType();
-            var nodeAttr = type.GetCustomAttributes(typeof(SemanticNodeAttribute), inherit: true)
+            Type type = obj.GetType();
+            SemanticNodeAttribute? nodeAttr = type.GetCustomAttributes(typeof(SemanticNodeAttribute), inherit: true)
                                .OfType<SemanticNodeAttribute>()
                                .FirstOrDefault();
 
             if (nodeAttr is null)
+            {
                 continue;
+            }
 
-            var nodeId = new NodeId(RuntimeHelpers.GetHashCode(obj).ToString("x8"));
+            var nodeId = new NodeId(RuntimeHelpers.GetHashCode(obj).ToString("x8", CultureInfo.InvariantCulture));
             objectIds[obj] = nodeId;
             var label = nodeAttr.Label ?? type.Name;
             nodes.Add(new GraphNode(nodeId, label, nodeAttr.Kind));
 
-            foreach (var prop in type.GetProperties())
+            foreach (PropertyInfo prop in type.GetProperties())
             {
-                var edgeAttr = prop.GetCustomAttributes(typeof(SemanticEdgeAttribute), inherit: true)
+                SemanticEdgeAttribute? edgeAttr = prop.GetCustomAttributes(typeof(SemanticEdgeAttribute), inherit: true)
                                    .OfType<SemanticEdgeAttribute>()
                                    .FirstOrDefault();
 
                 if (edgeAttr is null)
+                {
                     continue;
+                }
 
                 var target = prop.GetValue(obj);
                 if (target is null)
+                {
                     continue;
+                }
 
-                var targetId = new NodeId(RuntimeHelpers.GetHashCode(target).ToString("x8"));
+                var targetId = new NodeId(RuntimeHelpers.GetHashCode(target).ToString("x8", CultureInfo.InvariantCulture));
                 var edgeId = new EdgeId($"{nodeId.Value}->{targetId.Value}");
                 edges.Add(new GraphEdge(edgeId, nodeId, targetId, edgeAttr.Label));
             }
@@ -68,22 +76,26 @@ public sealed class ReflectionGraphProjector : IGraphProjector
 
         foreach (var obj in objectList)
         {
-            var type = obj.GetType();
-            var groupAttr = type.GetCustomAttributes(typeof(SemanticGroupAttribute), inherit: true)
+            Type type = obj.GetType();
+            SemanticGroupAttribute? groupAttr = type.GetCustomAttributes(typeof(SemanticGroupAttribute), inherit: true)
                                 .OfType<SemanticGroupAttribute>()
                                 .FirstOrDefault();
 
             if (groupAttr is null)
+            {
                 continue;
+            }
 
             var childIds = new List<NodeId>();
-            foreach (var prop in type.GetProperties())
+            foreach (PropertyInfo prop in type.GetProperties())
             {
                 var value = prop.GetValue(obj);
                 if (value is null)
+                {
                     continue;
+                }
 
-                if (objectIds.TryGetValue(value, out var childId))
+                if (objectIds.TryGetValue(value, out NodeId childId))
                 {
                     childIds.Add(childId);
                     continue;
@@ -94,13 +106,15 @@ public sealed class ReflectionGraphProjector : IGraphProjector
                 {
                     foreach (var item in enumerable)
                     {
-                        if (item is not null && objectIds.TryGetValue(item, out var itemId))
+                        if (item is not null && objectIds.TryGetValue(item, out NodeId itemId))
+                        {
                             childIds.Add(itemId);
+                        }
                     }
                 }
             }
 
-            var groupId = new GroupId(RuntimeHelpers.GetHashCode(obj).ToString("x8"));
+            var groupId = new GroupId(RuntimeHelpers.GetHashCode(obj).ToString("x8", CultureInfo.InvariantCulture));
             var label = groupAttr.Label ?? type.Name;
             groups.Add(new GraphGroup(groupId, label, groupAttr.Kind, childIds));
         }

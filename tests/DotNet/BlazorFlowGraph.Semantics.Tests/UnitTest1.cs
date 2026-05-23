@@ -1,5 +1,3 @@
-using BlazorFlowGraph.Semantics;
-
 namespace BlazorFlowGraph.Semantics.Tests;
 
 [SemanticNode(Kind = "component")]

@@ -3,13 +3,19 @@ namespace BlazorFlowGraph.Protocol;
 /// <summary>Unique identifier for a graph node.</summary>
 public readonly record struct NodeId(string Value)
 {
-    public override string ToString() => Value;
+    public override string ToString()
+    {
+        return Value;
+    }
 }
 
 /// <summary>Unique identifier for a graph edge.</summary>
 public readonly record struct EdgeId(string Value)
 {
-    public override string ToString() => Value;
+    public override string ToString()
+    {
+        return Value;
+    }
 }
 
 /// <summary>A node in the dataflow graph.</summary>
@@ -29,7 +35,10 @@ public sealed record GraphEdge(
 /// <summary>Unique identifier for a graph group.</summary>
 public readonly record struct GroupId(string Value)
 {
-    public override string ToString() => Value;
+    public override string ToString()
+    {
+        return Value;
+    }
 }
 
 /// <summary>A semantic group that aggregates child nodes.</summary>

@@ -1,4 +1,3 @@
-using BlazorFlowGraph.Diffing;
 using BlazorFlowGraph.Protocol;
 
 namespace BlazorFlowGraph.Diffing.Tests;
@@ -7,17 +6,19 @@ public class GraphDifferTests
 {
     private readonly GraphDiffer _differ = new();
 
-    private static GraphSnapshot Empty(int version = 0) =>
-        new(version, [], []);
+    private static GraphSnapshot Empty(int version = 0)
+    {
+        return new(version, [], []);
+    }
 
     [Test]
     public async Task Diff_AddedNodes_ReturnsAddOperations()
     {
-        var from = Empty(0);
+        GraphSnapshot from = Empty(0);
         var node = new GraphNode(new NodeId("n1"), "Node 1", "default");
         var to = new GraphSnapshot(1, [node], []);
 
-        var diff = _differ.Diff(from, to);
+        GraphDiff diff = _differ.Diff(from, to);
 
         await Assert.That(diff.NodeOperations).Count().IsEqualTo(1);
         await Assert.That(diff.NodeOperations[0].Type).IsEqualTo(DiffOperationType.Add);
@@ -29,9 +30,9 @@ public class GraphDifferTests
     {
         var node = new GraphNode(new NodeId("n1"), "Node 1", "default");
         var from = new GraphSnapshot(0, [node], []);
-        var to = Empty(1);
+        GraphSnapshot to = Empty(1);
 
-        var diff = _differ.Diff(from, to);
+        GraphDiff diff = _differ.Diff(from, to);
 
         await Assert.That(diff.NodeOperations).Count().IsEqualTo(1);
         await Assert.That(diff.NodeOperations[0].Type).IsEqualTo(DiffOperationType.Remove);
@@ -45,7 +46,7 @@ public class GraphDifferTests
         var from = new GraphSnapshot(0, [original], []);
         var to = new GraphSnapshot(1, [updated], []);
 
-        var diff = _differ.Diff(from, to);
+        GraphDiff diff = _differ.Diff(from, to);
 
         await Assert.That(diff.NodeOperations).Count().IsEqualTo(1);
         await Assert.That(diff.NodeOperations[0].Type).IsEqualTo(DiffOperationType.Update);
@@ -59,7 +60,7 @@ public class GraphDifferTests
         var from = new GraphSnapshot(0, [node], []);
         var to = new GraphSnapshot(1, [node], []);
 
-        var diff = _differ.Diff(from, to);
+        GraphDiff diff = _differ.Diff(from, to);
 
         await Assert.That(diff.NodeOperations).IsEmpty();
     }
@@ -67,7 +68,7 @@ public class GraphDifferTests
     [Test]
     public async Task Diff_Versions_ArePreserved()
     {
-        var diff = _differ.Diff(Empty(3), Empty(7));
+        GraphDiff diff = _differ.Diff(Empty(3), Empty(7));
         await Assert.That(diff.FromVersion).IsEqualTo(3);
         await Assert.That(diff.ToVersion).IsEqualTo(7);
     }
@@ -78,7 +79,7 @@ public class GraphDifferTests
         var from = new GraphSnapshot(0, [], [], ProtocolVersion: 1);
         var to = new GraphSnapshot(1, [], [], ProtocolVersion: 2);
 
-        var diff = _differ.Diff(from, to);
+        GraphDiff diff = _differ.Diff(from, to);
 
         await Assert.That(diff.ProtocolVersion).IsEqualTo(2);
     }
@@ -86,7 +87,7 @@ public class GraphDifferTests
     [Test]
     public async Task Diff_BothSnapshotsNoGroups_GroupOperationsIsNull()
     {
-        var diff = _differ.Diff(Empty(0), Empty(1));
+        GraphDiff diff = _differ.Diff(Empty(0), Empty(1));
         await Assert.That(diff.GroupOperations).IsNull();
     }
 
@@ -94,10 +95,10 @@ public class GraphDifferTests
     public async Task Diff_AddedGroups_ReturnsAddOperations()
     {
         var group = new GraphGroup(new GroupId("g1"), "Group 1", "cluster", [new NodeId("n1")]);
-        var from = Empty(0);
+        GraphSnapshot from = Empty(0);
         var to = new GraphSnapshot(1, [], [], [group]);
 
-        var diff = _differ.Diff(from, to);
+        GraphDiff diff = _differ.Diff(from, to);
 
         await Assert.That(diff.GroupOperations).Count().IsEqualTo(1);
         await Assert.That(diff.GroupOperations![0].Type).IsEqualTo(DiffOperationType.Add);
@@ -109,9 +110,9 @@ public class GraphDifferTests
     {
         var group = new GraphGroup(new GroupId("g1"), "Group 1", "cluster", []);
         var from = new GraphSnapshot(0, [], [], [group]);
-        var to = Empty(1);
+        GraphSnapshot to = Empty(1);
 
-        var diff = _differ.Diff(from, to);
+        GraphDiff diff = _differ.Diff(from, to);
 
         await Assert.That(diff.GroupOperations).Count().IsEqualTo(1);
         await Assert.That(diff.GroupOperations![0].Type).IsEqualTo(DiffOperationType.Remove);
@@ -125,7 +126,7 @@ public class GraphDifferTests
         var from = new GraphSnapshot(0, [], [], [original]);
         var to = new GraphSnapshot(1, [], [], [updated]);
 
-        var diff = _differ.Diff(from, to);
+        GraphDiff diff = _differ.Diff(from, to);
 
         await Assert.That(diff.GroupOperations).Count().IsEqualTo(1);
         await Assert.That(diff.GroupOperations![0].Type).IsEqualTo(DiffOperationType.Update);
@@ -139,7 +140,7 @@ public class GraphDifferTests
         var from = new GraphSnapshot(0, [], [], [group]);
         var to = new GraphSnapshot(1, [], [], [group]);
 
-        var diff = _differ.Diff(from, to);
+        GraphDiff diff = _differ.Diff(from, to);
 
         await Assert.That(diff.GroupOperations).IsEmpty();
     }

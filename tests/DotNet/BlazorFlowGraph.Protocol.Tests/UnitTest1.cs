@@ -1,5 +1,3 @@
-using BlazorFlowGraph.Protocol;
-
 namespace BlazorFlowGraph.Protocol.Tests;
 
 public class GraphContractsTests
@@ -39,7 +37,7 @@ public class GraphContractsTests
     [Test]
     public async Task GraphGroup_Equality_BasedOnValues()
     {
-        var childIds = new[] { new NodeId("n1"), new NodeId("n2") };
+        NodeId[] childIds = [new NodeId("n1"), new NodeId("n2")];
         var a = new GraphGroup(new GroupId("g1"), "Group A", "cluster", childIds);
         var b = new GraphGroup(new GroupId("g1"), "Group A", "cluster", childIds);
         await Assert.That(a).IsEqualTo(b);

@@ -102,42 +102,23 @@ builder.Services.AddDataflowVisualizer();
 
 ## Development
 
+### Canonical Commands
+
+Use the `eng/` scripts as the canonical entry point:
+
+```bash
+./eng/restore.sh   # restore .NET packages and frontend dependencies
+./eng/build.sh     # build all projects
+./eng/test.sh      # run all tests
+./eng/format.sh    # format source code
+./eng/check.sh     # full validation (restore → build → test → format check)
+```
+
 ### Prerequisites
 
 - .NET 10 SDK
 - Node.js LTS
 - Corepack enabled for pnpm
-
-### Restore
-
-```bash
-corepack enable
-pnpm install --frozen-lockfile
-dotnet restore BlazorFlowGraph.slnx
-```
-
-### Build
-
-```bash
-pnpm build
-dotnet build BlazorFlowGraph.slnx --no-restore --configuration Release
-```
-
-### TypeScript checks
-
-```bash
-pnpm typecheck
-pnpm test
-```
-
-### .NET tests
-
-```bash
-dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Protocol.Tests --configuration Release
-dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Diffing.Tests --configuration Release
-dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Projection.Tests --configuration Release
-dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Semantics.Tests --configuration Release
-```
 
 ### Running all samples
 
@@ -151,9 +132,10 @@ Use `.devcontainer/samples/devcontainer.json` to auto-start the fixed sample por
 
 ### Additional guidance
 
+- [`docs/ENGINEERING.md`](docs/ENGINEERING.md) — engineering command contract and script reference
+- [`docs/GUARDRAILS.md`](docs/GUARDRAILS.md) — test and implementation guardrails
 - [`Codespace.md`](Codespace.md) — zero-install Codespaces setup
 - [`Nuget.md`](Nuget.md) — NuGet packaging and release guidance
-- [`tooling/README.md`](tooling/README.md) — repository tooling notes
 
 ## Current Status
 

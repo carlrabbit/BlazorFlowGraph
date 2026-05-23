@@ -1,8 +1,5 @@
-using BlazorFlowGraph.Blazor;
 using BlazorFlowGraph.Diffing;
 using BlazorFlowGraph.Projection;
-using BlazorFlowGraph.Semantics;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace BlazorFlowGraph.Blazor.Server;
 
@@ -16,8 +13,8 @@ public static class DataflowVisualizerServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddDataflowVisualizer(this IServiceCollection services)
     {
-        services.AddSingleton<IGraphProjector, ReflectionGraphProjector>();
-        services.AddSingleton<IGraphDiffer, GraphDiffer>();
+        _ = services.AddSingleton<IGraphProjector, ReflectionGraphProjector>();
+        _ = services.AddSingleton<IGraphDiffer, GraphDiffer>();
         return services;
     }
 }

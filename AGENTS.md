@@ -6,7 +6,18 @@ Read first:
 - docs/SPECS.md
 - docs/WORKFLOWS.md
 - docs/TBPS.md
+- docs/ENGINEERING.md
+- docs/GUARDRAILS.md
 - docs/agent-context/project-context.md
+
+Engineering commands:
+- `./eng/restore.sh` — restore dependencies
+- `./eng/build.sh` — build all projects
+- `./eng/test.sh` — run all tests
+- `./eng/format.sh` — format source code
+- `./eng/check.sh` — full validation (restore → build → test → format check)
+
+**Agents must run `./eng/check.sh` before declaring implementation work complete.**
 
 Routing rules:
 - terminology changes -> `docs/TERMINOLOGY.md`
@@ -16,6 +27,8 @@ Routing rules:
 - process changes -> `docs/TBPS.md` and `docs/tbps/`
 - workflow intent changes -> `docs/workflows/`
 - workflow implementation changes -> `.github/workflows/`
+- engineering commands/scripts -> `docs/engineering/command-contract.md`
+- test guardrails -> `docs/guardrails/testing.md`
 
 When changing architecture or runtime boundaries:
 - update docs/architecture first

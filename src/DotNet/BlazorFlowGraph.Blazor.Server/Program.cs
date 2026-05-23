@@ -1,18 +1,18 @@
 using BlazorFlowGraph.Blazor.Server;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddDataflowVisualizer();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
-    app.UseHsts();
+    _ = app.UseExceptionHandler("/Error");
+    _ = app.UseHsts();
 }
 
 app.UseHttpsRedirection();

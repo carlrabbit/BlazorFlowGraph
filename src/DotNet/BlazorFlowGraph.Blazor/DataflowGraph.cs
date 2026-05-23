@@ -1,7 +1,7 @@
+using BlazorFlowGraph.Protocol;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.JSInterop;
-using BlazorFlowGraph.Protocol;
 
 namespace BlazorFlowGraph.Blazor;
 
@@ -143,6 +143,8 @@ public sealed partial class DataflowGraph : ComponentBase, IAsyncDisposable
                 break;
             case "overlay" when OnOverlayInspected.HasDelegate:
                 await OnOverlayInspected.InvokeAsync(inspection);
+                break;
+            default:
                 break;
         }
     }
