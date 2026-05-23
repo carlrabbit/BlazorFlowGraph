@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const releaseVersionPattern = /^v\d+\.\d+\.\d+\.\d+$/;
@@ -31,7 +31,7 @@ function ensureCommitIsOnMain() {
   const gitSha = process.env.GITHUB_SHA;
   if (!gitSha) {
     throw new Error(
-      "GITHUB_SHA is required in GitHub Actions so the release workflow can verify that the selected commit is reachable from origin/main."
+      "GITHUB_SHA is required in GitHub Actions so the release workflow can verify that the selected commit is reachable from origin/main.",
     );
   }
 
@@ -42,7 +42,7 @@ function ensureCommitIsOnMain() {
     });
   } catch {
     throw new Error(
-      "Failed to fetch origin/main, which is required to validate that the release commit comes from main."
+      "Failed to fetch origin/main, which is required to validate that the release commit comes from main.",
     );
   }
 
@@ -53,7 +53,7 @@ function ensureCommitIsOnMain() {
     });
   } catch {
     throw new Error(
-      `Release commit '${gitSha}' is not reachable from origin/main. Publish only from main-tagged commits or manual runs on main.`
+      `Release commit '${gitSha}' is not reachable from origin/main. Publish only from main-tagged commits or manual runs on main.`,
     );
   }
 }

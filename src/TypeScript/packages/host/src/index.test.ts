@@ -14,9 +14,11 @@ describe("registerGlobals", () => {
     try {
       registerGlobals();
 
-      expect((windowObject as unknown as Record<string, unknown>).DataflowVisualizer).toMatchObject({
-        version,
-      });
+      expect((windowObject as unknown as Record<string, unknown>).DataflowVisualizer).toMatchObject(
+        {
+          version,
+        },
+      );
     } finally {
       if (originalWindowDescriptor == null) {
         delete (globalThis as { window?: typeof window }).window;

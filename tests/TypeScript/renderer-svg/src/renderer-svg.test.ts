@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { computeLayout } from "@dataflow-visualizer/layout";
 import { renderToSvg } from "@dataflow-visualizer/renderer-svg";
 import { applySnapshot } from "@dataflow-visualizer/runtime";
-import { computeLayout } from "@dataflow-visualizer/layout";
+import { describe, expect, it } from "vitest";
 
 describe("renderToSvg", () => {
   it("returns an SVG string", () => {
@@ -10,7 +10,11 @@ describe("renderToSvg", () => {
       nodes: [{ id: "n1", label: "Node A", kind: "default" }],
       edges: [],
     });
-    const snapshot = { version: 1, nodes: [{ id: "n1", label: "Node A", kind: "default" }], edges: [] };
+    const snapshot = {
+      version: 1,
+      nodes: [{ id: "n1", label: "Node A", kind: "default" }],
+      edges: [],
+    };
     const layout = computeLayout(snapshot);
     const svg = renderToSvg(state, layout, { width: 800, height: 600 });
     expect(svg).toContain("<svg");
@@ -23,7 +27,11 @@ describe("renderToSvg", () => {
       nodes: [{ id: "n1", label: "MyLabel", kind: "default" }],
       edges: [],
     });
-    const snapshot = { version: 1, nodes: [{ id: "n1", label: "MyLabel", kind: "default" }], edges: [] };
+    const snapshot = {
+      version: 1,
+      nodes: [{ id: "n1", label: "MyLabel", kind: "default" }],
+      edges: [],
+    };
     const layout = computeLayout(snapshot);
     const svg = renderToSvg(state, layout, { width: 800, height: 600 });
     expect(svg).toContain("MyLabel");
@@ -35,7 +43,11 @@ describe("renderToSvg", () => {
       nodes: [{ id: "n1", label: "<dangerous>", kind: "default" }],
       edges: [],
     });
-    const snapshot = { version: 1, nodes: [{ id: "n1", label: "<dangerous>", kind: "default" }], edges: [] };
+    const snapshot = {
+      version: 1,
+      nodes: [{ id: "n1", label: "<dangerous>", kind: "default" }],
+      edges: [],
+    };
     const layout = computeLayout(snapshot);
     const svg = renderToSvg(state, layout, { width: 800, height: 600 });
     expect(svg).not.toContain("<dangerous>");

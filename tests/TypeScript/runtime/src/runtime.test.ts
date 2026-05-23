@@ -1,10 +1,6 @@
+import type { GraphDiff, GraphSnapshot } from "@dataflow-visualizer/protocol";
+import { applyDiff, applySnapshot, createEmptyState } from "@dataflow-visualizer/runtime";
 import { describe, expect, it } from "vitest";
-import {
-  createEmptyState,
-  applySnapshot,
-  applyDiff,
-} from "@dataflow-visualizer/runtime";
-import type { GraphSnapshot, GraphDiff } from "@dataflow-visualizer/protocol";
 
 const emptySnapshot = (version = 0): GraphSnapshot => ({
   version,
@@ -41,9 +37,7 @@ describe("applyDiff", () => {
       protocolVersion: 1,
       fromVersion: 0,
       toVersion: 1,
-      nodeOperations: [
-        { type: "add", node: { id: "n1", label: "Node 1", kind: "default" } },
-      ],
+      nodeOperations: [{ type: "add", node: { id: "n1", label: "Node 1", kind: "default" } }],
       edgeOperations: [],
     };
     const next = applyDiff(state, diff);
@@ -61,9 +55,7 @@ describe("applyDiff", () => {
       protocolVersion: 1,
       fromVersion: 0,
       toVersion: 1,
-      nodeOperations: [
-        { type: "remove", node: { id: "n1", label: "Node 1", kind: "default" } },
-      ],
+      nodeOperations: [{ type: "remove", node: { id: "n1", label: "Node 1", kind: "default" } }],
       edgeOperations: [],
     };
     const next = applyDiff(state, diff);
@@ -80,9 +72,7 @@ describe("applyDiff", () => {
       protocolVersion: 1,
       fromVersion: 0,
       toVersion: 1,
-      nodeOperations: [
-        { type: "update", node: { id: "n1", label: "New", kind: "default" } },
-      ],
+      nodeOperations: [{ type: "update", node: { id: "n1", label: "New", kind: "default" } }],
       edgeOperations: [],
     };
     const next = applyDiff(state, diff);
@@ -103,6 +93,8 @@ describe("applyDiff", () => {
       edgeOperations: [],
     };
 
-    expect(() => applyDiff(state, diff)).toThrowError(/fromVersion 2 does not match current state version 3/);
+    expect(() => applyDiff(state, diff)).toThrowError(
+      /fromVersion 2 does not match current state version 3/,
+    );
   });
 });

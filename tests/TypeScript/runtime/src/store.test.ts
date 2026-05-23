@@ -1,8 +1,5 @@
+import { GraphRuntimeEventBus, GraphRuntimeStore } from "@dataflow-visualizer/runtime";
 import { describe, expect, it, vi } from "vitest";
-import {
-  GraphRuntimeStore,
-  GraphRuntimeEventBus,
-} from "@dataflow-visualizer/runtime";
 
 // ---------------------------------------------------------------------------
 // GraphRuntimeStore — initial state

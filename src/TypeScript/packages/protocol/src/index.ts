@@ -95,7 +95,7 @@ export interface SnapshotValidationOptions {
 /** Validates a GraphSnapshot against the public snapshot contract. */
 export function validateGraphSnapshot(
   snapshot: GraphSnapshot,
-  options?: SnapshotValidationOptions
+  options?: SnapshotValidationOptions,
 ): readonly string[] {
   const errors: string[] = [];
 
@@ -108,7 +108,7 @@ export function validateGraphSnapshot(
 
   if (!supportedProtocolVersions.includes(protocolVersion)) {
     errors.push(
-      `snapshot.protocolVersion ${protocolVersion} is not supported; supported values: ${supportedProtocolVersions.join(", ")}`
+      `snapshot.protocolVersion ${protocolVersion} is not supported; supported values: ${supportedProtocolVersions.join(", ")}`,
     );
   }
 

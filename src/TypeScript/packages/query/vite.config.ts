@@ -1,5 +1,5 @@
+import { resolve } from "node:path";
 import { defineConfig } from "vite";
-import { resolve } from "path";
 
 export default defineConfig({
   build: {
@@ -9,10 +9,7 @@ export default defineConfig({
       fileName: "index",
     },
     rollupOptions: {
-      external: [
-        "@dataflow-visualizer/protocol",
-        "@dataflow-visualizer/runtime",
-      ],
+      external: ["@dataflow-visualizer/protocol", "@dataflow-visualizer/runtime"],
     },
     emptyOutDir: false,
     sourcemap: true,

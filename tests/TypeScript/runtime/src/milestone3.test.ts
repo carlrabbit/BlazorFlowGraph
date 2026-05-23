@@ -4,45 +4,45 @@
  * SpatialIndex, RuntimeDiagnostics, GraphRuntimeHost.
  */
 
-import { describe, expect, it, vi } from "vitest";
 import {
-  // SemanticCommand types
-  type FocusNodeCommand,
+  type ApplySearchCommand,
+  type BoundingBox,
   type CollapseGroupCommand,
   type ExpandGroupCommand,
-  type FitSelectionCommand,
   type FitGraphCommand,
-  type ApplySearchCommand,
+  type FitSelectionCommand,
+  type FocusGroupCommand,
+  // SemanticCommand types
+  type FocusNodeCommand,
+  // GraphRuntimeHost
+  GraphRuntimeHost,
+  // Store
+  GraphRuntimeStore,
+  MultiViewCoordinator,
   type NavigateBackCommand,
   type NavigateForwardCommand,
-  type FocusGroupCommand,
-  type RevealElementCommand,
-  type SemanticCommand,
-  // ViewportContext
-  createViewportContext,
-  type ViewportContext,
-  // VisibleGraph
-  buildVisibleGraph,
-  type VisibleGraph,
+  type OverlayProvider,
   // OverlayRegistry
   OverlayRegistry,
+  type RevealElementCommand,
+  // RuntimeDiagnostics
+  RuntimeDiagnostics,
+  type SemanticCommand,
+  type SpatialEntry,
+  type ViewportContext,
+  type VisibleGraph,
+  buildMinimapViewportRect,
   // SpatialIndex
   buildSpatialIndex,
   buildSpatialIndexWithOptions,
-  type BoundingBox,
-  type SpatialEntry,
-  // RuntimeDiagnostics
-  RuntimeDiagnostics,
-  // GraphRuntimeHost
-  GraphRuntimeHost,
-  MultiViewCoordinator,
-  buildMinimapViewportRect,
-  type OverlayProvider,
-  // Store
-  GraphRuntimeStore,
+  // VisibleGraph
+  buildVisibleGraph,
+  // ViewportContext
+  createViewportContext,
 } from "@dataflow-visualizer/runtime";
 import { applySnapshot } from "@dataflow-visualizer/runtime";
 import type { GraphDataState } from "@dataflow-visualizer/runtime";
+import { describe, expect, it, vi } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -51,7 +51,7 @@ import type { GraphDataState } from "@dataflow-visualizer/runtime";
 function makeData(
   nodes: Array<{ id: string; label: string; kind: string }>,
   edges: Array<{ id: string; sourceId: string; targetId: string }> = [],
-  groups: Array<{ id: string; label: string; kind: string; childNodeIds: string[] }> = []
+  groups: Array<{ id: string; label: string; kind: string; childNodeIds: string[] }> = [],
 ): GraphDataState {
   return {
     version: 1,
@@ -117,7 +117,11 @@ describe("SemanticCommand — discriminated union", () => {
   });
 
   it("RevealElement command supports semantic targets", () => {
-    const cmd: RevealElementCommand = { type: "RevealElement", elementId: "n1", elementKind: "node" };
+    const cmd: RevealElementCommand = {
+      type: "RevealElement",
+      elementId: "n1",
+      elementKind: "node",
+    };
     expect(cmd.type).toBe("RevealElement");
     expect(cmd.elementId).toBe("n1");
     expect(cmd.elementKind).toBe("node");
@@ -126,16 +130,26 @@ describe("SemanticCommand — discriminated union", () => {
   it("SemanticCommand union narrowing works in switch", () => {
     const dispatch = (cmd: SemanticCommand): string => {
       switch (cmd.type) {
-        case "FocusNode": return `focus:${cmd.nodeId}`;
-        case "CollapseGroup": return `collapse:${cmd.groupId}`;
-        case "ExpandGroup": return `expand:${cmd.groupId}`;
-        case "FocusGroup": return `focus-group:${cmd.groupId}`;
-        case "FitSelection": return "fit";
-        case "FitGraph": return "fit-graph";
-        case "RevealElement": return `reveal:${cmd.elementId}`;
-        case "ApplySearch": return `search:${cmd.query}`;
-        case "NavigateBack": return "back";
-        case "NavigateForward": return "forward";
+        case "FocusNode":
+          return `focus:${cmd.nodeId}`;
+        case "CollapseGroup":
+          return `collapse:${cmd.groupId}`;
+        case "ExpandGroup":
+          return `expand:${cmd.groupId}`;
+        case "FocusGroup":
+          return `focus-group:${cmd.groupId}`;
+        case "FitSelection":
+          return "fit";
+        case "FitGraph":
+          return "fit-graph";
+        case "RevealElement":
+          return `reveal:${cmd.elementId}`;
+        case "ApplySearch":
+          return `search:${cmd.query}`;
+        case "NavigateBack":
+          return "back";
+        case "NavigateForward":
+          return "forward";
       }
     };
     expect(dispatch({ type: "FocusNode", nodeId: "n1" })).toBe("focus:n1");
@@ -192,8 +206,11 @@ describe("createViewportContext", () => {
 describe("buildVisibleGraph — no policy (all visible)", () => {
   it("includes all nodes when no policy given", () => {
     const data = makeData(
-      [{ id: "n1", label: "A", kind: "x" }, { id: "n2", label: "B", kind: "x" }],
-      [{ id: "e1", sourceId: "n1", targetId: "n2" }]
+      [
+        { id: "n1", label: "A", kind: "x" },
+        { id: "n2", label: "B", kind: "x" },
+      ],
+      [{ id: "e1", sourceId: "n1", targetId: "n2" }],
     );
     const vg: VisibleGraph = buildVisibleGraph(data);
     expect(vg.visibleNodeIds.has("n1")).toBe(true);
@@ -210,10 +227,13 @@ describe("buildVisibleGraph — no policy (all visible)", () => {
 
 describe("buildVisibleGraph — search filter", () => {
   it("hides nodes not in searchMatchedIds", () => {
-    const data = makeData([
-      { id: "n1", label: "A", kind: "x" },
-      { id: "n2", label: "B", kind: "x" },
-    ], [{ id: "e1", sourceId: "n1", targetId: "n2" }]);
+    const data = makeData(
+      [
+        { id: "n1", label: "A", kind: "x" },
+        { id: "n2", label: "B", kind: "x" },
+      ],
+      [{ id: "e1", sourceId: "n1", targetId: "n2" }],
+    );
     const vg = buildVisibleGraph(data, { searchMatchedIds: new Set(["n1"]) });
     expect(vg.visibleNodeIds.has("n1")).toBe(true);
     expect(vg.visibleNodeIds.has("n2")).toBe(false);
@@ -236,7 +256,7 @@ describe("buildVisibleGraph — search filter", () => {
         { id: "n1", label: "A", kind: "x" },
         { id: "n2", label: "B", kind: "x" },
       ],
-      [{ id: "e1", sourceId: "n1", targetId: "n2" }]
+      [{ id: "e1", sourceId: "n1", targetId: "n2" }],
     );
     const vg = buildVisibleGraph(data, {
       searchMatchedIds: new Set(["n1"]),
@@ -257,7 +277,7 @@ describe("buildVisibleGraph — search filter", () => {
       [
         { id: "e1", sourceId: "n1", targetId: "n2" },
         { id: "e2", sourceId: "n2", targetId: "n3" },
-      ]
+      ],
     );
     const vg = buildVisibleGraph(data, {
       searchMatchedIds: new Set(["n2"]),
@@ -277,7 +297,7 @@ describe("buildVisibleGraph — collapsed groups", () => {
         { id: "n2", label: "B", kind: "x" },
       ],
       [],
-      [{ id: "g1", label: "G", kind: "group", childNodeIds: ["n2"] }]
+      [{ id: "g1", label: "G", kind: "group", childNodeIds: ["n2"] }],
     );
     const vg = buildVisibleGraph(data, { collapsedGroupIds: new Set(["g1"]) });
     expect(vg.visibleNodeIds.has("n1")).toBe(true);
@@ -288,7 +308,7 @@ describe("buildVisibleGraph — collapsed groups", () => {
     const data = makeData(
       [{ id: "n1", label: "A", kind: "x" }],
       [],
-      [{ id: "g1", label: "G", kind: "group", childNodeIds: ["n1"] }]
+      [{ id: "g1", label: "G", kind: "group", childNodeIds: ["n1"] }],
     );
     const vg = buildVisibleGraph(data, { collapsedGroupIds: new Set(["g1"]) });
     expect(vg.visibleGroupIds.has("g1")).toBe(false);
@@ -301,7 +321,7 @@ describe("buildVisibleGraph — collapsed groups", () => {
         { id: "n2", label: "B", kind: "x" },
       ],
       [],
-      [{ id: "g1", label: "G", kind: "group", childNodeIds: ["n2"] }]
+      [{ id: "g1", label: "G", kind: "group", childNodeIds: ["n2"] }],
     );
     const vg = buildVisibleGraph(data, { collapsedGroupIds: new Set(["g1"]) });
     expect(vg.diagnostics?.culledNodeCount).toBe(1);
@@ -320,7 +340,7 @@ describe("buildVisibleGraph — focus filter", () => {
       [
         { id: "e1", sourceId: "n1", targetId: "n2" },
         { id: "e2", sourceId: "n2", targetId: "n3" },
-      ]
+      ],
     );
     const vg = buildVisibleGraph(data, { focusedNodeId: "n2" });
     expect(vg.visibleNodeIds.has("n1")).toBe(true);
@@ -335,7 +355,7 @@ describe("buildVisibleGraph — focus filter", () => {
         { id: "n2", label: "B", kind: "x" },
         { id: "n3", label: "C", kind: "x" },
       ],
-      [{ id: "e1", sourceId: "n1", targetId: "n2" }]
+      [{ id: "e1", sourceId: "n1", targetId: "n2" }],
     );
     const vg = buildVisibleGraph(data, { focusedNodeId: "n1" });
     expect(vg.visibleNodeIds.has("n1")).toBe(true);
@@ -478,9 +498,22 @@ describe("buildSpatialIndex", () => {
 
   it("uniform-grid implementation is compatible with linear semantics", () => {
     const linear = buildSpatialIndex(entries);
-    const grid = buildSpatialIndexWithOptions(entries, { implementation: "uniform-grid", cellSize: 64 });
+    const grid = buildSpatialIndexWithOptions(entries, {
+      implementation: "uniform-grid",
+      cellSize: 64,
+    });
     const region: BoundingBox = { x: 0, y: 0, width: 250, height: 130 };
-    expect(grid.query(region).map((e) => e.id).sort()).toEqual(linear.query(region).map((e) => e.id).sort());
+    expect(
+      grid
+        .query(region)
+        .map((e) => e.id)
+        .sort(),
+    ).toEqual(
+      linear
+        .query(region)
+        .map((e) => e.id)
+        .sort(),
+    );
     expect(grid.hitTest(50, 20)?.id).toBe(linear.hitTest(50, 20)?.id);
   });
 });
@@ -671,7 +704,7 @@ describe("GraphRuntimeHost — RevealElement command", () => {
         { id: "n1", label: "A", kind: "service" },
         { id: "n2", label: "B", kind: "service" },
       ],
-      [{ id: "e1", sourceId: "n1", targetId: "n2" }]
+      [{ id: "e1", sourceId: "n1", targetId: "n2" }],
     );
     host.store.setData(data);
     const visible = buildVisibleGraph(data, { searchMatchedIds: new Set(["n1"]) });
@@ -725,7 +758,7 @@ describe("GraphRuntimeHost — diagnostics integration", () => {
         toVersion: 1000,
         nodeOperations: [],
         edgeOperations: [],
-      })
+      }),
     ).toThrow();
     expect(host.diagnostics.failedDiffApplications).toBe(1);
   });
@@ -734,9 +767,7 @@ describe("GraphRuntimeHost — diagnostics integration", () => {
 describe("GraphRuntimeHost — overlay providers", () => {
   it("registers providers and recomputes overlay state", () => {
     const host = new GraphRuntimeHost();
-    host.store.setData(
-      makeData([{ id: "n1", label: "A", kind: "service" }])
-    );
+    host.store.setData(makeData([{ id: "n1", label: "A", kind: "service" }]));
     const compute = vi.fn(() => ({
       nodeOverlays: new Map([["n1", { nodeId: "n1", kind: "health", data: { badge: "!" } }]]),
     }));
@@ -777,7 +808,7 @@ describe("GraphRuntimeHost — overlay providers", () => {
       descriptor: { kind: "ownership", displayName: "Ownership", zOrder: 10 },
       compute: ({ data }) => ({
         nodeOverlays: new Map(
-          [...data.nodes.keys()].map((id) => [id, { nodeId: id, kind: "ownership" }])
+          [...data.nodes.keys()].map((id) => [id, { nodeId: id, kind: "ownership" }]),
         ),
       }),
     };

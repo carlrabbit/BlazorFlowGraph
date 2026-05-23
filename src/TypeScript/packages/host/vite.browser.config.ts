@@ -1,5 +1,5 @@
+import { resolve } from "node:path";
 import { defineConfig } from "vite";
-import { resolve } from "path";
 
 const workspaceSourceAliases = {
   "@dataflow-visualizer/protocol": resolve(__dirname, "../protocol/src/index.ts"),

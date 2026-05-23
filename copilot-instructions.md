@@ -2,9 +2,16 @@
 
 Read [`AGENTS.md`](AGENTS.md) first.
 
+## Required workflow
+
+Run `./eng/check.sh` before completing any implementation work.
+Use `eng/` scripts — do not invent raw `dotnet`, `bun`, or script commands.
+
 Primary repository documentation:
 - docs/TERMINOLOGY.md
 - docs/SPECS.md
+- docs/ENGINEERING.md
+- docs/engineering/command-contract.md
 - docs/architecture/system-overview.md
 - docs/architecture/backend-semantics.md
 - docs/architecture/browser-runtime.md
@@ -18,6 +25,7 @@ Repository conventions:
 - Keep rendering, reconciliation, layout, and interaction logic in the browser runtime.
 - Keep Blazor components thin and integration-focused.
 - Preserve deterministic identifiers, deterministic projections, and incremental synchronization.
+- Use Bun (not pnpm/npm) for JavaScript/TypeScript. Use Biome (not ESLint/Prettier).
 
 Workflow synchronization rules:
 - Workflow intent is defined in docs/workflows.

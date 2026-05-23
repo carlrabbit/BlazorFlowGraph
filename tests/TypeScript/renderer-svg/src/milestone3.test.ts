@@ -3,17 +3,17 @@
  * RenderFrame, buildRenderFrame, GraphRendererBackend interface.
  */
 
-import { describe, expect, it } from "vitest";
+import { computeLayout } from "@dataflow-visualizer/layout";
 import {
-  buildRenderFrame,
+  type GraphRendererBackend,
+  type RenderEdge,
   type RenderFrame,
   type RenderNode,
-  type RenderEdge,
-  type GraphRendererBackend,
+  buildRenderFrame,
 } from "@dataflow-visualizer/renderer-svg";
 import { applySnapshot } from "@dataflow-visualizer/runtime";
 import type { VisibleGraph } from "@dataflow-visualizer/runtime";
-import { computeLayout } from "@dataflow-visualizer/layout";
+import { describe, expect, it } from "vitest";
 
 // ---------------------------------------------------------------------------
 // buildRenderFrame
@@ -26,7 +26,11 @@ describe("buildRenderFrame", () => {
       nodes: [{ id: "n1", label: "Node A", kind: "default" }],
       edges: [],
     });
-    const snapshot = { version: 1, nodes: [{ id: "n1", label: "Node A", kind: "default" }], edges: [] };
+    const snapshot = {
+      version: 1,
+      nodes: [{ id: "n1", label: "Node A", kind: "default" }],
+      edges: [],
+    };
     const layout = computeLayout(snapshot);
     const frame: RenderFrame = buildRenderFrame(state, layout);
     expect(frame.nodes.length).toBe(1);

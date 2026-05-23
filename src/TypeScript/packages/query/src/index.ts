@@ -2,8 +2,8 @@
  * Query package — topology traversal engine for the dataflow visualizer.
  */
 
-import type { NodeId, GroupId, GraphEdge } from "@dataflow-visualizer/protocol";
-import type { GraphState, GraphDataState } from "@dataflow-visualizer/runtime";
+import type { GraphEdge, GroupId, NodeId } from "@dataflow-visualizer/protocol";
+import type { GraphDataState, GraphState } from "@dataflow-visualizer/runtime";
 
 export type { NodeId, GroupId, GraphEdge };
 
@@ -80,7 +80,7 @@ export interface TraversalOptions {
 export function findUpstream(
   nodeId: NodeId,
   index: TopologyIndex,
-  options?: TraversalOptions
+  options?: TraversalOptions,
 ): ReadonlySet<NodeId> {
   return bfs(nodeId, index, "upstream", options);
 }
@@ -92,7 +92,7 @@ export function findUpstream(
 export function findDownstream(
   nodeId: NodeId,
   index: TopologyIndex,
-  options?: TraversalOptions
+  options?: TraversalOptions,
 ): ReadonlySet<NodeId> {
   return bfs(nodeId, index, "downstream", options);
 }
@@ -104,7 +104,7 @@ export function findDownstream(
 export function findConnected(
   nodeId: NodeId,
   index: TopologyIndex,
-  options?: TraversalOptions
+  options?: TraversalOptions,
 ): ReadonlySet<NodeId> {
   return bfs(nodeId, index, "both", options);
 }
@@ -133,7 +133,7 @@ export function findGroupMembers(groupId: GroupId, index: TopologyIndex): Readon
 export function findGroupBoundaryEdges(
   groupId: GroupId,
   index: TopologyIndex,
-  state: GraphDataState | GraphState
+  state: GraphDataState | GraphState,
 ): readonly GraphEdge[] {
   const memberIds = new Set(index.groupChildrenById.get(groupId) ?? []);
   const result: GraphEdge[] = [];
@@ -171,7 +171,7 @@ export function extractSubgraph(
   seedNodeIds: readonly NodeId[],
   index: TopologyIndex,
   state: GraphDataState | GraphState,
-  options?: SubgraphOptions
+  options?: SubgraphOptions,
 ): Subgraph {
   const includeUpstream = options?.includeUpstream ?? true;
   const includeDownstream = options?.includeDownstream ?? true;
@@ -211,9 +211,9 @@ function bfs(
   startId: NodeId,
   index: TopologyIndex,
   direction: TraversalDirection,
-  options?: TraversalOptions
+  options?: TraversalOptions,
 ): ReadonlySet<NodeId> {
-  const maxDepth = options?.maxDepth ?? Infinity;
+  const maxDepth = options?.maxDepth ?? Number.POSITIVE_INFINITY;
   const nodeFilter = options?.nodeFilter;
   const edgeFilter = options?.edgeFilter;
 
