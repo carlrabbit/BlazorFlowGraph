@@ -19,7 +19,8 @@ describe("registerGlobals", () => {
       });
     } finally {
       if (originalWindowDescriptor == null) {
-        (globalThis as { window?: typeof window }).window = undefined;
+        // biome-ignore lint/performance/noDelete: delete is required to fully remove the property (not just set it to undefined)
+        delete (globalThis as { window?: typeof window }).window;
       } else {
         Object.defineProperty(globalThis, "window", originalWindowDescriptor);
       }
