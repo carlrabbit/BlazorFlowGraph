@@ -5,9 +5,13 @@
 | Category | Location | Speed | External Dependencies | CI Default |
 |---|---|---|---|---|
 | Unit | `tests/DotNet/BlazorFlowGraph.*.Tests` | Fast (< 1 s per test) | None | Yes |
-| Integration | (future: `tests/integration/`) | Slow (may take seconds) | Network, DB, containers | Explicit |
+| Integration | (future: `tests/DotNet/*.Tests.Integration`) | Slow (may take seconds) | Network, DB, containers | Explicit |
 | E2E | (future: `tests/e2e/`) | Slow (browser automation) | Browser, running server | Explicit |
 | Benchmark | `benchmarks/` | Variable | None | Never |
+
+> **Note:** This repository currently uses `tests/DotNet/` as the test root. The Engineering Guide V3
+> convention uses `tests/unit/` and `tests/integration/`. New test projects should be added under
+> `tests/DotNet/` following the existing naming pattern until a directory restructure is planned.
 
 ## Unit Test Rules
 

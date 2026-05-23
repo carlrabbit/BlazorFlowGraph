@@ -47,9 +47,14 @@ than `dotnet test`, because MTP test runners are entry-point executables.
 
 ## TypeScript Tooling
 
-Frontend dependencies use pnpm. `eng/restore.sh` runs `pnpm install --frozen-lockfile`
-when `package.json` is present. `eng/format.sh` and `eng/check.sh` invoke Biome
-when `biome.json` is present.
+Frontend dependencies use pnpm (current package manager). `eng/restore.sh` detects and runs
+`pnpm install --frozen-lockfile` when `package.json` is present. When pnpm is unavailable,
+the script falls back to bun if installed. If neither is available, the frontend install step
+is skipped — .NET restore still succeeds for .NET-only CI jobs.
+
+If the repository migrates to bun, update `eng/restore.sh` to remove the pnpm/bun detection
+logic and use `bun install --frozen-lockfile` directly. `eng/format.sh` and `eng/check.sh`
+invoke Biome when `biome.json` is present.
 
 ## CI Integration
 
