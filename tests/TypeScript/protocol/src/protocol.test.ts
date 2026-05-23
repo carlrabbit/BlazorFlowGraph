@@ -1,5 +1,10 @@
+import {
+  type GraphDiff,
+  type GraphNode,
+  type GraphSnapshot,
+  validateGraphSnapshot,
+} from "@dataflow-visualizer/protocol";
 import { describe, expect, it } from "vitest";
-import { type GraphSnapshot, type GraphDiff, type GraphNode, validateGraphSnapshot } from "@dataflow-visualizer/protocol";
 
 describe("protocol types", () => {
   it("GraphSnapshot holds nodes and edges", () => {

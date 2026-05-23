@@ -5,9 +5,9 @@
  *              and viewport-culling support in buildRenderFrame.
  */
 
-import type { GraphState } from "@dataflow-visualizer/runtime";
 import type { LayoutResult } from "@dataflow-visualizer/layout";
-import type { VisibleGraph, ViewportContext, GraphGroup, NodeOverlay } from "@dataflow-visualizer/runtime";
+import type { GraphState } from "@dataflow-visualizer/runtime";
+import type { GraphGroup, NodeOverlay, ViewportContext, VisibleGraph } from "@dataflow-visualizer/runtime";
 
 export type { LayoutResult, VisibleGraph };
 
@@ -98,11 +98,9 @@ export const defaultStyleTokens: Record<string, StyleToken> = {
  * Resolves the StyleToken for the given node kind.
  * Falls back to the `default` token if the kind is not registered.
  */
-export function resolveStyleToken(
-  kind: string,
-  tokens: Record<string, StyleToken> = defaultStyleTokens
-): StyleToken {
-  return tokens[kind] ?? tokens["default"] ?? defaultStyleTokens["default"]!;
+export function resolveStyleToken(kind: string, tokens: Record<string, StyleToken> = defaultStyleTokens): StyleToken {
+  // biome-ignore lint/style/noNonNullAssertion: defaultStyleTokens always defines a "default" key
+  return tokens[kind] ?? tokens.default ?? defaultStyleTokens.default!;
 }
 
 // ---------------------------------------------------------------------------
@@ -124,7 +122,10 @@ export interface RenderNode {
 export interface RenderEdge {
   readonly id: string;
   readonly label?: string | undefined;
-  readonly sections: readonly { readonly startPoint: { x: number; y: number }; readonly endPoint: { x: number; y: number } }[];
+  readonly sections: readonly {
+    readonly startPoint: { x: number; y: number };
+    readonly endPoint: { x: number; y: number };
+  }[];
 }
 
 /** A positioned group hull ready for rendering (Milestone 4). */
@@ -293,11 +294,11 @@ export function buildRenderFrame(
   if (options?.nodeOverlays != null) {
     for (const [nodeId, overlay] of options.nodeOverlays) {
       if (visible != null && !visible.visibleNodeIds.has(nodeId)) continue;
-      const badge = typeof overlay.data?.["badge"] === "string" ? overlay.data["badge"] : undefined;
-      const shapeValue = typeof overlay.data?.["shape"] === "string" ? overlay.data["shape"] : undefined;
+      const badge = typeof overlay.data?.badge === "string" ? overlay.data.badge : undefined;
+      const shapeValue = typeof overlay.data?.shape === "string" ? overlay.data.shape : undefined;
       const shape = isRenderOverlayShape(shapeValue) ? shapeValue : "badge";
-      const severity = typeof overlay.data?.["severity"] === "string" ? overlay.data["severity"] : undefined;
-      const priority = typeof overlay.data?.["priority"] === "number" ? overlay.data["priority"] : undefined;
+      const severity = typeof overlay.data?.severity === "string" ? overlay.data.severity : undefined;
+      const priority = typeof overlay.data?.priority === "number" ? overlay.data.priority : undefined;
       overlays.push({
         nodeId,
         kind: overlay.kind,
@@ -359,10 +360,10 @@ function computeGroupHull(
   defaultWidth: number,
   defaultHeight: number
 ): { x: number; y: number; width: number; height: number } | null {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
   let found = false;
 
   for (const childId of group.childNodeIds) {
@@ -445,12 +446,12 @@ export interface GraphRendererBackend {
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 const ARROW_DEFS_MARKUP = [
-  `<defs>`,
+  "<defs>",
   `  <marker id="dfv-arrow" markerWidth="8" markerHeight="8"`,
   `           refX="6" refY="3" orient="auto">`,
   `    <path d="M0,0 L0,6 L8,3 z" fill="#9ca3af"/>`,
-  `  </marker>`,
-  `</defs>`,
+  "  </marker>",
+  "</defs>",
 ].join("\n");
 
 /**
@@ -496,10 +497,7 @@ export class SvgRendererBackend implements GraphRendererBackend {
   }
 
   updateViewport(panX: number, panY: number, scale: number): void {
-    this.viewportGroup?.setAttribute(
-      "transform",
-      `translate(${panX},${panY}) scale(${scale})`
-    );
+    this.viewportGroup?.setAttribute("transform", `translate(${panX},${panY}) scale(${scale})`);
   }
 
   resize(width: number, height: number): void {
@@ -533,7 +531,7 @@ function buildFrameMarkup(frame: RenderFrame, tokens: Record<string, StyleToken>
       `        fill="${escapeXmlAttr(style.fill)}" fill-opacity="0.3"`,
       `        stroke="${escapeXmlAttr(style.stroke)}" stroke-width="1" stroke-dasharray="4 3"/>`,
       `  <text x="${group.x + 8}" y="${group.y + 14}" font-size="11" fill="${escapeXmlAttr(style.stroke)}" font-weight="500">${labelText}</text>`,
-      `</g>`,
+      "</g>",
     ].join("\n");
   });
 
@@ -555,7 +553,7 @@ function buildFrameMarkup(frame: RenderFrame, tokens: Record<string, StyleToken>
       `<g class="dfv-edge" data-edge-id="${escapeXmlAttr(edge.id)}" role="graphics-symbol" aria-label="${edgeLabel !== "" ? escapeXmlAttr(edgeLabel) : "edge"}">`,
       `  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#dfv-arrow)"/>`,
       labelEl,
-      `</g>`,
+      "</g>",
     ]
       .filter(Boolean)
       .join("\n");
@@ -586,7 +584,7 @@ function buildFrameMarkup(frame: RenderFrame, tokens: Record<string, StyleToken>
       `  <text x="${textX}" y="${textY}" text-anchor="middle" font-size="12"`,
       `        fill="${escapeXmlAttr(style.textColor)}">${labelText}</text>`,
       overlayMarkup,
-      `</g>`,
+      "</g>",
     ]
       .filter(Boolean)
       .join("\n");
@@ -613,9 +611,7 @@ function buildOverlayMarkup(overlay: RenderOverlay, nodeWidth: number, nodeHeigh
   }
 
   if (overlay.shape === "muted") {
-    return [
-      `<rect width="${nodeWidth}" height="${nodeHeight}" rx="4" ry="4" fill="white" opacity="0.12"/>`,
-    ].join("\n");
+    return [`<rect width="${nodeWidth}" height="${nodeHeight}" rx="4" ry="4" fill="white" opacity="0.12"/>`].join("\n");
   }
 
   return buildOverlayBadge(overlay, nodeWidth);
@@ -624,7 +620,8 @@ function buildOverlayMarkup(overlay: RenderOverlay, nodeWidth: number, nodeHeigh
 /** Builds a small badge overlay indicator in the top-right corner of a node. */
 function buildOverlayBadge(overlay: RenderOverlay, nodeWidth: number): string {
   const color = resolveOverlayColor(overlay.kind);
-  const ariaLabel = overlay.severity != null ? `${overlay.kind} ${overlay.severity} indicator` : `${overlay.kind} indicator`;
+  const ariaLabel =
+    overlay.severity != null ? `${overlay.kind} ${overlay.severity} indicator` : `${overlay.kind} indicator`;
   // Badge text is capped at 2 characters to fit inside the 8px-radius circle badge.
   const text = overlay.badge != null ? escapeXml(overlay.badge.slice(0, 2)) : "●";
   const bx = nodeWidth - 10;
@@ -632,7 +629,7 @@ function buildOverlayBadge(overlay: RenderOverlay, nodeWidth: number): string {
     `<g class="dfv-overlay dfv-overlay-${escapeXmlAttr(overlay.kind)}" aria-label="${escapeXmlAttr(ariaLabel)}">`,
     `  <circle cx="${bx}" cy="0" r="8" fill="${color}" stroke="white" stroke-width="1"/>`,
     `  <text x="${bx}" y="4" text-anchor="middle" font-size="8" fill="white" font-weight="bold">${text}</text>`,
-    `</g>`,
+    "</g>",
   ].join("\n");
 }
 
@@ -715,7 +712,7 @@ export function renderInnerSvg(
       `  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"`,
       `        stroke="#9ca3af" stroke-width="1.5" marker-end="url(#dfv-arrow)"/>`,
       labelEl,
-      `</g>`,
+      "</g>",
     ]
       .filter(Boolean)
       .join("\n");
@@ -739,7 +736,7 @@ export function renderInnerSvg(
       `        fill="${escapeXmlAttr(style.fill)}"`,
       `        stroke="${escapeXmlAttr(style.stroke)}" stroke-width="${style.strokeWidth}"/>`,
       `  <text x="${textX}" y="${textY}" text-anchor="middle" font-size="12" fill="${escapeXmlAttr(style.textColor)}">${labelText}</text>`,
-      `</g>`,
+      "</g>",
     ].join("\n");
   });
 
@@ -769,16 +766,12 @@ export function renderToSvg(
     ` role="graphics-document" aria-label="Dataflow graph">`,
     defs,
     inner,
-    `</svg>`,
+    "</svg>",
   ].join("\n");
 }
 
 /** Renders only the edge layer. */
-function renderEdgesLayer(
-  state: GraphState,
-  layout: LayoutResult,
-  options: RenderLayerOptions
-): string {
+function renderEdgesLayer(state: GraphState, layout: LayoutResult, options: RenderLayerOptions): string {
   const elements = Array.from(state.edges.values()).map((edge) => {
     const section = layout.edges.get(edge.id)?.sections[0];
     if (section == null) return "";
@@ -798,7 +791,7 @@ function renderEdgesLayer(
       `  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"`,
       `        stroke="#9ca3af" stroke-width="1.5" marker-end="url(#dfv-arrow)"/>`,
       labelEl,
-      `</g>`,
+      "</g>",
     ]
       .filter(Boolean)
       .join("\n");
@@ -831,7 +824,7 @@ function renderNodesLayer(
       `        fill="${escapeXmlAttr(style.fill)}"`,
       `        stroke="${escapeXmlAttr(style.stroke)}" stroke-width="${style.strokeWidth}"/>`,
       `  <text x="${textX}" y="${textY}" text-anchor="middle" font-size="12" fill="${escapeXmlAttr(style.textColor)}">${labelText}</text>`,
-      `</g>`,
+      "</g>",
     ].join("\n");
   });
   return elements.filter(Boolean).join("\n");
@@ -858,7 +851,7 @@ function renderGroupsLayer(
       `        fill="${escapeXmlAttr(style.fill)}" fill-opacity="0.3"`,
       `        stroke="${escapeXmlAttr(style.stroke)}" stroke-width="1" stroke-dasharray="4 3"/>`,
       `  <text x="${hull.x + 8}" y="${hull.y + 14}" font-size="11" fill="${escapeXmlAttr(style.stroke)}" font-weight="500">${labelText}</text>`,
-      `</g>`,
+      "</g>",
     ].join("\n");
   });
   return elements.filter(Boolean).join("\n");
@@ -867,12 +860,12 @@ function renderGroupsLayer(
 /** Builds the SVG <defs> block for the arrowhead marker. */
 function buildArrowDefs(): string {
   return [
-    `<defs>`,
+    "<defs>",
     `  <marker id="dfv-arrow" markerWidth="8" markerHeight="8"`,
     `           refX="6" refY="3" orient="auto">`,
     `    <path d="M0,0 L0,6 L8,3 z" fill="#9ca3af"/>`,
-    `  </marker>`,
-    `</defs>`,
+    "  </marker>",
+    "</defs>",
   ].join("\n");
 }
 
@@ -889,10 +882,7 @@ function toSafeInt(value: number): number {
  * Escapes a string for safe embedding as XML text content.
  */
 function escapeXml(value: string): string {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 /**

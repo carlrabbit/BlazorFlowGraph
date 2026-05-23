@@ -3,15 +3,15 @@
  */
 
 import type {
-  GraphSnapshot,
+  EdgeOverlay,
   GraphDiff,
-  NodeId,
-  GroupId,
-  GraphNode,
   GraphEdge,
   GraphGroup,
+  GraphNode,
+  GraphSnapshot,
+  GroupId,
+  NodeId,
   NodeOverlay,
-  EdgeOverlay,
 } from "@dataflow-visualizer/protocol";
 
 export type { GraphSnapshot, GraphDiff, NodeOverlay, EdgeOverlay };
@@ -52,9 +52,7 @@ export function applySnapshot(snapshot: GraphSnapshot): GraphState {
 /** Applies a diff to an existing state. */
 export function applyDiff(state: GraphState, diff: GraphDiff): GraphState {
   if (diff.fromVersion !== state.version) {
-    throw new Error(
-      `diff fromVersion ${diff.fromVersion} does not match current state version ${state.version}`
-    );
+    throw new Error(`diff fromVersion ${diff.fromVersion} does not match current state version ${state.version}`);
   }
 
   const nodes = new Map(state.nodes);
@@ -432,10 +430,7 @@ export function buildSearchIndex(data: GraphDataState | GraphState): SearchIndex
 
       for (const node of data.nodes.values()) {
         if (text != null && text.length > 0) {
-          if (
-            !node.label.toLowerCase().includes(text) &&
-            !node.id.toLowerCase().includes(text)
-          ) {
+          if (!node.label.toLowerCase().includes(text) && !node.id.toLowerCase().includes(text)) {
             continue;
           }
         }
@@ -446,9 +441,7 @@ export function buildSearchIndex(data: GraphDataState | GraphState): SearchIndex
 
         if (filters != null) {
           const meta = node.metadata ?? {};
-          const allMatch = Object.entries(filters).every(
-            ([k, v]) => meta[k] === v
-          );
+          const allMatch = Object.entries(filters).every(([k, v]) => meta[k] === v);
           if (!allMatch) continue;
         }
 
@@ -643,10 +636,7 @@ export interface VisibilityPolicy {
  * Builds a `VisibleGraph` from the runtime data and optional visibility policies.
  * All nodes are visible by default; policies progressively restrict visibility.
  */
-export function buildVisibleGraph(
-  data: GraphDataState | GraphState,
-  policy?: VisibilityPolicy
-): VisibleGraph {
+export function buildVisibleGraph(data: GraphDataState | GraphState, policy?: VisibilityPolicy): VisibleGraph {
   const searchFilter = policy?.searchMatchedIds;
   const searchVisibilityBehavior = policy?.searchVisibilityBehavior ?? "filter";
   const focusedNode = policy?.focusedNodeId;
@@ -815,9 +805,7 @@ export class OverlayRegistry {
 
   /** Returns all registered overlay kinds in ascending z-order. */
   getVisible(): readonly OverlayDescriptor[] {
-    return [...this.descriptors.values()]
-      .filter((d) => d.visible)
-      .sort((a, b) => a.zOrder - b.zOrder);
+    return [...this.descriptors.values()].filter((d) => d.visible).sort((a, b) => a.zOrder - b.zOrder);
   }
 
   /** Returns all registered overlay kinds regardless of visibility. */
@@ -982,6 +970,7 @@ function buildUniformGridSpatialIndex(entries: readonly SpatialEntry[], cellSize
       const bucket = cellMap.get(`${gx},${gy}`);
       if (bucket == null) return null;
       for (let i = bucket.length - 1; i >= 0; i--) {
+        // biome-ignore lint/style/noNonNullAssertion: i is a valid index within bucket.length - 1
         const entry = bucket[i]!;
         const b = entry.bounds;
         if (x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height) {
@@ -994,12 +983,7 @@ function buildUniformGridSpatialIndex(entries: readonly SpatialEntry[], cellSize
 }
 
 function boxesIntersect(a: BoundingBox, b: BoundingBox): boolean {
-  return (
-    a.x < b.x + b.width &&
-    a.x + a.width > b.x &&
-    a.y < b.y + b.height &&
-    a.y + a.height > b.y
-  );
+  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
 // ---------------------------------------------------------------------------
@@ -1067,17 +1051,39 @@ export class RuntimeDiagnostics {
     return this.samples.slice(-limit);
   }
 
-  get visibleNodeCount(): number { return this._visibleNodeCount; }
-  get visibleEdgeCount(): number { return this._visibleEdgeCount; }
-  get visibleGroupCount(): number { return this._visibleGroupCount; }
-  get graphNodeCount(): number { return this._graphNodeCount; }
-  get graphEdgeCount(): number { return this._graphEdgeCount; }
-  get graphGroupCount(): number { return this._graphGroupCount; }
-  get culledNodeCount(): number { return this._culledNodeCount; }
-  get culledEdgeCount(): number { return this._culledEdgeCount; }
-  get culledGroupCount(): number { return this._culledGroupCount; }
-  get totalDiffApplications(): number { return this._totalDiffApplications; }
-  get failedDiffApplications(): number { return this._failedDiffApplications; }
+  get visibleNodeCount(): number {
+    return this._visibleNodeCount;
+  }
+  get visibleEdgeCount(): number {
+    return this._visibleEdgeCount;
+  }
+  get visibleGroupCount(): number {
+    return this._visibleGroupCount;
+  }
+  get graphNodeCount(): number {
+    return this._graphNodeCount;
+  }
+  get graphEdgeCount(): number {
+    return this._graphEdgeCount;
+  }
+  get graphGroupCount(): number {
+    return this._graphGroupCount;
+  }
+  get culledNodeCount(): number {
+    return this._culledNodeCount;
+  }
+  get culledEdgeCount(): number {
+    return this._culledEdgeCount;
+  }
+  get culledGroupCount(): number {
+    return this._culledGroupCount;
+  }
+  get totalDiffApplications(): number {
+    return this._totalDiffApplications;
+  }
+  get failedDiffApplications(): number {
+    return this._failedDiffApplications;
+  }
 
   /** Returns a summary snapshot of current diagnostic state. */
   getSummary(): {

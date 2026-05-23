@@ -1,4 +1,4 @@
-(function () {
+(() => {
   function normalizePath(path) {
     if (!path || path.trim() === "") {
       return "/";
@@ -49,7 +49,7 @@
         `<td>${escapeHtml(sample.description)}</td>`,
         `<td><code>${escapeHtml(sample.projectPath)}</code></td>`,
         `<td><code>${escapeHtml(sample.port)}</code></td>`,
-        `<td><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a></td>`
+        `<td><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a></td>`,
       ].join("");
       tableBody.appendChild(row);
     }
@@ -59,7 +59,7 @@
     const errorElement = document.getElementById("sample-index-error");
     const tableBody = document.getElementById("sample-table-body");
     if (tableBody) {
-      tableBody.innerHTML = "<tr><td colspan=\"5\">Unable to load sample registry.</td></tr>";
+      tableBody.innerHTML = '<tr><td colspan="5">Unable to load sample registry.</td></tr>';
     }
 
     if (errorElement) {
@@ -88,7 +88,7 @@
   }
 
   window.BlazorFlowGraphSampleIndex = {
-    createSampleUrl
+    createSampleUrl,
   };
 
   loadRegistry();

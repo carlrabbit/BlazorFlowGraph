@@ -19,7 +19,7 @@ describe("registerGlobals", () => {
       });
     } finally {
       if (originalWindowDescriptor == null) {
-        delete (globalThis as { window?: typeof window }).window;
+        (globalThis as { window?: typeof window }).window = undefined;
       } else {
         Object.defineProperty(globalThis, "window", originalWindowDescriptor);
       }

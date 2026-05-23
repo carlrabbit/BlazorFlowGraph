@@ -1,10 +1,469 @@
-var DataflowVisualizerBundle=(function(A){"use strict";function D(n,e){const t=[],s=[1],u=n.protocolVersion??1;(!Number.isInteger(n.version)||n.version<0)&&t.push("snapshot.version must be an integer greater than or equal to zero"),s.includes(u)||t.push(`snapshot.protocolVersion ${u} is not supported; supported values: ${s.join(", ")}`);const r=new Set;for(const i of n.nodes){if(r.has(i.id)){t.push(`duplicate node id: ${i.id}`);continue}r.add(i.id)}const l=new Set;for(const i of n.edges)l.has(i.id)?t.push(`duplicate edge id: ${i.id}`):l.add(i.id),r.has(i.sourceId)||t.push(`edge ${i.id} has unknown sourceId: ${i.sourceId}`),r.has(i.targetId)||t.push(`edge ${i.id} has unknown targetId: ${i.targetId}`);const f=new Set;for(const i of n.groups??[]){if(f.has(i.id)){t.push(`duplicate group id: ${i.id}`);continue}f.add(i.id);for(const v of i.childNodeIds)r.has(v)||t.push(`group ${i.id} references unknown childNodeId: ${v}`)}return t}function _(){return{version:0,nodes:new Map,edges:new Map,groups:new Map}}function F(n){return{version:n.version,nodes:new Map(n.nodes.map(e=>[e.id,e])),edges:new Map(n.edges.map(e=>[e.id,e])),groups:new Map((n.groups??[]).map(e=>[e.id,e]))}}function X(n,e){if(e.fromVersion!==n.version)throw new Error(`diff fromVersion ${e.fromVersion} does not match current state version ${n.version}`);const t=new Map(n.nodes),s=new Map(n.edges),u=new Map(n.groups);for(const r of e.nodeOperations)r.type==="remove"?t.delete(r.node.id):t.set(r.node.id,r.node);for(const r of e.edgeOperations)r.type==="remove"?s.delete(r.edge.id):s.set(r.edge.id,r.edge);for(const r of e.groupOperations??[])r.type==="remove"?u.delete(r.group.id):u.set(r.group.id,r.group);return{version:e.toVersion,nodes:t,edges:s,groups:u}}class Y{handlers=new Map;on(e,t){let s=this.handlers.get(e);s==null&&(s=new Set,this.handlers.set(e,s)),s.add(t)}off(e,t){this.handlers.get(e)?.delete(t)}emit(e,t){const s=this.handlers.get(e);if(s!=null)for(const u of s)u(t)}}class j{data={version:0,nodes:new Map,edges:new Map,groups:new Map};interaction={selectedNodeIds:new Set,hoveredNodeId:null};focus={focusedNodeId:null,focusedGroupId:null,navigationHistory:[]};search={query:"",matchedNodeIds:new Set,activeFilters:[],activeResultIndex:-1,visibilityBehavior:"filter"};overlays={nodeOverlays:new Map,edgeOverlays:new Map};layout={policy:"Incremental",expandedGroupIds:new Set};listeners=new Set;eventBus=new Y;setData(e){this.data=e,this.notify()}setSelection(e){this.interaction={...this.interaction,selectedNodeIds:e},this.eventBus.emit("SelectionChanged",{selectedNodeIds:e}),this.notify()}setHover(e){this.interaction={...this.interaction,hoveredNodeId:e},this.notify()}setFocus(e){const t=e.focusedNodeId!==void 0?e.focusedNodeId:this.focus.focusedNodeId,s=e.focusedGroupId!==void 0?e.focusedGroupId:this.focus.focusedGroupId,u=t!==null&&t!==this.focus.focusedNodeId?[...this.focus.navigationHistory,t]:this.focus.navigationHistory;this.focus={focusedNodeId:t,focusedGroupId:s,navigationHistory:u},this.eventBus.emit("FocusChanged",{focusedNodeId:t,focusedGroupId:s}),this.notify()}setSearch(e,t,s){this.search={query:e,matchedNodeIds:t,activeFilters:s?.activeFilters??[],activeResultIndex:s?.activeResultIndex??-1,visibilityBehavior:s?.visibilityBehavior??"filter"},this.eventBus.emit("SearchApplied",{query:e,matchedNodeIds:t}),this.notify()}setOverlays(e){this.overlays=e,this.notify()}setLayout(e){this.layout={...this.layout,...e},this.notify()}toggleGroup(e){const t=new Set(this.layout.expandedGroupIds);t.has(e)?(t.delete(e),this.layout={...this.layout,expandedGroupIds:t},this.eventBus.emit("GroupCollapsed",{groupId:e})):(t.add(e),this.layout={...this.layout,expandedGroupIds:t},this.eventBus.emit("GroupExpanded",{groupId:e})),this.notify()}getSnapshot(){return{data:this.data,interaction:this.interaction,focus:this.focus,search:this.search,overlays:this.overlays,layout:this.layout}}subscribe(e){return this.listeners.add(e),()=>{this.listeners.delete(e)}}notify(){const e=this.getSnapshot();for(const t of this.listeners)t(e)}}class z{state=_();listeners=new Set;store=new j;eventBus=this.store.eventBus;receiveSnapshot(e){const t=D(e);if(t.length>0){console.warn(`[interop] rejected invalid snapshot: ${t.join("; ")}`);return}this.state=F(e),this.store.setData(this.state),this.notifyListeners()}receiveDiff(e){if(e.fromVersion!==this.state.version){console.warn(`[interop] diff fromVersion ${e.fromVersion} does not match current state version ${this.state.version}`);return}this.state=X(this.state,e),this.store.setData(this.state),this.notifyListeners()}getState(){return this.state}subscribe(e){return this.listeners.add(e),()=>{this.listeners.delete(e)}}notifyListeners(){for(const e of this.listeners)e(this.state)}}const $=new z;function q(n,e={}){const{nodeWidth:t=120,nodeHeight:s=40,spacing:u=20}=e,r=Math.ceil(Math.sqrt(n.nodes.length)),l=new Map(n.nodes.map((h,o)=>[h.id,{id:h.id,x:o%r*(t+u),y:Math.floor(o/r)*(s+u),width:t,height:s}])),f=new Map(n.edges.map(h=>{const o=l.get(h.sourceId),d=l.get(h.targetId);return[h.id,{id:h.id,sections:o!=null&&d!=null?[{startPoint:{x:o.x+o.width/2,y:o.y+o.height},endPoint:{x:d.x+d.width/2,y:d.y}}]:[]}]})),i=Math.max(1,r),v=Math.ceil(n.nodes.length/i);return{nodes:l,edges:f,width:i*(t+u),height:v*(s+u)}}const E={default:{fill:"#e0e7ff",stroke:"#6366f1",strokeWidth:1.5,textColor:"#1e1b4b",rx:4},service:{fill:"#d1fae5",stroke:"#059669",strokeWidth:1.5,textColor:"#064e3b",rx:4},datastore:{fill:"#fef3c7",stroke:"#d97706",strokeWidth:1.5,textColor:"#78350f",rx:6},gateway:{fill:"#ede9fe",stroke:"#7c3aed",strokeWidth:2,textColor:"#4c1d95",rx:4},queue:{fill:"#fee2e2",stroke:"#dc2626",strokeWidth:1.5,textColor:"#7f1d1d",rx:4},group:{fill:"#f0f9ff",stroke:"#0284c7",strokeWidth:1,textColor:"#0c4a6e",rx:8}};function Z(n,e=E){return e[n]??e.default??E.default}function U(n,e,t,s=E){const u=Array.from(n.edges.values()).map(l=>{const f=e.edges.get(l.id)?.sections[0];if(f==null)return"";const i=y(f.startPoint.x),v=y(f.startPoint.y),h=y(f.endPoint.x),o=y(f.endPoint.y),d=l.label!=null?V(l.label):"",c=y((i+h)/2),x=y((v+o)/2),S=d!==""?`<text x="${c}" y="${x}" text-anchor="middle" font-size="10" fill="#6b7280">${d}</text>`:"";return[`<g class="dfv-edge" data-edge-id="${b(l.id)}" role="graphics-symbol" aria-label="${d!==""?b(d):"edge"}">`,`  <line x1="${i}" y1="${v}" x2="${h}" y2="${o}"`,'        stroke="#9ca3af" stroke-width="1.5" marker-end="url(#dfv-arrow)"/>',S,"</g>"].filter(Boolean).join(`
-`)}),r=Array.from(n.nodes.values()).map(l=>{const f=e.nodes.get(l.id);if(f==null)return"";const i=y(f.x),v=y(f.y),h=y(f.width),o=y(f.height),d=Z(l.kind,s),c=V(l.label),x=y(h/2),S=y(o/2+5);return[`<g class="dfv-node" data-node-id="${b(l.id)}" data-kind="${b(l.kind)}"`,`   transform="translate(${i},${v})" role="graphics-symbol" aria-label="${b(l.label)}">`,`  <rect width="${h}" height="${o}" rx="${d.rx}" ry="${d.rx}"`,`        fill="${b(d.fill)}"`,`        stroke="${b(d.stroke)}" stroke-width="${d.strokeWidth}"/>`,`  <text x="${x}" y="${S}" text-anchor="middle" font-size="12" fill="${b(d.textColor)}">${c}</text>`,"</g>"].join(`
-`)});return[...u,...r].filter(Boolean).join(`
-`)}function y(n){const e=Math.floor(Number(n));return Number.isFinite(e)&&e>=0?e:0}function V(n){return String(n).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}function b(n){return String(n).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}const J=typeof __BLAZORFLOWGRAPH_VERSION__>"u"?"0.0.0-dev":__BLAZORFLOWGRAPH_VERSION__;function B(n){return Math.max(.1,Math.min(10,n))}const O=1.1,K=`<defs>
+var DataflowVisualizerBundle = (function (A) {
+  function D(n, e) {
+    const t = [],
+      s = [1],
+      u = n.protocolVersion ?? 1;
+    (!Number.isInteger(n.version) || n.version < 0) &&
+      t.push("snapshot.version must be an integer greater than or equal to zero"),
+      s.includes(u) || t.push(`snapshot.protocolVersion ${u} is not supported; supported values: ${s.join(", ")}`);
+    const r = new Set();
+    for (const i of n.nodes) {
+      if (r.has(i.id)) {
+        t.push(`duplicate node id: ${i.id}`);
+        continue;
+      }
+      r.add(i.id);
+    }
+    const l = new Set();
+    for (const i of n.edges)
+      l.has(i.id) ? t.push(`duplicate edge id: ${i.id}`) : l.add(i.id),
+        r.has(i.sourceId) || t.push(`edge ${i.id} has unknown sourceId: ${i.sourceId}`),
+        r.has(i.targetId) || t.push(`edge ${i.id} has unknown targetId: ${i.targetId}`);
+    const f = new Set();
+    for (const i of n.groups ?? []) {
+      if (f.has(i.id)) {
+        t.push(`duplicate group id: ${i.id}`);
+        continue;
+      }
+      f.add(i.id);
+      for (const v of i.childNodeIds) r.has(v) || t.push(`group ${i.id} references unknown childNodeId: ${v}`);
+    }
+    return t;
+  }
+  function _() {
+    return { version: 0, nodes: new Map(), edges: new Map(), groups: new Map() };
+  }
+  function F(n) {
+    return {
+      version: n.version,
+      nodes: new Map(n.nodes.map((e) => [e.id, e])),
+      edges: new Map(n.edges.map((e) => [e.id, e])),
+      groups: new Map((n.groups ?? []).map((e) => [e.id, e])),
+    };
+  }
+  function X(n, e) {
+    if (e.fromVersion !== n.version)
+      throw new Error(`diff fromVersion ${e.fromVersion} does not match current state version ${n.version}`);
+    const t = new Map(n.nodes),
+      s = new Map(n.edges),
+      u = new Map(n.groups);
+    for (const r of e.nodeOperations) r.type === "remove" ? t.delete(r.node.id) : t.set(r.node.id, r.node);
+    for (const r of e.edgeOperations) r.type === "remove" ? s.delete(r.edge.id) : s.set(r.edge.id, r.edge);
+    for (const r of e.groupOperations ?? []) r.type === "remove" ? u.delete(r.group.id) : u.set(r.group.id, r.group);
+    return { version: e.toVersion, nodes: t, edges: s, groups: u };
+  }
+  class Y {
+    handlers = new Map();
+    on(e, t) {
+      let s = this.handlers.get(e);
+      s == null && ((s = new Set()), this.handlers.set(e, s)), s.add(t);
+    }
+    off(e, t) {
+      this.handlers.get(e)?.delete(t);
+    }
+    emit(e, t) {
+      const s = this.handlers.get(e);
+      if (s != null) for (const u of s) u(t);
+    }
+  }
+  class j {
+    data = { version: 0, nodes: new Map(), edges: new Map(), groups: new Map() };
+    interaction = { selectedNodeIds: new Set(), hoveredNodeId: null };
+    focus = { focusedNodeId: null, focusedGroupId: null, navigationHistory: [] };
+    search = {
+      query: "",
+      matchedNodeIds: new Set(),
+      activeFilters: [],
+      activeResultIndex: -1,
+      visibilityBehavior: "filter",
+    };
+    overlays = { nodeOverlays: new Map(), edgeOverlays: new Map() };
+    layout = { policy: "Incremental", expandedGroupIds: new Set() };
+    listeners = new Set();
+    eventBus = new Y();
+    setData(e) {
+      (this.data = e), this.notify();
+    }
+    setSelection(e) {
+      (this.interaction = { ...this.interaction, selectedNodeIds: e }),
+        this.eventBus.emit("SelectionChanged", { selectedNodeIds: e }),
+        this.notify();
+    }
+    setHover(e) {
+      (this.interaction = { ...this.interaction, hoveredNodeId: e }), this.notify();
+    }
+    setFocus(e) {
+      const t = e.focusedNodeId !== void 0 ? e.focusedNodeId : this.focus.focusedNodeId,
+        s = e.focusedGroupId !== void 0 ? e.focusedGroupId : this.focus.focusedGroupId,
+        u =
+          t !== null && t !== this.focus.focusedNodeId
+            ? [...this.focus.navigationHistory, t]
+            : this.focus.navigationHistory;
+      (this.focus = { focusedNodeId: t, focusedGroupId: s, navigationHistory: u }),
+        this.eventBus.emit("FocusChanged", { focusedNodeId: t, focusedGroupId: s }),
+        this.notify();
+    }
+    setSearch(e, t, s) {
+      (this.search = {
+        query: e,
+        matchedNodeIds: t,
+        activeFilters: s?.activeFilters ?? [],
+        activeResultIndex: s?.activeResultIndex ?? -1,
+        visibilityBehavior: s?.visibilityBehavior ?? "filter",
+      }),
+        this.eventBus.emit("SearchApplied", { query: e, matchedNodeIds: t }),
+        this.notify();
+    }
+    setOverlays(e) {
+      (this.overlays = e), this.notify();
+    }
+    setLayout(e) {
+      (this.layout = { ...this.layout, ...e }), this.notify();
+    }
+    toggleGroup(e) {
+      const t = new Set(this.layout.expandedGroupIds);
+      t.has(e)
+        ? (t.delete(e),
+          (this.layout = { ...this.layout, expandedGroupIds: t }),
+          this.eventBus.emit("GroupCollapsed", { groupId: e }))
+        : (t.add(e),
+          (this.layout = { ...this.layout, expandedGroupIds: t }),
+          this.eventBus.emit("GroupExpanded", { groupId: e })),
+        this.notify();
+    }
+    getSnapshot() {
+      return {
+        data: this.data,
+        interaction: this.interaction,
+        focus: this.focus,
+        search: this.search,
+        overlays: this.overlays,
+        layout: this.layout,
+      };
+    }
+    subscribe(e) {
+      return (
+        this.listeners.add(e),
+        () => {
+          this.listeners.delete(e);
+        }
+      );
+    }
+    notify() {
+      const e = this.getSnapshot();
+      for (const t of this.listeners) t(e);
+    }
+  }
+  class z {
+    state = _();
+    listeners = new Set();
+    store = new j();
+    eventBus = this.store.eventBus;
+    receiveSnapshot(e) {
+      const t = D(e);
+      if (t.length > 0) {
+        console.warn(`[interop] rejected invalid snapshot: ${t.join("; ")}`);
+        return;
+      }
+      (this.state = F(e)), this.store.setData(this.state), this.notifyListeners();
+    }
+    receiveDiff(e) {
+      if (e.fromVersion !== this.state.version) {
+        console.warn(
+          `[interop] diff fromVersion ${e.fromVersion} does not match current state version ${this.state.version}`
+        );
+        return;
+      }
+      (this.state = X(this.state, e)), this.store.setData(this.state), this.notifyListeners();
+    }
+    getState() {
+      return this.state;
+    }
+    subscribe(e) {
+      return (
+        this.listeners.add(e),
+        () => {
+          this.listeners.delete(e);
+        }
+      );
+    }
+    notifyListeners() {
+      for (const e of this.listeners) e(this.state);
+    }
+  }
+  const $ = new z();
+  function q(n, e = {}) {
+    const { nodeWidth: t = 120, nodeHeight: s = 40, spacing: u = 20 } = e,
+      r = Math.ceil(Math.sqrt(n.nodes.length)),
+      l = new Map(
+        n.nodes.map((h, o) => [
+          h.id,
+          { id: h.id, x: (o % r) * (t + u), y: Math.floor(o / r) * (s + u), width: t, height: s },
+        ])
+      ),
+      f = new Map(
+        n.edges.map((h) => {
+          const o = l.get(h.sourceId),
+            d = l.get(h.targetId);
+          return [
+            h.id,
+            {
+              id: h.id,
+              sections:
+                o != null && d != null
+                  ? [
+                      {
+                        startPoint: { x: o.x + o.width / 2, y: o.y + o.height },
+                        endPoint: { x: d.x + d.width / 2, y: d.y },
+                      },
+                    ]
+                  : [],
+            },
+          ];
+        })
+      ),
+      i = Math.max(1, r),
+      v = Math.ceil(n.nodes.length / i);
+    return { nodes: l, edges: f, width: i * (t + u), height: v * (s + u) };
+  }
+  const E = {
+    default: { fill: "#e0e7ff", stroke: "#6366f1", strokeWidth: 1.5, textColor: "#1e1b4b", rx: 4 },
+    service: { fill: "#d1fae5", stroke: "#059669", strokeWidth: 1.5, textColor: "#064e3b", rx: 4 },
+    datastore: { fill: "#fef3c7", stroke: "#d97706", strokeWidth: 1.5, textColor: "#78350f", rx: 6 },
+    gateway: { fill: "#ede9fe", stroke: "#7c3aed", strokeWidth: 2, textColor: "#4c1d95", rx: 4 },
+    queue: { fill: "#fee2e2", stroke: "#dc2626", strokeWidth: 1.5, textColor: "#7f1d1d", rx: 4 },
+    group: { fill: "#f0f9ff", stroke: "#0284c7", strokeWidth: 1, textColor: "#0c4a6e", rx: 8 },
+  };
+  function Z(n, e = E) {
+    return e[n] ?? e.default ?? E.default;
+  }
+  function U(n, e, t, s = E) {
+    const u = Array.from(n.edges.values()).map((l) => {
+        const f = e.edges.get(l.id)?.sections[0];
+        if (f == null) return "";
+        const i = y(f.startPoint.x),
+          v = y(f.startPoint.y),
+          h = y(f.endPoint.x),
+          o = y(f.endPoint.y),
+          d = l.label != null ? V(l.label) : "",
+          c = y((i + h) / 2),
+          x = y((v + o) / 2),
+          S = d !== "" ? `<text x="${c}" y="${x}" text-anchor="middle" font-size="10" fill="#6b7280">${d}</text>` : "";
+        return [
+          `<g class="dfv-edge" data-edge-id="${b(l.id)}" role="graphics-symbol" aria-label="${d !== "" ? b(d) : "edge"}">`,
+          `  <line x1="${i}" y1="${v}" x2="${h}" y2="${o}"`,
+          '        stroke="#9ca3af" stroke-width="1.5" marker-end="url(#dfv-arrow)"/>',
+          S,
+          "</g>",
+        ]
+          .filter(Boolean)
+          .join(`
+`);
+      }),
+      r = Array.from(n.nodes.values()).map((l) => {
+        const f = e.nodes.get(l.id);
+        if (f == null) return "";
+        const i = y(f.x),
+          v = y(f.y),
+          h = y(f.width),
+          o = y(f.height),
+          d = Z(l.kind, s),
+          c = V(l.label),
+          x = y(h / 2),
+          S = y(o / 2 + 5);
+        return [
+          `<g class="dfv-node" data-node-id="${b(l.id)}" data-kind="${b(l.kind)}"`,
+          `   transform="translate(${i},${v})" role="graphics-symbol" aria-label="${b(l.label)}">`,
+          `  <rect width="${h}" height="${o}" rx="${d.rx}" ry="${d.rx}"`,
+          `        fill="${b(d.fill)}"`,
+          `        stroke="${b(d.stroke)}" stroke-width="${d.strokeWidth}"/>`,
+          `  <text x="${x}" y="${S}" text-anchor="middle" font-size="12" fill="${b(d.textColor)}">${c}</text>`,
+          "</g>",
+        ].join(`
+`);
+      });
+    return [...u, ...r].filter(Boolean).join(`
+`);
+  }
+  function y(n) {
+    const e = Math.floor(Number(n));
+    return Number.isFinite(e) && e >= 0 ? e : 0;
+  }
+  function V(n) {
+    return String(n).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function b(n) {
+    return String(n)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+  const J = typeof __BLAZORFLOWGRAPH_VERSION__ > "u" ? "0.0.0-dev" : __BLAZORFLOWGRAPH_VERSION__;
+  function B(n) {
+    return Math.max(0.1, Math.min(10, n));
+  }
+  const O = 1.1,
+    K = `<defs>
   <marker id="dfv-arrow" markerWidth="8" markerHeight="8"
            refX="6" refY="3" orient="auto">
     <path d="M0,0 L0,6 L8,3 z" fill="#9ca3af"/>
   </marker>
-</defs>`;function Q(n){const{container:e,width:t=800,height:s=600,nodeWidth:u=120,nodeHeight:r=40,inspectionTarget:l,inspectionMethodName:f="HandleInspection"}=n,i=document.querySelector(e);if(i==null)throw new Error(`[host] Container element "${e}" not found`);const v=i,h="http://www.w3.org/2000/svg",o=document.createElementNS(h,"svg");o.setAttribute("xmlns",h),o.setAttribute("width",String(t)),o.setAttribute("height",String(s)),o.style.touchAction="none",o.style.userSelect="none",o.innerHTML=K;const d=document.createElementNS(h,"g");d.setAttribute("class","dfv-viewport"),o.appendChild(d),v.innerHTML="",v.appendChild(o);let c={x:0,y:0,scale:1},x=0,S=0;function k(){d.setAttribute("transform",`translate(${c.x},${c.y}) scale(${c.scale})`)}function H(){const a=$.getState(),m={version:a.version,nodes:Array.from(a.nodes.values()),edges:Array.from(a.edges.values())},p=q(m,{nodeWidth:u,nodeHeight:r});x=p.width,S=p.height,d.innerHTML=U(a,p)}const ee=$.subscribe(H);H();function L(a){l?.invokeMethodAsync(f,a).catch(()=>{})}let N=!1,G={x:0,y:0};function T(a){a.button===0&&(N=!0,G={x:a.clientX-c.x,y:a.clientY-c.y},o.setPointerCapture(a.pointerId))}function P(a){N&&(c={...c,x:a.clientX-G.x,y:a.clientY-G.y},k())}function M(){N=!1}function R(a){a.preventDefault();const m=o.getBoundingClientRect(),p=a.clientX-m.left,w=a.clientY-m.top,I=a.deltaY<0?O:1/O,g=B(c.scale*I);c={x:p-(p-c.x)*(g/c.scale),y:w-(w-c.y)*(g/c.scale),scale:g},k()}function W(a){const m=a.target;if(m==null)return;const p=m.closest("[data-node-id]");if(p!=null){const g=p.getAttribute("data-node-id");g!=null&&L({targetType:"node",targetIds:[g],...p.getAttribute("aria-label")!=null?{label:p.getAttribute("aria-label")??""}:{},...p.getAttribute("data-kind")!=null?{kind:p.getAttribute("data-kind")??""}:{},topologyScope:"node"});return}const w=m.closest("[data-edge-id]");if(w!=null){const g=w.getAttribute("data-edge-id");g!=null&&L({targetType:"edge",targetIds:[g],...w.getAttribute("aria-label")!=null?{label:w.getAttribute("aria-label")??""}:{},topologyScope:"edge"});return}const I=m.closest("[data-group-id]");if(I!=null){const g=I.getAttribute("data-group-id");g!=null&&L({targetType:"group",targetIds:[g],...I.getAttribute("aria-label")!=null?{label:I.getAttribute("aria-label")??""}:{},topologyScope:"group"})}}o.addEventListener("pointerdown",T),o.addEventListener("pointermove",P),o.addEventListener("pointerup",M),o.addEventListener("pointercancel",M),o.addEventListener("wheel",R,{passive:!1}),o.addEventListener("click",W);function te(){if(x<=0||S<=0)return;const a=20,m=(t-a*2)/x,p=(s-a*2)/S,w=B(Math.min(m,p)),I=(t-x*w)/2,g=(s-S*w)/2;c={x:I,y:g,scale:w},k()}function ne(){c={x:0,y:0,scale:1},k()}function oe(){ee(),o.removeEventListener("pointerdown",T),o.removeEventListener("pointermove",P),o.removeEventListener("pointerup",M),o.removeEventListener("pointercancel",M),o.removeEventListener("wheel",R),o.removeEventListener("click",W),v.innerHTML=""}return{unmount:oe,fitToScreen:te,resetViewport:ne,getViewport:()=>c}}function C(){const n=window,e=new Map;n.DataflowVisualizer={version:J,receiveSnapshot:t=>$.receiveSnapshot(t),receiveDiff:$.receiveDiff.bind($),mount:t=>{const s=Q(t);return e.set(t.container,s),s},unmount:t=>{e.get(t)?.unmount(),e.delete(t)},fitToScreen:t=>{e.get(t)?.fitToScreen()},resetViewport:t=>{e.get(t)?.resetViewport()}}}return C(),A.registerGlobals=C,Object.defineProperty(A,Symbol.toStringTag,{value:"Module"}),A})({});
+</defs>`;
+  function Q(n) {
+    const {
+        container: e,
+        width: t = 800,
+        height: s = 600,
+        nodeWidth: u = 120,
+        nodeHeight: r = 40,
+        inspectionTarget: l,
+        inspectionMethodName: f = "HandleInspection",
+      } = n,
+      i = document.querySelector(e);
+    if (i == null) throw new Error(`[host] Container element "${e}" not found`);
+    const v = i,
+      h = "http://www.w3.org/2000/svg",
+      o = document.createElementNS(h, "svg");
+    o.setAttribute("xmlns", h),
+      o.setAttribute("width", String(t)),
+      o.setAttribute("height", String(s)),
+      (o.style.touchAction = "none"),
+      (o.style.userSelect = "none"),
+      (o.innerHTML = K);
+    const d = document.createElementNS(h, "g");
+    d.setAttribute("class", "dfv-viewport"), o.appendChild(d), (v.innerHTML = ""), v.appendChild(o);
+    let c = { x: 0, y: 0, scale: 1 },
+      x = 0,
+      S = 0;
+    function k() {
+      d.setAttribute("transform", `translate(${c.x},${c.y}) scale(${c.scale})`);
+    }
+    function H() {
+      const a = $.getState(),
+        m = { version: a.version, nodes: Array.from(a.nodes.values()), edges: Array.from(a.edges.values()) },
+        p = q(m, { nodeWidth: u, nodeHeight: r });
+      (x = p.width), (S = p.height), (d.innerHTML = U(a, p));
+    }
+    const ee = $.subscribe(H);
+    H();
+    function L(a) {
+      l?.invokeMethodAsync(f, a).catch(() => {});
+    }
+    let N = !1,
+      G = { x: 0, y: 0 };
+    function T(a) {
+      a.button === 0 && ((N = !0), (G = { x: a.clientX - c.x, y: a.clientY - c.y }), o.setPointerCapture(a.pointerId));
+    }
+    function P(a) {
+      N && ((c = { ...c, x: a.clientX - G.x, y: a.clientY - G.y }), k());
+    }
+    function M() {
+      N = !1;
+    }
+    function R(a) {
+      a.preventDefault();
+      const m = o.getBoundingClientRect(),
+        p = a.clientX - m.left,
+        w = a.clientY - m.top,
+        I = a.deltaY < 0 ? O : 1 / O,
+        g = B(c.scale * I);
+      (c = { x: p - (p - c.x) * (g / c.scale), y: w - (w - c.y) * (g / c.scale), scale: g }), k();
+    }
+    function W(a) {
+      const m = a.target;
+      if (m == null) return;
+      const p = m.closest("[data-node-id]");
+      if (p != null) {
+        const g = p.getAttribute("data-node-id");
+        g != null &&
+          L({
+            targetType: "node",
+            targetIds: [g],
+            ...(p.getAttribute("aria-label") != null ? { label: p.getAttribute("aria-label") ?? "" } : {}),
+            ...(p.getAttribute("data-kind") != null ? { kind: p.getAttribute("data-kind") ?? "" } : {}),
+            topologyScope: "node",
+          });
+        return;
+      }
+      const w = m.closest("[data-edge-id]");
+      if (w != null) {
+        const g = w.getAttribute("data-edge-id");
+        g != null &&
+          L({
+            targetType: "edge",
+            targetIds: [g],
+            ...(w.getAttribute("aria-label") != null ? { label: w.getAttribute("aria-label") ?? "" } : {}),
+            topologyScope: "edge",
+          });
+        return;
+      }
+      const I = m.closest("[data-group-id]");
+      if (I != null) {
+        const g = I.getAttribute("data-group-id");
+        g != null &&
+          L({
+            targetType: "group",
+            targetIds: [g],
+            ...(I.getAttribute("aria-label") != null ? { label: I.getAttribute("aria-label") ?? "" } : {}),
+            topologyScope: "group",
+          });
+      }
+    }
+    o.addEventListener("pointerdown", T),
+      o.addEventListener("pointermove", P),
+      o.addEventListener("pointerup", M),
+      o.addEventListener("pointercancel", M),
+      o.addEventListener("wheel", R, { passive: !1 }),
+      o.addEventListener("click", W);
+    function te() {
+      if (x <= 0 || S <= 0) return;
+      const a = 20,
+        m = (t - a * 2) / x,
+        p = (s - a * 2) / S,
+        w = B(Math.min(m, p)),
+        I = (t - x * w) / 2,
+        g = (s - S * w) / 2;
+      (c = { x: I, y: g, scale: w }), k();
+    }
+    function ne() {
+      (c = { x: 0, y: 0, scale: 1 }), k();
+    }
+    function oe() {
+      ee(),
+        o.removeEventListener("pointerdown", T),
+        o.removeEventListener("pointermove", P),
+        o.removeEventListener("pointerup", M),
+        o.removeEventListener("pointercancel", M),
+        o.removeEventListener("wheel", R),
+        o.removeEventListener("click", W),
+        (v.innerHTML = "");
+    }
+    return { unmount: oe, fitToScreen: te, resetViewport: ne, getViewport: () => c };
+  }
+  function C() {
+    const n = window,
+      e = new Map();
+    n.DataflowVisualizer = {
+      version: J,
+      receiveSnapshot: (t) => $.receiveSnapshot(t),
+      receiveDiff: $.receiveDiff.bind($),
+      mount: (t) => {
+        const s = Q(t);
+        return e.set(t.container, s), s;
+      },
+      unmount: (t) => {
+        e.get(t)?.unmount(), e.delete(t);
+      },
+      fitToScreen: (t) => {
+        e.get(t)?.fitToScreen();
+      },
+      resetViewport: (t) => {
+        e.get(t)?.resetViewport();
+      },
+    };
+  }
+  return C(), (A.registerGlobals = C), Object.defineProperty(A, Symbol.toStringTag, { value: "Module" }), A;
+})({});
 //# sourceMappingURL=browser.iife.js.map

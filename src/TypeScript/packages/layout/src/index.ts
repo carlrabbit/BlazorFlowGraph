@@ -195,10 +195,7 @@ export class GridLayoutProvider implements LayoutProvider {
  * Computes a simple grid layout for a graph snapshot.
  * Replace with ELK integration for production use.
  */
-export function computeLayout(
-  snapshot: GraphSnapshot,
-  options: LayoutOptions = {}
-): LayoutResult {
+export function computeLayout(snapshot: GraphSnapshot, options: LayoutOptions = {}): LayoutResult {
   const { nodeWidth = 120, nodeHeight = 40, spacing = 20 } = options;
   const cols = Math.ceil(Math.sqrt(snapshot.nodes.length));
 
@@ -223,20 +220,21 @@ export function computeLayout(
         edge.id,
         {
           id: edge.id,
-          sections: source != null && target != null
-            ? [
-                {
-                  startPoint: {
-                    x: source.x + source.width / 2,
-                    y: source.y + source.height,
+          sections:
+            source != null && target != null
+              ? [
+                  {
+                    startPoint: {
+                      x: source.x + source.width / 2,
+                      y: source.y + source.height,
+                    },
+                    endPoint: {
+                      x: target.x + target.width / 2,
+                      y: target.y,
+                    },
                   },
-                  endPoint: {
-                    x: target.x + target.width / 2,
-                    y: target.y,
-                  },
-                },
-              ]
-            : [],
+                ]
+              : [],
         },
       ];
     })
@@ -379,10 +377,7 @@ export class ElkLayoutProvider implements LayoutProvider {
       const section = elkEdge.sections?.[0];
       edges.set(elkEdge.id, {
         id: elkEdge.id,
-        sections:
-          section != null
-            ? [{ startPoint: section.startPoint, endPoint: section.endPoint }]
-            : [],
+        sections: section != null ? [{ startPoint: section.startPoint, endPoint: section.endPoint }] : [],
       });
     }
 

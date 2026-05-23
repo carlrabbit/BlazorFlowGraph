@@ -16,8 +16,9 @@ dist/
 *.tsbuildinfo
 coverage/
 
-# pnpm
-.pnpm-store/
+# bun
+.bun/
+bun.lockb
 
 # Build outputs
 wwwroot/js/
@@ -30,5 +31,3 @@ Thumbs.db
 
 # Misc
 *.log
-*.lock
-!pnpm-lock.yaml

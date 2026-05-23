@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "build": "vite build && vite build --config vite.browser.config.ts && tsc -p tsconfig.json --emitDeclarationOnly",
+    "build": "bun build src/index.ts --outdir ./dist --format esm --target browser --sourcemap=external --external @dataflow-visualizer/interop --external @dataflow-visualizer/layout --external @dataflow-visualizer/protocol --external @dataflow-visualizer/renderer-svg --external @dataflow-visualizer/runtime && bun build src/browser.ts --outdir ./dist --format iife --target browser --sourcemap=external && tsc -p tsconfig.json --emitDeclarationOnly",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest"
@@ -27,7 +27,6 @@
   },
   "devDependencies": {
     "typescript": "^5.8.3",
-    "vite": "^6.3.5",
     "vitest": "^3.1.3"
   }
 }

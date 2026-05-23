@@ -4,45 +4,45 @@
  * SpatialIndex, RuntimeDiagnostics, GraphRuntimeHost.
  */
 
-import { describe, expect, it, vi } from "vitest";
 import {
-  // SemanticCommand types
-  type FocusNodeCommand,
+  type ApplySearchCommand,
+  type BoundingBox,
   type CollapseGroupCommand,
   type ExpandGroupCommand,
-  type FitSelectionCommand,
   type FitGraphCommand,
-  type ApplySearchCommand,
+  type FitSelectionCommand,
+  type FocusGroupCommand,
+  // SemanticCommand types
+  type FocusNodeCommand,
+  // GraphRuntimeHost
+  GraphRuntimeHost,
+  // Store
+  GraphRuntimeStore,
+  MultiViewCoordinator,
   type NavigateBackCommand,
   type NavigateForwardCommand,
-  type FocusGroupCommand,
-  type RevealElementCommand,
-  type SemanticCommand,
-  // ViewportContext
-  createViewportContext,
-  type ViewportContext,
-  // VisibleGraph
-  buildVisibleGraph,
-  type VisibleGraph,
+  type OverlayProvider,
   // OverlayRegistry
   OverlayRegistry,
+  type RevealElementCommand,
+  // RuntimeDiagnostics
+  RuntimeDiagnostics,
+  type SemanticCommand,
+  type SpatialEntry,
+  type ViewportContext,
+  type VisibleGraph,
+  buildMinimapViewportRect,
   // SpatialIndex
   buildSpatialIndex,
   buildSpatialIndexWithOptions,
-  type BoundingBox,
-  type SpatialEntry,
-  // RuntimeDiagnostics
-  RuntimeDiagnostics,
-  // GraphRuntimeHost
-  GraphRuntimeHost,
-  MultiViewCoordinator,
-  buildMinimapViewportRect,
-  type OverlayProvider,
-  // Store
-  GraphRuntimeStore,
+  // VisibleGraph
+  buildVisibleGraph,
+  // ViewportContext
+  createViewportContext,
 } from "@dataflow-visualizer/runtime";
 import { applySnapshot } from "@dataflow-visualizer/runtime";
 import type { GraphDataState } from "@dataflow-visualizer/runtime";
+import { describe, expect, it, vi } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -126,16 +126,26 @@ describe("SemanticCommand — discriminated union", () => {
   it("SemanticCommand union narrowing works in switch", () => {
     const dispatch = (cmd: SemanticCommand): string => {
       switch (cmd.type) {
-        case "FocusNode": return `focus:${cmd.nodeId}`;
-        case "CollapseGroup": return `collapse:${cmd.groupId}`;
-        case "ExpandGroup": return `expand:${cmd.groupId}`;
-        case "FocusGroup": return `focus-group:${cmd.groupId}`;
-        case "FitSelection": return "fit";
-        case "FitGraph": return "fit-graph";
-        case "RevealElement": return `reveal:${cmd.elementId}`;
-        case "ApplySearch": return `search:${cmd.query}`;
-        case "NavigateBack": return "back";
-        case "NavigateForward": return "forward";
+        case "FocusNode":
+          return `focus:${cmd.nodeId}`;
+        case "CollapseGroup":
+          return `collapse:${cmd.groupId}`;
+        case "ExpandGroup":
+          return `expand:${cmd.groupId}`;
+        case "FocusGroup":
+          return `focus-group:${cmd.groupId}`;
+        case "FitSelection":
+          return "fit";
+        case "FitGraph":
+          return "fit-graph";
+        case "RevealElement":
+          return `reveal:${cmd.elementId}`;
+        case "ApplySearch":
+          return `search:${cmd.query}`;
+        case "NavigateBack":
+          return "back";
+        case "NavigateForward":
+          return "forward";
       }
     };
     expect(dispatch({ type: "FocusNode", nodeId: "n1" })).toBe("focus:n1");
@@ -192,7 +202,10 @@ describe("createViewportContext", () => {
 describe("buildVisibleGraph — no policy (all visible)", () => {
   it("includes all nodes when no policy given", () => {
     const data = makeData(
-      [{ id: "n1", label: "A", kind: "x" }, { id: "n2", label: "B", kind: "x" }],
+      [
+        { id: "n1", label: "A", kind: "x" },
+        { id: "n2", label: "B", kind: "x" },
+      ],
       [{ id: "e1", sourceId: "n1", targetId: "n2" }]
     );
     const vg: VisibleGraph = buildVisibleGraph(data);
@@ -210,10 +223,13 @@ describe("buildVisibleGraph — no policy (all visible)", () => {
 
 describe("buildVisibleGraph — search filter", () => {
   it("hides nodes not in searchMatchedIds", () => {
-    const data = makeData([
-      { id: "n1", label: "A", kind: "x" },
-      { id: "n2", label: "B", kind: "x" },
-    ], [{ id: "e1", sourceId: "n1", targetId: "n2" }]);
+    const data = makeData(
+      [
+        { id: "n1", label: "A", kind: "x" },
+        { id: "n2", label: "B", kind: "x" },
+      ],
+      [{ id: "e1", sourceId: "n1", targetId: "n2" }]
+    );
     const vg = buildVisibleGraph(data, { searchMatchedIds: new Set(["n1"]) });
     expect(vg.visibleNodeIds.has("n1")).toBe(true);
     expect(vg.visibleNodeIds.has("n2")).toBe(false);
@@ -480,7 +496,17 @@ describe("buildSpatialIndex", () => {
     const linear = buildSpatialIndex(entries);
     const grid = buildSpatialIndexWithOptions(entries, { implementation: "uniform-grid", cellSize: 64 });
     const region: BoundingBox = { x: 0, y: 0, width: 250, height: 130 };
-    expect(grid.query(region).map((e) => e.id).sort()).toEqual(linear.query(region).map((e) => e.id).sort());
+    expect(
+      grid
+        .query(region)
+        .map((e) => e.id)
+        .sort()
+    ).toEqual(
+      linear
+        .query(region)
+        .map((e) => e.id)
+        .sort()
+    );
     expect(grid.hitTest(50, 20)?.id).toBe(linear.hitTest(50, 20)?.id);
   });
 });
@@ -734,9 +760,7 @@ describe("GraphRuntimeHost — diagnostics integration", () => {
 describe("GraphRuntimeHost — overlay providers", () => {
   it("registers providers and recomputes overlay state", () => {
     const host = new GraphRuntimeHost();
-    host.store.setData(
-      makeData([{ id: "n1", label: "A", kind: "service" }])
-    );
+    host.store.setData(makeData([{ id: "n1", label: "A", kind: "service" }]));
     const compute = vi.fn(() => ({
       nodeOverlays: new Map([["n1", { nodeId: "n1", kind: "health", data: { badge: "!" } }]]),
     }));
@@ -776,9 +800,7 @@ describe("GraphRuntimeHost — overlay providers", () => {
       kind: "ownership",
       descriptor: { kind: "ownership", displayName: "Ownership", zOrder: 10 },
       compute: ({ data }) => ({
-        nodeOverlays: new Map(
-          [...data.nodes.keys()].map((id) => [id, { nodeId: id, kind: "ownership" }])
-        ),
+        nodeOverlays: new Map([...data.nodes.keys()].map((id) => [id, { nodeId: id, kind: "ownership" }])),
       }),
     };
     host.registerOverlayProvider(provider);

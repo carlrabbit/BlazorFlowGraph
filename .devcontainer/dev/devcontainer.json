@@ -16,13 +16,12 @@
       "extensions": [
         "ms-dotnettools.csdevkit",
         "ms-dotnettools.vscode-dotnet-runtime",
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
+        "biomejs.biome",
         "EditorConfig.EditorConfig"
       ],
       "settings": {
         "editor.formatOnSave": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.defaultFormatter": "biomejs.biome",
         "[csharp]": {
           "editor.defaultFormatter": "ms-dotnettools.csharp"
         },
@@ -30,8 +29,8 @@
       }
     }
   },
-  "onCreateCommand": "corepack enable && corepack prepare pnpm@10.11.0 --activate",
-  "updateContentCommand": "pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx",
+  "onCreateCommand": "curl -fsSL https://bun.sh/install | bash && echo 'export PATH=\"$HOME/.bun/bin:$PATH\"' >> ~/.bashrc",
+  "updateContentCommand": "$HOME/.bun/bin/bun install && dotnet restore BlazorFlowGraph.slnx",
   "forwardPorts": [5000, 5001, 5100, 5101, 5102, 5103, 5104, 5105],
   "portsAttributes": {
     "5000": {

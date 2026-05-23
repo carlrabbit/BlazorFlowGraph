@@ -2,8 +2,8 @@
  * Query package — topology traversal engine for the dataflow visualizer.
  */
 
-import type { NodeId, GroupId, GraphEdge } from "@dataflow-visualizer/protocol";
-import type { GraphState, GraphDataState } from "@dataflow-visualizer/runtime";
+import type { GraphEdge, GroupId, NodeId } from "@dataflow-visualizer/protocol";
+import type { GraphDataState, GraphState } from "@dataflow-visualizer/runtime";
 
 export type { NodeId, GroupId, GraphEdge };
 
@@ -77,11 +77,7 @@ export interface TraversalOptions {
  * Returns all nodes reachable upstream (via incoming edges) from the given node.
  * The seed node itself is not included.
  */
-export function findUpstream(
-  nodeId: NodeId,
-  index: TopologyIndex,
-  options?: TraversalOptions
-): ReadonlySet<NodeId> {
+export function findUpstream(nodeId: NodeId, index: TopologyIndex, options?: TraversalOptions): ReadonlySet<NodeId> {
   return bfs(nodeId, index, "upstream", options);
 }
 
@@ -89,11 +85,7 @@ export function findUpstream(
  * Returns all nodes reachable downstream (via outgoing edges) from the given node.
  * The seed node itself is not included.
  */
-export function findDownstream(
-  nodeId: NodeId,
-  index: TopologyIndex,
-  options?: TraversalOptions
-): ReadonlySet<NodeId> {
+export function findDownstream(nodeId: NodeId, index: TopologyIndex, options?: TraversalOptions): ReadonlySet<NodeId> {
   return bfs(nodeId, index, "downstream", options);
 }
 
@@ -101,11 +93,7 @@ export function findDownstream(
  * Returns all nodes reachable in either direction from the given node.
  * The seed node itself is not included.
  */
-export function findConnected(
-  nodeId: NodeId,
-  index: TopologyIndex,
-  options?: TraversalOptions
-): ReadonlySet<NodeId> {
+export function findConnected(nodeId: NodeId, index: TopologyIndex, options?: TraversalOptions): ReadonlySet<NodeId> {
   return bfs(nodeId, index, "both", options);
 }
 
@@ -213,7 +201,7 @@ function bfs(
   direction: TraversalDirection,
   options?: TraversalOptions
 ): ReadonlySet<NodeId> {
-  const maxDepth = options?.maxDepth ?? Infinity;
+  const maxDepth = options?.maxDepth ?? Number.POSITIVE_INFINITY;
   const nodeFilter = options?.nodeFilter;
   const edgeFilter = options?.edgeFilter;
 

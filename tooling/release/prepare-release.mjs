@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const releaseVersionPattern = /^v\d+\.\d+\.\d+\.\d+$/;

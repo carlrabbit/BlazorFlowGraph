@@ -22,28 +22,25 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version-file: .nvmrc
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+          bun-version: latest
 
       - name: Prepare release
         id: release
         env:
           INPUT_RELEASE_VERSION: ${{ inputs.release_version }}
-        run: node tooling/release/prepare-release.mjs
+        run: bun tooling/release/prepare-release.mjs
 
       - name: Install TypeScript dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Build TypeScript packages
-        run: pnpm build
+        run: bun run build
 
       - name: Refresh packaged browser bundle
-        run: cp src/TypeScript/packages/host/dist/browser.iife.js src/DotNet/BlazorFlowGraph.Blazor/wwwroot/js/dataflow-visualizer.js
+        run: cp src/TypeScript/packages/host/dist/browser.js src/DotNet/BlazorFlowGraph.Blazor/wwwroot/js/dataflow-visualizer.js
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4

@@ -105,29 +105,27 @@ builder.Services.AddDataflowVisualizer();
 ### Prerequisites
 
 - .NET 10 SDK
-- Node.js LTS
-- Corepack enabled for pnpm
+- Bun (https://bun.sh)
 
 ### Restore
 
 ```bash
-corepack enable
-pnpm install --frozen-lockfile
+bun install
 dotnet restore BlazorFlowGraph.slnx
 ```
 
 ### Build
 
 ```bash
-pnpm build
+bun run build
 dotnet build BlazorFlowGraph.slnx --no-restore --configuration Release
 ```
 
 ### TypeScript checks
 
 ```bash
-pnpm typecheck
-pnpm test
+bun run typecheck
+bun run test
 ```
 
 ### .NET tests

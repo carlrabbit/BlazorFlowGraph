@@ -2,13 +2,13 @@
  * Interop package — .NET / Blazor bridge for the dataflow visualizer.
  */
 
-import { type GraphSnapshot, type GraphDiff, validateGraphSnapshot } from "@dataflow-visualizer/protocol";
+import { type GraphDiff, type GraphSnapshot, validateGraphSnapshot } from "@dataflow-visualizer/protocol";
 import {
-  applySnapshot,
-  applyDiff,
-  createEmptyState,
-  GraphRuntimeStore,
   GraphRuntimeEventBus,
+  GraphRuntimeStore,
+  applyDiff,
+  applySnapshot,
+  createEmptyState,
 } from "@dataflow-visualizer/runtime";
 import type { GraphState } from "@dataflow-visualizer/runtime";
 

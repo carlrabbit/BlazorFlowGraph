@@ -3,17 +3,17 @@
  * RenderFrame, buildRenderFrame, GraphRendererBackend interface.
  */
 
-import { describe, expect, it } from "vitest";
+import { computeLayout } from "@dataflow-visualizer/layout";
 import {
-  buildRenderFrame,
+  type GraphRendererBackend,
+  type RenderEdge,
   type RenderFrame,
   type RenderNode,
-  type RenderEdge,
-  type GraphRendererBackend,
+  buildRenderFrame,
 } from "@dataflow-visualizer/renderer-svg";
 import { applySnapshot } from "@dataflow-visualizer/runtime";
 import type { VisibleGraph } from "@dataflow-visualizer/runtime";
-import { computeLayout } from "@dataflow-visualizer/layout";
+import { describe, expect, it } from "vitest";
 
 // ---------------------------------------------------------------------------
 // buildRenderFrame
@@ -215,13 +215,6 @@ describe("GraphRendererBackend lifecycle contract", () => {
     backend.resize(1024, 768);
     backend.dispose();
 
-    expect(calls).toEqual([
-      "initialize",
-      "renderFrame",
-      "renderFrame",
-      "updateViewport",
-      "resize",
-      "dispose",
-    ]);
+    expect(calls).toEqual(["initialize", "renderFrame", "renderFrame", "updateViewport", "resize", "dispose"]);
   });
 });

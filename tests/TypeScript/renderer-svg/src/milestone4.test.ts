@@ -3,18 +3,18 @@
  * style tokens, accessibility, group rendering, overlay rendering, viewport culling.
  */
 
-import { describe, expect, it } from "vitest";
+import { computeLayout } from "@dataflow-visualizer/layout";
 import {
-  buildRenderFrame,
-  renderToSvg,
-  renderLayer,
-  resolveStyleToken,
-  defaultStyleTokens,
-  type StyleToken,
   type RenderFrame,
+  type StyleToken,
+  buildRenderFrame,
+  defaultStyleTokens,
+  renderLayer,
+  renderToSvg,
+  resolveStyleToken,
 } from "@dataflow-visualizer/renderer-svg";
 import { applySnapshot, createViewportContext } from "@dataflow-visualizer/runtime";
-import { computeLayout } from "@dataflow-visualizer/layout";
+import { describe, expect, it } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Style tokens
@@ -29,7 +29,7 @@ describe("resolveStyleToken", () => {
 
   it("falls back to 'default' token for unknown kind", () => {
     const token = resolveStyleToken("unknown-kind");
-    expect(token).toEqual(defaultStyleTokens["default"]);
+    expect(token).toEqual(defaultStyleTokens.default);
   });
 
   it("supports custom token registry", () => {
@@ -50,11 +50,11 @@ describe("resolveStyleToken", () => {
   });
 
   it("defaultStyleTokens has entries for known node kinds", () => {
-    expect(defaultStyleTokens["default"]).toBeDefined();
-    expect(defaultStyleTokens["service"]).toBeDefined();
-    expect(defaultStyleTokens["datastore"]).toBeDefined();
-    expect(defaultStyleTokens["gateway"]).toBeDefined();
-    expect(defaultStyleTokens["group"]).toBeDefined();
+    expect(defaultStyleTokens.default).toBeDefined();
+    expect(defaultStyleTokens.service).toBeDefined();
+    expect(defaultStyleTokens.datastore).toBeDefined();
+    expect(defaultStyleTokens.gateway).toBeDefined();
+    expect(defaultStyleTokens.group).toBeDefined();
   });
 });
 
@@ -124,12 +124,16 @@ describe("buildRenderFrame — group hulls (Milestone 4)", () => {
     });
     const layout = computeLayout({
       version: 1,
-      nodes: [{ id: "n1", label: "A", kind: "service" }, { id: "n2", label: "B", kind: "service" }],
+      nodes: [
+        { id: "n1", label: "A", kind: "service" },
+        { id: "n2", label: "B", kind: "service" },
+      ],
       edges: [],
       groups: [{ id: "g1", label: "Services", kind: "group", childNodeIds: ["n1", "n2"] }],
     });
     const frame = buildRenderFrame(state, layout);
     expect(frame.groups.length).toBe(1);
+    // biome-ignore lint/style/noNonNullAssertion: length asserted to be 1 above
     const group = frame.groups[0]!;
     expect(group.id).toBe("g1");
     expect(group.label).toBe("Services");
@@ -156,7 +160,10 @@ describe("buildRenderFrame — group hulls (Milestone 4)", () => {
     });
     const layout = computeLayout({
       version: 1,
-      nodes: [{ id: "n1", label: "A", kind: "default" }, { id: "n2", label: "B", kind: "default" }],
+      nodes: [
+        { id: "n1", label: "A", kind: "default" },
+        { id: "n2", label: "B", kind: "default" },
+      ],
       edges: [],
     });
     const frame = buildRenderFrame(state, layout);
@@ -270,7 +277,10 @@ describe("buildRenderFrame — overlays (Milestone 4)", () => {
     });
     const layout = computeLayout({
       version: 1,
-      nodes: [{ id: "n1", label: "A", kind: "default" }, { id: "n2", label: "B", kind: "default" }],
+      nodes: [
+        { id: "n1", label: "A", kind: "default" },
+        { id: "n2", label: "B", kind: "default" },
+      ],
       edges: [],
     });
     const frame = buildRenderFrame(state, layout, {
@@ -322,7 +332,10 @@ describe("buildRenderFrame — viewport culling (Milestone 4)", () => {
     });
     const layout = computeLayout({
       version: 1,
-      nodes: [{ id: "n1", label: "A", kind: "default" }, { id: "n2", label: "B", kind: "default" }],
+      nodes: [
+        { id: "n1", label: "A", kind: "default" },
+        { id: "n2", label: "B", kind: "default" },
+      ],
       edges: [],
     });
 
@@ -350,7 +363,10 @@ describe("buildRenderFrame — viewport culling (Milestone 4)", () => {
     });
     const layout = computeLayout({
       version: 1,
-      nodes: [{ id: "n1", label: "A", kind: "default" }, { id: "n2", label: "B", kind: "default" }],
+      nodes: [
+        { id: "n1", label: "A", kind: "default" },
+        { id: "n2", label: "B", kind: "default" },
+      ],
       edges: [],
     });
     const frame = buildRenderFrame(state, layout);
@@ -368,7 +384,10 @@ describe("buildRenderFrame — viewport culling (Milestone 4)", () => {
     });
     const layout = computeLayout({
       version: 1,
-      nodes: [{ id: "n1", label: "A", kind: "default" }, { id: "n2", label: "B", kind: "default" }],
+      nodes: [
+        { id: "n1", label: "A", kind: "default" },
+        { id: "n2", label: "B", kind: "default" },
+      ],
       edges: [],
     });
     // Very large viewport — shows everything

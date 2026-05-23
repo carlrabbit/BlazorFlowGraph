@@ -24,7 +24,7 @@ Define the repository validation workflow that restores dependencies, builds the
 
 - repository contents on `main`
 - pull request branches targeting `main`
-- repository toolchain definitions such as `global.json`, `.nvmrc`, and `pnpm-lock.yaml`
+- repository toolchain definitions such as `global.json` and `bun.lock`
 
 # Outputs
 
