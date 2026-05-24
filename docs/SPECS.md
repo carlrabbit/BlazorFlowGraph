@@ -35,4 +35,4 @@ This document is authoritative for the repository's spec layer, what belongs in 
 
 # Document Contract
 
-Update this document when a spec is added, renamed, retired, or its authority changes. Keep it synchronized with [`README.md`](../README.md), [`../AGENTS.md`](../AGENTS.md), [`../copilot-instructions.md`](../copilot-instructions.md), and [`specs/README.md`](specs/README.md).
+Update this document when a spec is added, renamed, retired, or its authority changes. Keep it synchronized with [`README.md`](../README.md), [`../AGENTS.md`](../AGENTS.md), and [`../copilot-instructions.md`](../copilot-instructions.md).

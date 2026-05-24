@@ -9,14 +9,16 @@ The repository focuses on semantic graph projection, incremental synchronization
 Start here:
 
 - [`docs/TERMINOLOGY.md`](docs/TERMINOLOGY.md) — canonical project vocabulary
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — runtime boundaries and subsystem responsibilities
+- [`docs/DECISIONS.md`](docs/DECISIONS.md) — accepted architectural decisions and rationale
 - [`docs/SPECS.md`](docs/SPECS.md) — behavioral authority, invariants, contracts, and validation expectations
-- [`docs/architecture/system-overview.md`](docs/architecture/system-overview.md) — runtime boundaries and subsystem responsibilities
-- [`docs/WORKFLOWS.md`](docs/WORKFLOWS.md) — workflow intent index
+- [`docs/MILESTONES.md`](docs/MILESTONES.md) — milestone document structure and sequencing
 - [`docs/TBPS.md`](docs/TBPS.md) — reusable task best practices
+- [`docs/WORKFLOWS.md`](docs/WORKFLOWS.md) — workflow intent index
+- [`docs/GUARDRAILS.md`](docs/GUARDRAILS.md) — cross-cutting implementation and testing constraints
+- [`docs/ENGINEERING.md`](docs/ENGINEERING.md) — engineering substrate and stack profiles
+- [`docs/RESEARCH.md`](docs/RESEARCH.md) — non-authoritative research and rationale
 - [`docs/agent-context/project-context.md`](docs/agent-context/project-context.md) — concise repository context
-- [`docs/milestones/README.md`](docs/milestones/README.md) — milestone document structure
-- [`docs/decisions/`](docs/decisions) — accepted architectural decisions
-- [`Milestones.md`](Milestones.md) — capability roadmap and milestone progression
 
 Specialized references:
 
@@ -24,7 +26,6 @@ Specialized references:
 - [`docs/protocol/contracts.md`](docs/protocol/contracts.md) — shared graph contract reference
 - [`docs/layout/architecture.md`](docs/layout/architecture.md) — layout engine reference
 - [`docs/rendering/model.md`](docs/rendering/model.md) — render pipeline reference
-- [`docs/research/README.md`](docs/research/README.md) — exploratory research document location
 - [`docs/ai/`](docs/ai) — AI-facing architecture, protocol, and rendering references
 - [`samples.md`](samples.md) — sample catalog with run commands and screenshots
 
@@ -134,13 +135,13 @@ Use `.devcontainer/samples/devcontainer.json` to auto-start the fixed sample por
 - [`Codespace.md`](Codespace.md) — zero-install Codespaces setup
 - [`Nuget.md`](Nuget.md) — NuGet packaging and release guidance
 - [`docs/engineering/typescript-tools.md`](docs/engineering/typescript-tools.md) — TypeScript and JavaScript tooling
-- [`tooling/README.md`](tooling/README.md) — repository tooling notes
+- [`docs/engineering/tools.md`](docs/engineering/tools.md) — repository tooling scripts and utilities
 
 ## Current Status
 
 The repository is in an early platform-building phase with milestones covering semantic projection, incremental synchronization, layout infrastructure, renderer abstraction, and sample-driven validation.
 
-See [`Milestones.md`](Milestones.md) for the roadmap.
+See [`docs/MILESTONES.md`](docs/MILESTONES.md) for the roadmap.
 
 ## License
 

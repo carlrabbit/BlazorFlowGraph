@@ -6,6 +6,7 @@ Read first:
 - docs/SPECS.md
 - docs/WORKFLOWS.md
 - docs/TBPS.md
+- docs/GUARDRAILS.md
 - docs/ENGINEERING.md
 - docs/engineering/command-contract.md
 - docs/agent-context/project-context.md
@@ -40,16 +41,17 @@ If this command fails, fix the failure or document exactly why it could not be f
 
 - terminology changes → `docs/TERMINOLOGY.md`
 - behavior changes → `docs/SPECS.md` and `docs/specs/`
-- structure changes → `docs/architecture/`
-- rationale changes → `docs/decisions/`
+- structure changes → `docs/ARCHITECTURE.md` and `docs/architecture/`
+- rationale changes → `docs/DECISIONS.md` and `docs/decisions/`
 - process changes → `docs/TBPS.md` and `docs/tbps/`
-- workflow intent changes → `docs/workflows/`
+- workflow intent changes → `docs/WORKFLOWS.md` and `docs/workflows/`
 - workflow implementation changes → `.github/workflows/`
 - engineering substrate changes → `docs/ENGINEERING.md` and `docs/engineering/`
+- guardrail changes → `docs/GUARDRAILS.md` and `docs/guardrails/`
 
 When changing architecture or runtime boundaries:
-- update docs/architecture first
-- update docs/decisions when the change is durable and architectural
+- update docs/ARCHITECTURE.md and docs/architecture/ first
+- update docs/DECISIONS.md and docs/decisions/ when the change is durable and architectural
 - keep docs/ai synchronized when AI-facing constraints change, but do not use AI-facing docs as replacements for specs, architecture, or decisions
 
 When changing workflows:

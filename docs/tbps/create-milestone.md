@@ -9,9 +9,9 @@ Define the repeatable process for creating a milestone sequencing document.
 
 # Required Reading
 
-- [`../milestones/README.md`](../milestones/README.md)
+- [`../MILESTONES.md`](../MILESTONES.md)
 - [`../SPECS.md`](../SPECS.md)
-- [`../decisions/README.md`](../decisions/README.md)
+- [`../DECISIONS.md`](../DECISIONS.md)
 
 # Execution Steps
 
@@ -35,7 +35,7 @@ Define the repeatable process for creating a milestone sequencing document.
 
 # Synchronization Requirements
 
-- keep milestone docs aligned with [`../milestones/README.md`](../milestones/README.md)
+- keep milestone docs aligned with [`../MILESTONES.md`](../MILESTONES.md)
 - keep roadmap references aligned when milestone structure changes
 
 # Related Documents
@@ -49,4 +49,4 @@ This TBP is authoritative for creating milestone documents.
 
 # Document Contract
 
-Update this document when the milestone creation process changes. Keep it synchronized with [`../milestones/README.md`](../milestones/README.md) and milestone-related issue forms.
+Update this document when the milestone creation process changes. Keep it synchronized with [`../MILESTONES.md`](../MILESTONES.md) and milestone-related issue forms.

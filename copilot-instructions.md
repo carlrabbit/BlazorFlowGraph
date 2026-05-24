@@ -9,14 +9,16 @@ Use `eng/` scripts — do not invent raw `dotnet`, `bun`, or script commands.
 
 Primary repository documentation:
 - docs/TERMINOLOGY.md
+- docs/ARCHITECTURE.md
+- docs/DECISIONS.md
 - docs/SPECS.md
+- docs/GUARDRAILS.md
 - docs/ENGINEERING.md
 - docs/engineering/command-contract.md
 - docs/architecture/system-overview.md
 - docs/architecture/backend-semantics.md
 - docs/architecture/browser-runtime.md
 - docs/architecture/blazor-hosting.md
-- docs/decisions/
 - docs/workflows/
 - docs/tbps/
 
