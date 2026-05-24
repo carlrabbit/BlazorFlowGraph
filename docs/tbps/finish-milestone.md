@@ -48,4 +48,4 @@ This TBP is authoritative for finishing milestone execution.
 
 # Document Contract
 
-Update this document when the milestone closeout process changes. Keep it synchronized with milestone issue forms and [`../milestones/README.md`](../milestones/README.md).
+Update this document when the milestone closeout process changes. Keep it synchronized with milestone issue forms and [`../MILESTONES.md`](../MILESTONES.md).

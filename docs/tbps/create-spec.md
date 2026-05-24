@@ -10,7 +10,6 @@ Define the repeatable process for adding a new behavioral specification.
 # Required Reading
 
 - [`../SPECS.md`](../SPECS.md)
-- [`../specs/README.md`](../specs/README.md)
 - [`../TERMINOLOGY.md`](../TERMINOLOGY.md)
 
 # Execution Steps
@@ -23,7 +22,7 @@ Define the repeatable process for adding a new behavioral specification.
 
 # Validation
 
-- the spec includes the standard sections from `docs/specs/README.md`
+- the spec includes the standard sections from `docs/SPECS.md`
 - authority boundaries are explicit
 - indexes and routing files point to the new spec
 
@@ -40,7 +39,6 @@ Define the repeatable process for adding a new behavioral specification.
 
 # Related Documents
 
-- [`../specs/README.md`](../specs/README.md)
 - [`terminology-management.md`](terminology-management.md)
 
 # Authority
@@ -49,4 +47,4 @@ This TBP is authoritative for the process of creating new specs.
 
 # Document Contract
 
-Update this document when the spec creation workflow or template expectations change. Keep it synchronized with [`../SPECS.md`](../SPECS.md), [`../specs/README.md`](../specs/README.md), and the create-spec issue form.
+Update this document when the spec creation workflow or template expectations change. Keep it synchronized with [`../SPECS.md`](../SPECS.md) and the create-spec issue form.

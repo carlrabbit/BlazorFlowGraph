@@ -43,4 +43,4 @@ This document is authoritative for the repository TBP layer, TBP scope rules, TB
 
 # Document Contract
 
-Update this document when a TBP is added, renamed, retired, or re-layered. Keep it synchronized with [`tbps/README.md`](tbps/README.md), issue forms under `.github/ISSUE_TEMPLATE/`, and any workflow or routing document that references TBPs.
+Update this document when a TBP is added, renamed, retired, or re-layered. Keep it synchronized with issue forms under `.github/ISSUE_TEMPLATE/`, and any workflow or routing document that references TBPs.

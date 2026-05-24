@@ -20,6 +20,7 @@ This document is the index for the concrete engineering substrate and stack prof
 
 - [`docs/engineering/command-contract.md`](engineering/command-contract.md) — canonical commands, accepted arguments, and expected behavior
 - [`docs/engineering/typescript-tools.md`](engineering/typescript-tools.md) — TypeScript and JavaScript tooling stack
+- [`docs/engineering/tools.md`](engineering/tools.md) — repository tooling scripts and utilities
 
 ## Stack
 
@@ -35,10 +36,14 @@ This document is the index for the concrete engineering substrate and stack prof
 
 ## Guardrails
 
-- Agents must run `./eng/check.sh` before declaring work complete.
-- `eng/check.sh` is the canonical gate: restore, build, test, format verify, Biome check.
-- Benchmarks, packaging, and publishing are never part of `eng/check.sh`.
-- Do not add pnpm, npm, ESLint, Prettier, Vite, or Vitest. Use Bun (build + test) and Biome.
-- Test categories: fast unit tests run by default; slow/e2e/benchmark excluded from `eng/test.sh`.
+Guardrail constraints are defined in [`docs/GUARDRAILS.md`](GUARDRAILS.md) and [`docs/guardrails/engineering-guardrails.md`](guardrails/engineering-guardrails.md).
 
 See [`docs/engineering/command-contract.md`](engineering/command-contract.md) for full details.
+
+## Authority
+
+This document is authoritative for the engineering index, the stack profile, and for routing to engineering documents under `docs/engineering/`.
+
+## Document Contract
+
+Update this document when engineering documents are added, renamed, or retired, or when the stack profile changes. Keep it synchronized with [`GUARDRAILS.md`](GUARDRAILS.md), [`../AGENTS.md`](../AGENTS.md), [`../copilot-instructions.md`](../copilot-instructions.md), and [`engineering/command-contract.md`](engineering/command-contract.md).
