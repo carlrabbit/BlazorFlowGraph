@@ -7,7 +7,14 @@
 import type { GraphSnapshot } from "@dataflow-visualizer/protocol";
 
 /** Controls when layout is (re)computed. */
-export type LayoutPolicy = "Never" | "Incremental" | "Full" | "GroupLocal" | "Manual" | "Local" | "Frozen";
+export type LayoutPolicy =
+  | "Never"
+  | "Incremental"
+  | "Full"
+  | "GroupLocal"
+  | "Manual"
+  | "Local"
+  | "Frozen";
 
 /** Stable layout coordinates that persist across graph updates. */
 export interface PersistentLayoutState {
@@ -88,7 +95,7 @@ export interface LayoutGraph {
 /** Builds a LayoutGraph from a GraphSnapshot. */
 export function buildLayoutGraph(
   snapshot: GraphSnapshot,
-  options?: { nodeWidth?: number; nodeHeight?: number }
+  options?: { nodeWidth?: number; nodeHeight?: number },
 ): LayoutGraph {
   const nodeWidth = options?.nodeWidth ?? 120;
   const nodeHeight = options?.nodeHeight ?? 40;
@@ -150,7 +157,7 @@ export class GridLayoutProvider implements LayoutProvider {
           width: node.width,
           height: node.height,
         },
-      ])
+      ]),
     );
 
     const edges = new Map<string, LayoutEdge>(
@@ -178,7 +185,7 @@ export class GridLayoutProvider implements LayoutProvider {
                 : [],
           },
         ];
-      })
+      }),
     );
 
     const rows = Math.ceil(graph.nodes.length / cols);
@@ -195,10 +202,7 @@ export class GridLayoutProvider implements LayoutProvider {
  * Computes a simple grid layout for a graph snapshot.
  * Replace with ELK integration for production use.
  */
-export function computeLayout(
-  snapshot: GraphSnapshot,
-  options: LayoutOptions = {}
-): LayoutResult {
+export function computeLayout(snapshot: GraphSnapshot, options: LayoutOptions = {}): LayoutResult {
   const { nodeWidth = 120, nodeHeight = 40, spacing = 20 } = options;
   const cols = Math.ceil(Math.sqrt(snapshot.nodes.length));
 
@@ -212,7 +216,7 @@ export function computeLayout(
         width: nodeWidth,
         height: nodeHeight,
       },
-    ])
+    ]),
   );
 
   const edges = new Map<string, LayoutEdge>(
@@ -223,23 +227,24 @@ export function computeLayout(
         edge.id,
         {
           id: edge.id,
-          sections: source != null && target != null
-            ? [
-                {
-                  startPoint: {
-                    x: source.x + source.width / 2,
-                    y: source.y + source.height,
+          sections:
+            source != null && target != null
+              ? [
+                  {
+                    startPoint: {
+                      x: source.x + source.width / 2,
+                      y: source.y + source.height,
+                    },
+                    endPoint: {
+                      x: target.x + target.width / 2,
+                      y: target.y,
+                    },
                   },
-                  endPoint: {
-                    x: target.x + target.width / 2,
-                    y: target.y,
-                  },
-                },
-              ]
-            : [],
+                ]
+              : [],
         },
       ];
-    })
+    }),
   );
 
   const cols2 = Math.max(1, cols);
@@ -380,9 +385,7 @@ export class ElkLayoutProvider implements LayoutProvider {
       edges.set(elkEdge.id, {
         id: elkEdge.id,
         sections:
-          section != null
-            ? [{ startPoint: section.startPoint, endPoint: section.endPoint }]
-            : [],
+          section != null ? [{ startPoint: section.startPoint, endPoint: section.endPoint }] : [],
       });
     }
 

@@ -4,17 +4,15 @@
 
 import { bridge } from "@dataflow-visualizer/interop";
 import { computeLayout } from "@dataflow-visualizer/layout";
-import { renderInnerSvg } from "@dataflow-visualizer/renderer-svg";
 import type { GraphSnapshot } from "@dataflow-visualizer/protocol";
+import { renderInnerSvg } from "@dataflow-visualizer/renderer-svg";
 
 declare const __BLAZORFLOWGRAPH_VERSION__: string;
 
 export type { GraphSnapshot };
 export { bridge };
 export const version =
-  typeof __BLAZORFLOWGRAPH_VERSION__ === "undefined"
-    ? "0.0.0-dev"
-    : __BLAZORFLOWGRAPH_VERSION__;
+  typeof __BLAZORFLOWGRAPH_VERSION__ === "undefined" ? "0.0.0-dev" : __BLAZORFLOWGRAPH_VERSION__;
 
 export interface HostOptions {
   /** CSS selector or element id (with #) for the container element. */
@@ -104,7 +102,7 @@ export function mount(options: HostOptions): {
   function applyViewport(): void {
     viewportGroup.setAttribute(
       "transform",
-      `translate(${viewport.x},${viewport.y}) scale(${viewport.scale})`
+      `translate(${viewport.x},${viewport.y}) scale(${viewport.scale})`,
     );
   }
 
@@ -192,8 +190,12 @@ export function mount(options: HostOptions): {
         emitInspection({
           targetType: "node",
           targetIds: [nodeId],
-          ...(nodeEl.getAttribute("aria-label") != null ? { label: nodeEl.getAttribute("aria-label") ?? "" } : {}),
-          ...(nodeEl.getAttribute("data-kind") != null ? { kind: nodeEl.getAttribute("data-kind") ?? "" } : {}),
+          ...(nodeEl.getAttribute("aria-label") != null
+            ? { label: nodeEl.getAttribute("aria-label") ?? "" }
+            : {}),
+          ...(nodeEl.getAttribute("data-kind") != null
+            ? { kind: nodeEl.getAttribute("data-kind") ?? "" }
+            : {}),
           topologyScope: "node",
         });
       }
@@ -207,7 +209,9 @@ export function mount(options: HostOptions): {
         emitInspection({
           targetType: "edge",
           targetIds: [edgeId],
-          ...(edgeEl.getAttribute("aria-label") != null ? { label: edgeEl.getAttribute("aria-label") ?? "" } : {}),
+          ...(edgeEl.getAttribute("aria-label") != null
+            ? { label: edgeEl.getAttribute("aria-label") ?? "" }
+            : {}),
           topologyScope: "edge",
         });
       }
@@ -221,7 +225,9 @@ export function mount(options: HostOptions): {
         emitInspection({
           targetType: "group",
           targetIds: [groupId],
-          ...(groupEl.getAttribute("aria-label") != null ? { label: groupEl.getAttribute("aria-label") ?? "" } : {}),
+          ...(groupEl.getAttribute("aria-label") != null
+            ? { label: groupEl.getAttribute("aria-label") ?? "" }
+            : {}),
           topologyScope: "group",
         });
       }
@@ -274,15 +280,11 @@ export function mount(options: HostOptions): {
 /** Exposes the bridge and host API to Blazor via window globals. */
 export function registerGlobals(): void {
   const w = window as unknown as Record<string, unknown>;
-  const mountedInstances = new Map<
-    string,
-    ReturnType<typeof mount>
-  >();
+  const mountedInstances = new Map<string, ReturnType<typeof mount>>();
 
-  w["DataflowVisualizer"] = {
+  w.DataflowVisualizer = {
     version,
-    receiveSnapshot: (snapshot: GraphSnapshot) =>
-      bridge.receiveSnapshot(snapshot),
+    receiveSnapshot: (snapshot: GraphSnapshot) => bridge.receiveSnapshot(snapshot),
     receiveDiff: bridge.receiveDiff.bind(bridge),
     mount: (opts: HostOptions) => {
       const instance = mount(opts);

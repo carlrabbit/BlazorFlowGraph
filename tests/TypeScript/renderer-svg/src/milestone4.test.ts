@@ -3,18 +3,18 @@
  * style tokens, accessibility, group rendering, overlay rendering, viewport culling.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
+import { computeLayout } from "@dataflow-visualizer/layout";
 import {
-  buildRenderFrame,
-  renderToSvg,
-  renderLayer,
-  resolveStyleToken,
-  defaultStyleTokens,
-  type StyleToken,
   type RenderFrame,
+  type StyleToken,
+  buildRenderFrame,
+  defaultStyleTokens,
+  renderLayer,
+  renderToSvg,
+  resolveStyleToken,
 } from "@dataflow-visualizer/renderer-svg";
 import { applySnapshot, createViewportContext } from "@dataflow-visualizer/runtime";
-import { computeLayout } from "@dataflow-visualizer/layout";
 
 // ---------------------------------------------------------------------------
 // Style tokens
@@ -29,7 +29,7 @@ describe("resolveStyleToken", () => {
 
   it("falls back to 'default' token for unknown kind", () => {
     const token = resolveStyleToken("unknown-kind");
-    expect(token).toEqual(defaultStyleTokens["default"]);
+    expect(token).toEqual(defaultStyleTokens.default);
   });
 
   it("supports custom token registry", () => {
@@ -50,11 +50,11 @@ describe("resolveStyleToken", () => {
   });
 
   it("defaultStyleTokens has entries for known node kinds", () => {
-    expect(defaultStyleTokens["default"]).toBeDefined();
-    expect(defaultStyleTokens["service"]).toBeDefined();
-    expect(defaultStyleTokens["datastore"]).toBeDefined();
-    expect(defaultStyleTokens["gateway"]).toBeDefined();
-    expect(defaultStyleTokens["group"]).toBeDefined();
+    expect(defaultStyleTokens.default).toBeDefined();
+    expect(defaultStyleTokens.service).toBeDefined();
+    expect(defaultStyleTokens.datastore).toBeDefined();
+    expect(defaultStyleTokens.gateway).toBeDefined();
+    expect(defaultStyleTokens.group).toBeDefined();
   });
 });
 
@@ -65,7 +65,11 @@ describe("renderToSvg — style tokens and accessibility (Milestone 4)", () => {
       nodes: [{ id: "n1", label: "Svc", kind: "service" }],
       edges: [],
     });
-    const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "Svc", kind: "service" }], edges: [] });
+    const layout = computeLayout({
+      version: 1,
+      nodes: [{ id: "n1", label: "Svc", kind: "service" }],
+      edges: [],
+    });
     const svg = renderToSvg(state, layout, { width: 800, height: 600 });
     expect(svg).toContain("#d1fae5"); // service fill
     expect(svg).toContain("#059669"); // service stroke
@@ -74,24 +78,48 @@ describe("renderToSvg — style tokens and accessibility (Milestone 4)", () => {
   });
 
   it("includes role=graphics-document on SVG root (accessibility)", () => {
-    const state = applySnapshot({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
-    const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
+    const state = applySnapshot({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
+    const layout = computeLayout({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
     const svg = renderToSvg(state, layout, { width: 800, height: 600 });
     expect(svg).toContain('role="graphics-document"');
     expect(svg).toContain('aria-label="Dataflow graph"');
   });
 
   it("includes role=graphics-symbol on node groups (accessibility)", () => {
-    const state = applySnapshot({ version: 1, nodes: [{ id: "n1", label: "Service A", kind: "service" }], edges: [] });
-    const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "Service A", kind: "service" }], edges: [] });
+    const state = applySnapshot({
+      version: 1,
+      nodes: [{ id: "n1", label: "Service A", kind: "service" }],
+      edges: [],
+    });
+    const layout = computeLayout({
+      version: 1,
+      nodes: [{ id: "n1", label: "Service A", kind: "service" }],
+      edges: [],
+    });
     const svg = renderToSvg(state, layout, { width: 800, height: 600 });
     expect(svg).toContain('role="graphics-symbol"');
     expect(svg).toContain('aria-label="Service A"');
   });
 
   it("includes data-kind attribute for node kinds", () => {
-    const state = applySnapshot({ version: 1, nodes: [{ id: "n1", label: "DB", kind: "datastore" }], edges: [] });
-    const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "DB", kind: "datastore" }], edges: [] });
+    const state = applySnapshot({
+      version: 1,
+      nodes: [{ id: "n1", label: "DB", kind: "datastore" }],
+      edges: [],
+    });
+    const layout = computeLayout({
+      version: 1,
+      nodes: [{ id: "n1", label: "DB", kind: "datastore" }],
+      edges: [],
+    });
     const svg = renderToSvg(state, layout, { width: 800, height: 600 });
     expect(svg).toContain('data-kind="datastore"');
   });
@@ -100,8 +128,16 @@ describe("renderToSvg — style tokens and accessibility (Milestone 4)", () => {
     const custom: Record<string, StyleToken> = {
       default: { fill: "#ff0000", stroke: "#000000", strokeWidth: 3, textColor: "#ffffff", rx: 0 },
     };
-    const state = applySnapshot({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
-    const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
+    const state = applySnapshot({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
+    const layout = computeLayout({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
     const svg = renderToSvg(state, layout, { width: 800, height: 600 }, custom);
     expect(svg).toContain("#ff0000");
   });
@@ -124,7 +160,10 @@ describe("buildRenderFrame — group hulls (Milestone 4)", () => {
     });
     const layout = computeLayout({
       version: 1,
-      nodes: [{ id: "n1", label: "A", kind: "service" }, { id: "n2", label: "B", kind: "service" }],
+      nodes: [
+        { id: "n1", label: "A", kind: "service" },
+        { id: "n2", label: "B", kind: "service" },
+      ],
       edges: [],
       groups: [{ id: "g1", label: "Services", kind: "group", childNodeIds: ["n1", "n2"] }],
     });
@@ -138,8 +177,16 @@ describe("buildRenderFrame — group hulls (Milestone 4)", () => {
   });
 
   it("returns empty groups array when no groups in state", () => {
-    const state = applySnapshot({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
-    const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
+    const state = applySnapshot({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
+    const layout = computeLayout({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
     const frame = buildRenderFrame(state, layout);
     expect(frame.groups).toEqual([]);
   });
@@ -156,7 +203,10 @@ describe("buildRenderFrame — group hulls (Milestone 4)", () => {
     });
     const layout = computeLayout({
       version: 1,
-      nodes: [{ id: "n1", label: "A", kind: "default" }, { id: "n2", label: "B", kind: "default" }],
+      nodes: [
+        { id: "n1", label: "A", kind: "default" },
+        { id: "n2", label: "B", kind: "default" },
+      ],
       edges: [],
     });
     const frame = buildRenderFrame(state, layout);
@@ -178,7 +228,11 @@ describe("buildRenderFrame — group hulls (Milestone 4)", () => {
         { id: "g2", label: "G2", kind: "group", childNodeIds: [] },
       ],
     });
-    const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
+    const layout = computeLayout({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
     const frame = buildRenderFrame(state, layout, {
       visible: {
         visibleNodeIds: new Set(["n1"]),
@@ -200,7 +254,11 @@ describe("renderLayer('groups', ...) — Milestone 4", () => {
       edges: [],
       groups: [{ id: "g1", label: "MyGroup", kind: "group", childNodeIds: ["n1"] }],
     });
-    const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
+    const layout = computeLayout({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
     const markup = renderLayer("groups", state, layout, {});
     expect(markup).toContain("dfv-group");
     expect(markup).toContain("MyGroup");
@@ -225,7 +283,11 @@ describe("buildRenderFrame — overlays (Milestone 4)", () => {
       nodes: [{ id: "n1", label: "A", kind: "default" }],
       edges: [],
     });
-    const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
+    const layout = computeLayout({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
     const frame = buildRenderFrame(state, layout, {
       nodeOverlays: new Map([["n1", { nodeId: "n1", kind: "warning", data: { badge: "!" } }]]),
     });
@@ -235,8 +297,16 @@ describe("buildRenderFrame — overlays (Milestone 4)", () => {
   });
 
   it("returns empty overlays when nodeOverlays not provided", () => {
-    const state = applySnapshot({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
-    const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
+    const state = applySnapshot({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
+    const layout = computeLayout({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
     const frame = buildRenderFrame(state, layout);
     expect(frame.overlays).toEqual([]);
   });
@@ -250,7 +320,11 @@ describe("buildRenderFrame — overlays (Milestone 4)", () => {
       nodes: [{ id: "n1", label: "A", kind: "default" }],
       edges: [],
     });
-    const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
+    const layout = computeLayout({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
     const frame = buildRenderFrame(state, layout, {
       nodeOverlays: new Map([["n1", { nodeId: "n1", kind: "error", data: { badge: "E" } }]]),
     });
@@ -270,7 +344,10 @@ describe("buildRenderFrame — overlays (Milestone 4)", () => {
     });
     const layout = computeLayout({
       version: 1,
-      nodes: [{ id: "n1", label: "A", kind: "default" }, { id: "n2", label: "B", kind: "default" }],
+      nodes: [
+        { id: "n1", label: "A", kind: "default" },
+        { id: "n2", label: "B", kind: "default" },
+      ],
       edges: [],
     });
     const frame = buildRenderFrame(state, layout, {
@@ -294,10 +371,21 @@ describe("buildRenderFrame — overlays (Milestone 4)", () => {
       nodes: [{ id: "n1", label: "A", kind: "default" }],
       edges: [],
     });
-    const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
+    const layout = computeLayout({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
     const frame = buildRenderFrame(state, layout, {
       nodeOverlays: new Map([
-        ["n1", { nodeId: "n1", kind: "warning", data: { shape: "halo", severity: "high", priority: 50 } }],
+        [
+          "n1",
+          {
+            nodeId: "n1",
+            kind: "warning",
+            data: { shape: "halo", severity: "high", priority: 50 },
+          },
+        ],
       ]),
     });
     expect(frame.overlays[0]?.shape).toBe("halo");
@@ -322,7 +410,10 @@ describe("buildRenderFrame — viewport culling (Milestone 4)", () => {
     });
     const layout = computeLayout({
       version: 1,
-      nodes: [{ id: "n1", label: "A", kind: "default" }, { id: "n2", label: "B", kind: "default" }],
+      nodes: [
+        { id: "n1", label: "A", kind: "default" },
+        { id: "n2", label: "B", kind: "default" },
+      ],
       edges: [],
     });
 
@@ -350,7 +441,10 @@ describe("buildRenderFrame — viewport culling (Milestone 4)", () => {
     });
     const layout = computeLayout({
       version: 1,
-      nodes: [{ id: "n1", label: "A", kind: "default" }, { id: "n2", label: "B", kind: "default" }],
+      nodes: [
+        { id: "n1", label: "A", kind: "default" },
+        { id: "n2", label: "B", kind: "default" },
+      ],
       edges: [],
     });
     const frame = buildRenderFrame(state, layout);
@@ -368,7 +462,10 @@ describe("buildRenderFrame — viewport culling (Milestone 4)", () => {
     });
     const layout = computeLayout({
       version: 1,
-      nodes: [{ id: "n1", label: "A", kind: "default" }, { id: "n2", label: "B", kind: "default" }],
+      nodes: [
+        { id: "n1", label: "A", kind: "default" },
+        { id: "n2", label: "B", kind: "default" },
+      ],
       edges: [],
     });
     // Very large viewport — shows everything
@@ -384,8 +481,16 @@ describe("buildRenderFrame — viewport culling (Milestone 4)", () => {
 
 describe("RenderFrame structure (Milestone 4)", () => {
   it("includes groups and overlays fields in the frame", () => {
-    const state = applySnapshot({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
-    const layout = computeLayout({ version: 1, nodes: [{ id: "n1", label: "A", kind: "default" }], edges: [] });
+    const state = applySnapshot({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
+    const layout = computeLayout({
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "default" }],
+      edges: [],
+    });
     const frame: RenderFrame = buildRenderFrame(state, layout);
     expect(Array.isArray(frame.groups)).toBe(true);
     expect(Array.isArray(frame.overlays)).toBe(true);

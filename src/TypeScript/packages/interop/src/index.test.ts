@@ -1,4 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+/// <reference types="bun-types" />
+import { describe, expect, it, spyOn } from "bun:test";
+
 import { DotNetBridge } from "./index.js";
 
 describe("DotNetBridge reconciliation behavior", () => {
@@ -11,7 +13,7 @@ describe("DotNetBridge reconciliation behavior", () => {
       edges: [],
     });
 
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warn = spyOn(console, "warn").mockImplementation(() => {});
     bridge.receiveSnapshot({
       protocolVersion: 1,
       version: 2,
@@ -25,7 +27,7 @@ describe("DotNetBridge reconciliation behavior", () => {
     const current = bridge.getState();
     expect(current.version).toBe(1);
     expect(current.nodes.size).toBe(1);
-    expect(warn).toHaveBeenCalledOnce();
+    expect(warn).toHaveBeenCalledTimes(1);
     warn.mockRestore();
   });
 
@@ -38,7 +40,7 @@ describe("DotNetBridge reconciliation behavior", () => {
       edges: [],
     });
 
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warn = spyOn(console, "warn").mockImplementation(() => {});
     bridge.receiveDiff({
       protocolVersion: 1,
       fromVersion: 0,
@@ -50,7 +52,7 @@ describe("DotNetBridge reconciliation behavior", () => {
     const current = bridge.getState();
     expect(current.version).toBe(1);
     expect(current.nodes.get("n1")?.label).toBe("A");
-    expect(warn).toHaveBeenCalledOnce();
+    expect(warn).toHaveBeenCalledTimes(1);
     warn.mockRestore();
   });
 });

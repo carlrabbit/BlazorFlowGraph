@@ -105,45 +105,25 @@ builder.Services.AddDataflowVisualizer();
 ### Prerequisites
 
 - .NET 10 SDK
-- Node.js LTS
-- Corepack enabled for pnpm
+- [Bun](https://bun.sh) (`curl -fsSL https://bun.sh/install | bash`)
 
-### Restore
-
-```bash
-corepack enable
-pnpm install --frozen-lockfile
-dotnet restore BlazorFlowGraph.slnx
-```
-
-### Build
+### Canonical commands
 
 ```bash
-pnpm build
-dotnet build BlazorFlowGraph.slnx --no-restore --configuration Release
+./eng/restore.sh    # Restore .NET and Bun dependencies
+./eng/build.sh      # Build the repository (requires restore)
+./eng/test.sh       # Run fast tests (.NET + TypeScript)
+./eng/format.sh     # Format all source files
+./eng/check.sh      # Canonical gate: restore → build → test → verify
 ```
 
-### TypeScript checks
-
-```bash
-pnpm typecheck
-pnpm test
-```
-
-### .NET tests
-
-```bash
-dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Protocol.Tests --configuration Release
-dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Diffing.Tests --configuration Release
-dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Projection.Tests --configuration Release
-dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Semantics.Tests --configuration Release
-```
+See [`docs/ENGINEERING.md`](docs/ENGINEERING.md) and [`docs/engineering/command-contract.md`](docs/engineering/command-contract.md) for the full command reference.
 
 ### Running all samples
 
 ```bash
-./tooling/scripts/run-samples-all.sh
-bash tooling/scripts/run-samples-all.sh --dry-run
+./eng/samples.sh
+./eng/samples.sh --dry-run
 ```
 
 Open the sample index on port `5100`.
@@ -153,6 +133,7 @@ Use `.devcontainer/samples/devcontainer.json` to auto-start the fixed sample por
 
 - [`Codespace.md`](Codespace.md) — zero-install Codespaces setup
 - [`Nuget.md`](Nuget.md) — NuGet packaging and release guidance
+- [`docs/engineering/typescript-tools.md`](docs/engineering/typescript-tools.md) — TypeScript and JavaScript tooling
 - [`tooling/README.md`](tooling/README.md) — repository tooling notes
 
 ## Current Status

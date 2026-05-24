@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  build-dotnet:
-    name: Build & Test .NET
+  check:
+    name: Check
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -20,23 +20,41 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Check
+        run: ./eng/check.sh
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-test-results
+          path: "TestResults/*.trx"
+
+  validate-artifacts:
+    name: Validate Artifacts
+    runs-on: ubuntu-latest
+    needs: check
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Restore
-        run: dotnet restore BlazorFlowGraph.slnx
+        run: ./eng/restore.sh
 
       - name: Build
-        run: dotnet build BlazorFlowGraph.slnx --no-restore --configuration Release
-
-      - name: Test — BlazorFlowGraph.Protocol
-        run: dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Protocol.Tests --configuration Release -- --report-trx --results-directory TestResults
-
-      - name: Test — BlazorFlowGraph.Diffing
-        run: dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Diffing.Tests --configuration Release -- --report-trx --results-directory TestResults
-
-      - name: Test — BlazorFlowGraph.Projection
-        run: dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Projection.Tests --configuration Release -- --report-trx --results-directory TestResults
-
-      - name: Test — BlazorFlowGraph.Semantics
-        run: dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Semantics.Tests --configuration Release -- --report-trx --results-directory TestResults
+        run: ./eng/build.sh
 
       - name: Validate sample builds
         run: |
@@ -61,13 +79,6 @@ jobs:
             dotnet pack "$project" --no-build --configuration Release --output artifacts/ci-pack
           done < <(find src/DotNet -name "*.csproj" -type f | sort)
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: dotnet-test-results
-          path: "TestResults/*.trx"
-
       - name: Upload package validation artifacts
         if: success()
         uses: actions/upload-artifact@v4
@@ -77,53 +88,3 @@ jobs:
             artifacts/ci-pack/*.nupkg
             artifacts/ci-pack/*.snupkg
 
-  build-typescript:
-    name: Build & Typecheck TypeScript
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm build
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-  test-typescript:
-    name: Test TypeScript
-    runs-on: ubuntu-latest
-    needs: build-typescript
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm build
-
-      - name: Test
-        run: pnpm test

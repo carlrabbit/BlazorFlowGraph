@@ -1,16 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
+import type { GraphSnapshot } from "@dataflow-visualizer/protocol";
 import {
   buildTopologyIndex,
-  findUpstream,
-  findDownstream,
-  findConnected,
-  findNeighbors,
   extractSubgraph,
-  findGroupMembers,
+  findConnected,
+  findDownstream,
   findGroupBoundaryEdges,
+  findGroupMembers,
+  findNeighbors,
+  findUpstream,
 } from "@dataflow-visualizer/query";
 import { applySnapshot } from "@dataflow-visualizer/runtime";
-import type { GraphSnapshot } from "@dataflow-visualizer/protocol";
 
 // ---------------------------------------------------------------------------
 // Fixture helpers
@@ -34,9 +34,7 @@ function makeLinearSnapshot(): GraphSnapshot {
       { id: "e2", sourceId: "n2", targetId: "n3" },
       { id: "e3", sourceId: "n2", targetId: "n4" },
     ],
-    groups: [
-      { id: "g1", label: "Group 1", kind: "module", childNodeIds: ["n1", "n2"] },
-    ],
+    groups: [{ id: "g1", label: "Group 1", kind: "module", childNodeIds: ["n1", "n2"] }],
   };
 }
 

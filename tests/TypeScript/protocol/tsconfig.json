@@ -5,7 +5,5 @@
     "outDir": "./dist"
   },
   "include": ["src"],
-  "references": [
-    { "path": "../../../src/TypeScript/packages/protocol" }
-  ]
+  "references": [{ "path": "../../../src/TypeScript/packages/protocol" }]
 }

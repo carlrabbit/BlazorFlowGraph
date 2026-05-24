@@ -2,13 +2,17 @@
  * Interop package — .NET / Blazor bridge for the dataflow visualizer.
  */
 
-import { type GraphSnapshot, type GraphDiff, validateGraphSnapshot } from "@dataflow-visualizer/protocol";
 import {
-  applySnapshot,
-  applyDiff,
-  createEmptyState,
-  GraphRuntimeStore,
+  type GraphDiff,
+  type GraphSnapshot,
+  validateGraphSnapshot,
+} from "@dataflow-visualizer/protocol";
+import {
   GraphRuntimeEventBus,
+  GraphRuntimeStore,
+  applyDiff,
+  applySnapshot,
+  createEmptyState,
 } from "@dataflow-visualizer/runtime";
 import type { GraphState } from "@dataflow-visualizer/runtime";
 
@@ -48,7 +52,7 @@ export class DotNetBridge {
   receiveDiff(diff: GraphDiff): void {
     if (diff.fromVersion !== this.state.version) {
       console.warn(
-        `[interop] diff fromVersion ${diff.fromVersion} does not match current state version ${this.state.version}`
+        `[interop] diff fromVersion ${diff.fromVersion} does not match current state version ${this.state.version}`,
       );
       return;
     }

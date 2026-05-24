@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+/// <reference types="bun-types" />
+import { describe, expect, it } from "bun:test";
 
 import { registerGlobals, version } from "./index";
 
@@ -14,9 +15,11 @@ describe("registerGlobals", () => {
     try {
       registerGlobals();
 
-      expect((windowObject as unknown as Record<string, unknown>).DataflowVisualizer).toMatchObject({
-        version,
-      });
+      expect((windowObject as unknown as Record<string, unknown>).DataflowVisualizer).toMatchObject(
+        {
+          version,
+        },
+      );
     } finally {
       if (originalWindowDescriptor == null) {
         delete (globalThis as { window?: typeof window }).window;

@@ -3,8 +3,8 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./src",
   fullyParallel: true,
-  retries: process.env["CI"] ? 2 : 0,
-  workers: process.env["CI"] ? 1 : undefined,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
   reporter: "html",
   use: {
     baseURL: "http://localhost:5000",
@@ -17,9 +17,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command:
-      "dotnet run --project ../../samples/MinimalViewer/MinimalViewer.csproj",
+    command: "dotnet run --project ../../samples/MinimalViewer/MinimalViewer.csproj",
     url: "http://localhost:5000",
-    reuseExistingServer: !process.env["CI"],
+    reuseExistingServer: !process.env.CI,
   },
 });

@@ -16,13 +16,17 @@ dist/
 *.tsbuildinfo
 coverage/
 
-# pnpm
-.pnpm-store/
+# Bun
+bun.lockb
 
 # Build outputs
 wwwroot/js/
 wwwroot/css/
 TestResults/
+
+# Local artifacts
+artifacts/*
+!artifacts/.gitkeep
 
 # OS
 .DS_Store
@@ -30,5 +34,3 @@ Thumbs.db
 
 # Misc
 *.log
-*.lock
-!pnpm-lock.yaml

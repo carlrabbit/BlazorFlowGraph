@@ -6,9 +6,5 @@
     "outDir": "./dist"
   },
   "include": ["src"],
-  "references": [
-    { "path": "../protocol" },
-    { "path": "../runtime" },
-    { "path": "../layout" }
-  ]
+  "references": [{ "path": "../protocol" }, { "path": "../runtime" }, { "path": "../layout" }]
 }

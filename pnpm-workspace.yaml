@@ -1,5 +1,0 @@
-packages:
-  - src/TypeScript/packages/*
-  - tests/TypeScript/*
-onlyBuiltDependencies:
-  - esbuild
