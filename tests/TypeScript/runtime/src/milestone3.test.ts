@@ -4,6 +4,7 @@
  * SpatialIndex, RuntimeDiagnostics, GraphRuntimeHost.
  */
 
+import { describe, expect, it, mock } from "bun:test";
 import {
   type ApplySearchCommand,
   type BoundingBox,
@@ -42,7 +43,6 @@ import {
 } from "@dataflow-visualizer/runtime";
 import { applySnapshot } from "@dataflow-visualizer/runtime";
 import type { GraphDataState } from "@dataflow-visualizer/runtime";
-import { describe, expect, it, vi } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -717,7 +717,7 @@ describe("GraphRuntimeHost — RevealElement command", () => {
 describe("GraphRuntimeHost — custom command handlers", () => {
   it("addCommandHandler receives dispatched commands", () => {
     const host = new GraphRuntimeHost();
-    const handler = vi.fn();
+    const handler = mock();
     host.addCommandHandler(handler);
     host.dispatch({ type: "FitSelection" });
     expect(handler).toHaveBeenCalledWith({ type: "FitSelection" });
@@ -725,7 +725,7 @@ describe("GraphRuntimeHost — custom command handlers", () => {
 
   it("unsubscribing removes the handler", () => {
     const host = new GraphRuntimeHost();
-    const handler = vi.fn();
+    const handler = mock();
     const unsub = host.addCommandHandler(handler);
     unsub();
     host.dispatch({ type: "FitSelection" });
@@ -734,13 +734,13 @@ describe("GraphRuntimeHost — custom command handlers", () => {
 
   it("multiple handlers all receive the command", () => {
     const host = new GraphRuntimeHost();
-    const h1 = vi.fn();
-    const h2 = vi.fn();
+    const h1 = mock();
+    const h2 = mock();
     host.addCommandHandler(h1);
     host.addCommandHandler(h2);
     host.dispatch({ type: "FitSelection" });
-    expect(h1).toHaveBeenCalledOnce();
-    expect(h2).toHaveBeenCalledOnce();
+    expect(h1).toHaveBeenCalledTimes(1);
+    expect(h2).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -768,7 +768,7 @@ describe("GraphRuntimeHost — overlay providers", () => {
   it("registers providers and recomputes overlay state", () => {
     const host = new GraphRuntimeHost();
     host.store.setData(makeData([{ id: "n1", label: "A", kind: "service" }]));
-    const compute = vi.fn(() => ({
+    const compute = mock(() => ({
       nodeOverlays: new Map([["n1", { nodeId: "n1", kind: "health", data: { badge: "!" } }]]),
     }));
 
@@ -826,7 +826,7 @@ describe("GraphRuntimeHost — inspection events", () => {
   it("emits NodeInspected with target metadata", () => {
     const host = new GraphRuntimeHost();
     host.store.setData(makeData([{ id: "n1", label: "Node A", kind: "service" }]));
-    const handler = vi.fn();
+    const handler = mock();
     host.store.eventBus.on("NodeInspected", handler);
     host.inspectNode("n1");
     expect(handler).toHaveBeenCalled();
@@ -836,7 +836,7 @@ describe("GraphRuntimeHost — inspection events", () => {
 
   it("emits OverlayInspected for overlay target context", () => {
     const host = new GraphRuntimeHost();
-    const handler = vi.fn();
+    const handler = mock();
     host.store.eventBus.on("OverlayInspected", handler);
     host.inspectOverlay("health", "node", "n1");
     expect(handler).toHaveBeenCalledWith({
@@ -855,7 +855,7 @@ describe("GraphRuntimeHost — inspection events", () => {
 describe("RuntimeEventMap — new Milestone 3 events", () => {
   it("store.eventBus supports CommandDispatched event", () => {
     const store = new GraphRuntimeStore();
-    const handler = vi.fn();
+    const handler = mock();
     store.eventBus.on("CommandDispatched", handler);
     const cmd: SemanticCommand = { type: "FocusNode", nodeId: "n1" };
     store.eventBus.emit("CommandDispatched", { command: cmd });
@@ -864,7 +864,7 @@ describe("RuntimeEventMap — new Milestone 3 events", () => {
 
   it("store.eventBus supports OverlayRegistryChanged event", () => {
     const store = new GraphRuntimeStore();
-    const handler = vi.fn();
+    const handler = mock();
     store.eventBus.on("OverlayRegistryChanged", handler);
     store.eventBus.emit("OverlayRegistryChanged", { kind: "health" });
     expect(handler).toHaveBeenCalledWith({ kind: "health" });
@@ -872,7 +872,7 @@ describe("RuntimeEventMap — new Milestone 3 events", () => {
 
   it("store.eventBus supports LayoutCompleted event", () => {
     const store = new GraphRuntimeStore();
-    const handler = vi.fn();
+    const handler = mock();
     store.eventBus.on("LayoutCompleted", handler);
     store.eventBus.emit("LayoutCompleted", { durationMs: 42 });
     expect(handler).toHaveBeenCalledWith({ durationMs: 42 });
@@ -880,7 +880,7 @@ describe("RuntimeEventMap — new Milestone 3 events", () => {
 
   it("store.eventBus supports NodeInspected event", () => {
     const store = new GraphRuntimeStore();
-    const handler = vi.fn();
+    const handler = mock();
     store.eventBus.on("NodeInspected", handler);
     store.eventBus.emit("NodeInspected", { targetType: "node", targetIds: ["n1"] });
     expect(handler).toHaveBeenCalledWith({ targetType: "node", targetIds: ["n1"] });

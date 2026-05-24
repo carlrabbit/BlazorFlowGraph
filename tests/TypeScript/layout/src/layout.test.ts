@@ -4,6 +4,7 @@
  * Milestone 4: ElkLayoutProvider.
  */
 
+import { describe, expect, it } from "bun:test";
 import {
   ElkLayoutProvider,
   GridLayoutProvider,
@@ -13,7 +14,6 @@ import {
   computeLayout,
 } from "@dataflow-visualizer/layout";
 import type { GraphSnapshot } from "@dataflow-visualizer/protocol";
-import { describe, expect, it } from "vitest";
 
 // ---------------------------------------------------------------------------
 // buildLayoutGraph

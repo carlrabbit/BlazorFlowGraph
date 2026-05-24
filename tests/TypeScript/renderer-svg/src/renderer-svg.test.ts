@@ -1,7 +1,7 @@
+import { describe, expect, it } from "bun:test";
 import { computeLayout } from "@dataflow-visualizer/layout";
 import { renderToSvg } from "@dataflow-visualizer/renderer-svg";
 import { applySnapshot } from "@dataflow-visualizer/runtime";
-import { describe, expect, it } from "vitest";
 
 describe("renderToSvg", () => {
   it("returns an SVG string", () => {

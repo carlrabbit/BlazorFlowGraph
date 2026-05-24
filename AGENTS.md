@@ -28,6 +28,7 @@ If this command fails, fix the failure or document exactly why it could not be f
 - Do not add package versions directly to project files. Use `Directory.Packages.props`.
 - Do not use pnpm or npm. Use Bun for JavaScript/TypeScript tooling.
 - Do not add ESLint or Prettier. Use Biome unless explicitly instructed otherwise.
+- Do not introduce Vite or Vitest. Use `bun build` for bundling and `bun test` for testing.
 - Do not add slow tests to the default test path (`eng/test.sh`).
 - Do not run benchmarks during normal validation.
 - Do not introduce Playwright unless the Playwright building block is applied.

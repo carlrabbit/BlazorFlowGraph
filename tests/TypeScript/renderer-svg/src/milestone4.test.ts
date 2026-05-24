@@ -3,6 +3,7 @@
  * style tokens, accessibility, group rendering, overlay rendering, viewport culling.
  */
 
+import { describe, expect, it } from "bun:test";
 import { computeLayout } from "@dataflow-visualizer/layout";
 import {
   type RenderFrame,
@@ -14,7 +15,6 @@ import {
   resolveStyleToken,
 } from "@dataflow-visualizer/renderer-svg";
 import { applySnapshot, createViewportContext } from "@dataflow-visualizer/runtime";
-import { describe, expect, it } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Style tokens

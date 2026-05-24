@@ -3,6 +3,7 @@
  * RenderFrame, buildRenderFrame, GraphRendererBackend interface.
  */
 
+import { describe, expect, it } from "bun:test";
 import { computeLayout } from "@dataflow-visualizer/layout";
 import {
   type GraphRendererBackend,
@@ -13,7 +14,6 @@ import {
 } from "@dataflow-visualizer/renderer-svg";
 import { applySnapshot } from "@dataflow-visualizer/runtime";
 import type { VisibleGraph } from "@dataflow-visualizer/runtime";
-import { describe, expect, it } from "vitest";
 
 // ---------------------------------------------------------------------------
 // buildRenderFrame

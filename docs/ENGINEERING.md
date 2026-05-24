@@ -27,7 +27,8 @@ This document is the index for the concrete engineering substrate and stack prof
 |---|---|
 | .NET runtime | .NET 10 |
 | Test framework | TUnit (Microsoft Testing Platform) |
-| TS/JS runtime | Bun |
+| TS/JS bundler | Bun (bun build) |
+| TS/JS test runner | Bun (bun test) |
 | TS/JS linter+formatter | Biome |
 | .NET formatter | dotnet format |
 | CI | GitHub Actions |
@@ -37,7 +38,7 @@ This document is the index for the concrete engineering substrate and stack prof
 - Agents must run `./eng/check.sh` before declaring work complete.
 - `eng/check.sh` is the canonical gate: restore, build, test, format verify, Biome check.
 - Benchmarks, packaging, and publishing are never part of `eng/check.sh`.
-- Do not add pnpm, npm, ESLint, or Prettier. Use Bun and Biome.
+- Do not add pnpm, npm, ESLint, Prettier, Vite, or Vitest. Use Bun (build + test) and Biome.
 - Test categories: fast unit tests run by default; slow/e2e/benchmark excluded from `eng/test.sh`.
 
 See [`docs/engineering/command-contract.md`](engineering/command-contract.md) for full details.

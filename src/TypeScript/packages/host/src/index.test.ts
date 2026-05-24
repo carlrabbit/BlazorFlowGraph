@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+/// <reference types="bun-types" />
+import { describe, expect, it } from "bun:test";
 
 import { registerGlobals, version } from "./index";
 

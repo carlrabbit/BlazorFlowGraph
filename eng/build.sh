@@ -12,8 +12,8 @@ if [ -f package.json ]; then
   require_command bun
 
   # Build TypeScript packages in topological dependency order.
-  # Workspace filter (bun run --filter) requires scripts in the lockfile (Bun 1.3 limitation).
-  # See docs/engineering/typescript-tools.md for context.
+  # Each package's build script uses bun build for bundling and tsc --emitDeclarationOnly
+  # for TypeScript declarations.
   bun run --cwd src/TypeScript/packages/protocol build
   bun run --cwd src/TypeScript/packages/runtime build
   bun run --cwd src/TypeScript/packages/layout build

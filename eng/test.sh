@@ -17,8 +17,6 @@ if [ -f package.json ]; then
   require_command bun
 
   # Run TypeScript tests in all src and test packages.
-  # Workspace filter (bun run --filter) requires scripts in the lockfile (Bun 1.3 limitation).
-  # See docs/engineering/typescript-tools.md for context.
   for pkg in src/TypeScript/packages/* tests/TypeScript/*; do
     if [ -f "$pkg/package.json" ]; then
       bun run --cwd "$pkg" test

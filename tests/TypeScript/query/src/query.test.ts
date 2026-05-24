@@ -1,3 +1,4 @@
+import { describe, expect, it } from "bun:test";
 import type { GraphSnapshot } from "@dataflow-visualizer/protocol";
 import {
   buildTopologyIndex,
@@ -10,7 +11,6 @@ import {
   findUpstream,
 } from "@dataflow-visualizer/query";
 import { applySnapshot } from "@dataflow-visualizer/runtime";
-import { describe, expect, it } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Fixture helpers

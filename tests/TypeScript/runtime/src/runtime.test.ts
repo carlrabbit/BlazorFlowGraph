@@ -1,6 +1,6 @@
+import { describe, expect, it } from "bun:test";
 import type { GraphDiff, GraphSnapshot } from "@dataflow-visualizer/protocol";
 import { applyDiff, applySnapshot, createEmptyState } from "@dataflow-visualizer/runtime";
-import { describe, expect, it } from "vitest";
 
 const emptySnapshot = (version = 0): GraphSnapshot => ({
   version,

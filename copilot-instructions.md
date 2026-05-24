@@ -25,7 +25,7 @@ Repository conventions:
 - Keep rendering, reconciliation, layout, and interaction logic in the browser runtime.
 - Keep Blazor components thin and integration-focused.
 - Preserve deterministic identifiers, deterministic projections, and incremental synchronization.
-- Use Bun (not pnpm/npm) for JavaScript/TypeScript. Use Biome (not ESLint/Prettier).
+- Use Bun (not pnpm/npm) for JavaScript/TypeScript. Use Biome (not ESLint/Prettier). Use `bun build`/`bun test` (not Vite/Vitest).
 
 Workflow synchronization rules:
 - Workflow intent is defined in docs/workflows.

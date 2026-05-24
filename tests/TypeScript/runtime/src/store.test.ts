@@ -1,5 +1,5 @@
+import { describe, expect, it, mock } from "bun:test";
 import { GraphRuntimeEventBus, GraphRuntimeStore } from "@dataflow-visualizer/runtime";
-import { describe, expect, it, vi } from "vitest";
 
 // ---------------------------------------------------------------------------
 // GraphRuntimeStore — initial state
@@ -60,19 +60,19 @@ describe("Selection updates", () => {
 
   it("setSelection fires SelectionChanged event", () => {
     const store = new GraphRuntimeStore();
-    const handler = vi.fn();
+    const handler = mock();
     store.eventBus.on("SelectionChanged", handler);
     store.setSelection(new Set(["n1"]));
-    expect(handler).toHaveBeenCalledOnce();
+    expect(handler).toHaveBeenCalledTimes(1);
     expect(handler).toHaveBeenCalledWith({ selectedNodeIds: new Set(["n1"]) });
   });
 
   it("setSelection notifies store subscribers", () => {
     const store = new GraphRuntimeStore();
-    const listener = vi.fn();
+    const listener = mock();
     store.subscribe(listener);
     store.setSelection(new Set(["n1"]));
-    expect(listener).toHaveBeenCalledOnce();
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 
   it("setHover updates hoveredNodeId", () => {
@@ -102,10 +102,10 @@ describe("Focus updates", () => {
 
   it("setFocus fires FocusChanged event", () => {
     const store = new GraphRuntimeStore();
-    const handler = vi.fn();
+    const handler = mock();
     store.eventBus.on("FocusChanged", handler);
     store.setFocus({ focusedNodeId: "n1" });
-    expect(handler).toHaveBeenCalledOnce();
+    expect(handler).toHaveBeenCalledTimes(1);
     expect(handler).toHaveBeenCalledWith({ focusedNodeId: "n1", focusedGroupId: null });
   });
 
@@ -154,7 +154,7 @@ describe("Group expand/collapse", () => {
 
   it("toggleGroup fires GroupExpanded when expanding", () => {
     const store = new GraphRuntimeStore();
-    const handler = vi.fn();
+    const handler = mock();
     store.eventBus.on("GroupExpanded", handler);
     store.toggleGroup("g1");
     expect(handler).toHaveBeenCalledWith({ groupId: "g1" });
@@ -162,7 +162,7 @@ describe("Group expand/collapse", () => {
 
   it("toggleGroup fires GroupCollapsed when collapsing", () => {
     const store = new GraphRuntimeStore();
-    const collapsedHandler = vi.fn();
+    const collapsedHandler = mock();
     store.eventBus.on("GroupCollapsed", collapsedHandler);
     store.toggleGroup("g1");
     store.toggleGroup("g1");
@@ -186,10 +186,10 @@ describe("Search state updates", () => {
 
   it("setSearch fires SearchApplied event", () => {
     const store = new GraphRuntimeStore();
-    const handler = vi.fn();
+    const handler = mock();
     store.eventBus.on("SearchApplied", handler);
     store.setSearch("world", new Set(["n3"]));
-    expect(handler).toHaveBeenCalledOnce();
+    expect(handler).toHaveBeenCalledTimes(1);
     expect(handler).toHaveBeenCalledWith({ query: "world", matchedNodeIds: new Set(["n3"]) });
   });
 });
@@ -201,13 +201,13 @@ describe("Search state updates", () => {
 describe("GraphRuntimeEventBus", () => {
   it("on/off registers and deregisters handlers", () => {
     const bus = new GraphRuntimeEventBus();
-    const handler = vi.fn();
+    const handler = mock();
     bus.on("ViewportChanged", handler);
     bus.emit("ViewportChanged", {});
-    expect(handler).toHaveBeenCalledOnce();
+    expect(handler).toHaveBeenCalledTimes(1);
     bus.off("ViewportChanged", handler);
     bus.emit("ViewportChanged", {});
-    expect(handler).toHaveBeenCalledOnce();
+    expect(handler).toHaveBeenCalledTimes(1);
   });
 
   it("does not throw when emitting event with no handlers", () => {
@@ -223,12 +223,12 @@ describe("GraphRuntimeEventBus", () => {
 describe("Store subscribe/unsubscribe", () => {
   it("unsubscribe prevents further notifications", () => {
     const store = new GraphRuntimeStore();
-    const listener = vi.fn();
+    const listener = mock();
     const unsub = store.subscribe(listener);
     store.setHover("n1");
-    expect(listener).toHaveBeenCalledOnce();
+    expect(listener).toHaveBeenCalledTimes(1);
     unsub();
     store.setHover("n2");
-    expect(listener).toHaveBeenCalledOnce();
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 });
