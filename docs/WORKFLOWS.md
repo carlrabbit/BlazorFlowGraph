@@ -12,7 +12,9 @@ This document is an index only. Detailed triggers, inputs, outputs, failure cond
 | [`workflows/package.md`](workflows/package.md) | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml), [`.github/workflows/nuget-publish.yml`](../.github/workflows/nuget-publish.yml) | Defines package generation intent and explicit packaging boundaries |
 | [`workflows/release.md`](workflows/release.md) | [`.github/workflows/nuget-publish.yml`](../.github/workflows/nuget-publish.yml) | Defines release packaging and publish intent with explicit credential gating |
 
-GitHub Pages is not an active module in this repository. If that changes, add and index `docs/workflows/pages.md` with the corresponding workflow implementation.
+## Notes
+
+- GitHub Pages is not an active module in this repository. If that changes, add and index `docs/workflows/pages.md` with the corresponding workflow implementation.
 
 # Authority
 
