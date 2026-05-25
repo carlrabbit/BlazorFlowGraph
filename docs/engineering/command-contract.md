@@ -30,6 +30,11 @@ Runs:
 - `dotnet build BlazorFlowGraph.slnx --no-restore --configuration Release`
 - `bun run --filter '*' build` (Vite + tsc for all TypeScript packages)
 
+Optional environment variables:
+- `RELEASE_VERSION` — when set, build applies release version properties to .NET build outputs
+- `RELEASE_TAG` — optional informational version tag (defaults to `RELEASE_VERSION`)
+- `REFRESH_PACKAGED_BROWSER_BUNDLE=1` — refreshes `src/DotNet/BlazorFlowGraph.Blazor/wwwroot/js/dataflow-visualizer.js` from the host package build output
+
 ### `./eng/test.sh`
 
 Runs fast (default) tests only. Excludes slow, e2e, and benchmark work.

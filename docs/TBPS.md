@@ -36,6 +36,7 @@ TBPs do **not** define:
 | Implementation | [`bug-investigation.md`](tbps/bug-investigation.md) | Investigate bugs against authoritative expected behavior |
 | Implementation | [`refactor-planning.md`](tbps/refactor-planning.md) | Plan structural changes while preserving documented behavior |
 | Operational | [`workflow-changes.md`](tbps/workflow-changes.md) | Update workflow intent before changing GitHub Actions implementation |
+| Operational | [`release.md`](tbps/release.md) | Execute release preparation, packaging, and publish gating through canonical workflow and commands |
 
 # Authority
 

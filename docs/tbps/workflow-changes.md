@@ -10,8 +10,11 @@ Define the standard process for changing repository automation without losing th
 # Required Reading
 
 - [`../WORKFLOWS.md`](../WORKFLOWS.md)
-- [`../workflows/ci-build.md`](../workflows/ci-build.md)
-- [`../workflows/publish-nuget.md`](../workflows/publish-nuget.md)
+- [`../workflows/build.md`](../workflows/build.md)
+- [`../workflows/test-short.md`](../workflows/test-short.md)
+- [`../workflows/test-long.md`](../workflows/test-long.md)
+- [`../workflows/package.md`](../workflows/package.md)
+- [`../workflows/release.md`](../workflows/release.md)
 - [`../../AGENTS.md`](../../AGENTS.md)
 
 # Execution Steps
@@ -41,8 +44,9 @@ Define the standard process for changing repository automation without losing th
 
 # Related Documents
 
-- [`../workflows/ci-build.md`](../workflows/ci-build.md)
-- [`../workflows/publish-nuget.md`](../workflows/publish-nuget.md)
+- [`../workflows/build.md`](../workflows/build.md)
+- [`../workflows/release.md`](../workflows/release.md)
+- [`release.md`](release.md)
 - [`documentation-changes.md`](documentation-changes.md)
 
 # Authority
