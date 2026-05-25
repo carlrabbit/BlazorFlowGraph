@@ -36,7 +36,7 @@ This document is the index for the concrete engineering substrate and stack prof
 
 ## Guardrails
 
-Guardrail constraints are defined in [`docs/GUARDRAILS.md`](GUARDRAILS.md) and [`docs/guardrails/engineering-guardrails.md`](guardrails/engineering-guardrails.md).
+Guardrail constraints are defined in [`docs/GUARDRAILS.md`](GUARDRAILS.md), [`docs/guardrails/implementation.md`](guardrails/implementation.md), and [`docs/guardrails/testing.md`](guardrails/testing.md).
 
 See [`docs/engineering/command-contract.md`](engineering/command-contract.md) for full details.
 
@@ -46,4 +46,4 @@ This document is authoritative for the engineering index, the stack profile, and
 
 ## Document Contract
 
-Update this document when engineering documents are added, renamed, or retired, or when the stack profile changes. Keep it synchronized with [`GUARDRAILS.md`](GUARDRAILS.md), [`../AGENTS.md`](../AGENTS.md), [`../copilot-instructions.md`](../copilot-instructions.md), and [`engineering/command-contract.md`](engineering/command-contract.md).
+Update this document when engineering documents are added, renamed, or retired, or when the stack profile changes. Keep it synchronized with [`GUARDRAILS.md`](GUARDRAILS.md), [`../AGENTS.md`](../AGENTS.md), [`../.github/copilot-instructions.md`](../.github/copilot-instructions.md), and [`engineering/command-contract.md`](engineering/command-contract.md).

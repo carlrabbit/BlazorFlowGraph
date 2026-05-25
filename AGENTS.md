@@ -3,13 +3,17 @@
 Read first:
 - README.md
 - docs/TERMINOLOGY.md
-- docs/SPECS.md
-- docs/WORKFLOWS.md
-- docs/TBPS.md
 - docs/GUARDRAILS.md
+- docs/TBPS.md
+- docs/SPECS.md
 - docs/ENGINEERING.md
 - docs/engineering/command-contract.md
+- docs/ARCHITECTURE.md
+- docs/DECISIONS.md
+- docs/MILESTONES.md
+- docs/WORKFLOWS.md
 - docs/agent-context/project-context.md
+- relevant architecture, decisions, workflows, milestones, guardrails, and engineering documents.
 
 ## Required workflow
 
@@ -24,18 +28,21 @@ If this command fails, fix the failure or document exactly why it could not be f
 ## Repository rules
 
 - Use `eng/` scripts instead of inventing raw `dotnet`, `bun`, or script commands.
+- Do not invent build, test, format, benchmark, package, publish, or release commands.
 - Do not add README files outside the root `README.md`.
 - Do not add new root-level folders without updating documentation.
 - Do not add package versions directly to project files. Use `Directory.Packages.props`.
 - Do not use pnpm or npm. Use Bun for JavaScript/TypeScript tooling.
 - Do not add ESLint or Prettier. Use Biome unless explicitly instructed otherwise.
 - Do not introduce Vite or Vitest. Use `bun build` for bundling and `bun test` for testing.
-- Do not add slow tests to the default test path (`eng/test.sh`).
-- Do not run benchmarks during normal validation.
+- Keep tests short-running by default. Do not add slow tests to the default test path (`eng/test.sh`).
+- Do not run long-running tests, e2e tests, benchmarks, package, publish, or release commands unless explicitly requested.
 - Do not introduce Playwright unless the Playwright building block is applied.
 - Prefer small, vertical changes over broad rewrites.
 - Preserve the command contract under `eng/`.
 - Package and publish are never part of `eng/check.sh`.
+- Follow `docs/guardrails/implementation.md` and `docs/guardrails/testing.md` before implementation and validation.
+- Follow language guardrails in `docs/guardrails/languages/` when applicable.
 
 ## Routing rules
 
