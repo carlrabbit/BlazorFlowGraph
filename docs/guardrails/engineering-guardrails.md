@@ -2,7 +2,13 @@
 
 ## Purpose
 
-Engineering guardrails define cross-cutting constraints for build, test, and tooling decisions across the repository.
+Engineering guardrails define legacy cross-cutting constraints for build, test, and tooling decisions across the repository.
+
+Primary day-to-day guardrails now live in:
+- [`implementation.md`](implementation.md)
+- [`testing.md`](testing.md)
+- [`languages/dotnet.md`](languages/dotnet.md)
+- [`languages/typescript.md`](languages/typescript.md)
 
 ## Constraints
 
