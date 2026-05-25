@@ -6,7 +6,20 @@ set -euo pipefail
 
 require_command dotnet
 
-dotnet build BlazorFlowGraph.slnx --no-restore --configuration Release
+build_args=(dotnet build BlazorFlowGraph.slnx --no-restore --configuration Release)
+
+if [ -n "${RELEASE_VERSION:-}" ]; then
+  RELEASE_TAG="${RELEASE_TAG:-$RELEASE_VERSION}"
+  build_args+=(
+    /p:Version="$RELEASE_VERSION"
+    /p:PackageVersion="$RELEASE_VERSION"
+    /p:AssemblyVersion="$RELEASE_VERSION"
+    /p:FileVersion="$RELEASE_VERSION"
+    /p:InformationalVersion="$RELEASE_TAG"
+  )
+fi
+
+"${build_args[@]}"
 
 if [ -f package.json ]; then
   require_command bun

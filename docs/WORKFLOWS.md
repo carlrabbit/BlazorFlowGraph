@@ -4,10 +4,15 @@ Workflow intent is documented independently from GitHub Actions implementation.
 
 This document is an index only. Detailed triggers, inputs, outputs, failure conditions, and synchronization rules live in the workflow documents under `docs/workflows/`.
 
-| Workflow | GitHub Actions File | Purpose |
+| Workflow Spec | GitHub Actions File(s) | Purpose |
 |---|---|---|
-| [`ci-build.md`](workflows/ci-build.md) | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Restore, build, typecheck, test, validate sample builds, and verify package generation on pushes and pull requests |
-| [`publish-nuget.md`](workflows/publish-nuget.md) | [`.github/workflows/nuget-publish.yml`](../.github/workflows/nuget-publish.yml) | Build, pack, and publish versioned NuGet packages from validated releases |
+| [`workflows/build.md`](workflows/build.md) | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Defines build intent and canonical `eng/` command routing for CI |
+| [`workflows/test-short.md`](workflows/test-short.md) | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Defines default short-running test validation in CI |
+| [`workflows/test-long.md`](workflows/test-long.md) | _none (explicit/manual only)_ | Defines long-running test intent outside default CI path |
+| [`workflows/package.md`](workflows/package.md) | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml), [`.github/workflows/nuget-publish.yml`](../.github/workflows/nuget-publish.yml) | Defines package generation intent and explicit packaging boundaries |
+| [`workflows/release.md`](workflows/release.md) | [`.github/workflows/nuget-publish.yml`](../.github/workflows/nuget-publish.yml) | Defines release packaging and publish intent with explicit credential gating |
+
+`pages.md` is not indexed because GitHub Pages is not an active module in this repository.
 
 # Authority
 

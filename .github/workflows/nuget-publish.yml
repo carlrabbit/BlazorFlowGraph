@@ -22,6 +22,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
@@ -31,34 +36,17 @@ jobs:
           INPUT_RELEASE_VERSION: ${{ inputs.release_version }}
         run: bun run tooling/release/prepare-release.mjs
 
-      - name: Install TypeScript dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Build TypeScript packages
-        run: bun run --filter '*' build
-
-      - name: Refresh packaged browser bundle
-        run: cp src/TypeScript/packages/host/dist/browser.iife.js src/DotNet/BlazorFlowGraph.Blazor/wwwroot/js/dataflow-visualizer.js
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: global.json
-
       - name: Restore
-        run: dotnet restore BlazorFlowGraph.slnx
+        run: ./eng/restore.sh
 
       - name: Build
         env:
           RELEASE_VERSION: ${{ steps.release.outputs.release_version }}
           RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
-        run: |
-          dotnet build BlazorFlowGraph.slnx --no-restore --configuration Release \
-            /p:Version="$RELEASE_VERSION" \
-            /p:PackageVersion="$RELEASE_VERSION" \
-            /p:AssemblyVersion="$RELEASE_VERSION" \
-            /p:FileVersion="$RELEASE_VERSION" \
-            /p:InformationalVersion="$RELEASE_TAG"
+        run: ./eng/build.sh
+
+      - name: Refresh packaged browser bundle
+        run: cp src/TypeScript/packages/host/dist/browser.iife.js src/DotNet/BlazorFlowGraph.Blazor/wwwroot/js/dataflow-visualizer.js
 
       - name: Pack NuGet packages
         env:
@@ -79,4 +67,3 @@ jobs:
           path: |
             artifacts/nuget/*.nupkg
             artifacts/nuget/*.snupkg
-
