@@ -10,7 +10,7 @@ build_args=(dotnet build BlazorFlowGraph.slnx --no-restore --configuration Relea
 
 if [ -n "${RELEASE_VERSION:-}" ]; then
   if [[ ! "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo "RELEASE_VERSION must use dotted numeric format (e.g. 1.0.0.0)." >&2
+    echo "RELEASE_VERSION must use 4-segment dotted numeric format (e.g. 1.0.0.0)." >&2
     exit 1
   fi
 
