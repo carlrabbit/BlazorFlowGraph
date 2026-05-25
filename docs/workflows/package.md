@@ -27,7 +27,8 @@ Define package generation workflow intent using canonical repository packaging c
 
 # Outputs
 
-- `.nupkg` and `.snupkg` artifacts under `artifacts/nuget` (release) or workflow-specific artifact path (validation)
+- `.nupkg` and `.snupkg` artifacts under `artifacts/nuget` (release path)
+- CI validation artifacts under `artifacts/ci-pack` (see `.github/workflows/ci.yml`)
 
 # Test Categories
 
