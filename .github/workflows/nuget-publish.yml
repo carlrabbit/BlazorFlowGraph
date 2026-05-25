@@ -43,10 +43,8 @@ jobs:
         env:
           RELEASE_VERSION: ${{ steps.release.outputs.release_version }}
           RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
+          REFRESH_PACKAGED_BROWSER_BUNDLE: "1"
         run: ./eng/build.sh
-
-      - name: Refresh packaged browser bundle
-        run: cp src/TypeScript/packages/host/dist/browser.iife.js src/DotNet/BlazorFlowGraph.Blazor/wwwroot/js/dataflow-visualizer.js
 
       - name: Pack NuGet packages
         env:
