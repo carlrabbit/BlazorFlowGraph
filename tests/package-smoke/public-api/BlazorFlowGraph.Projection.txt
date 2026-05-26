@@ -1,0 +1,4 @@
+PackageId: BlazorFlowGraph.Projection
+PublicApiBaseline: v1
+Intent: Projection and conversion contracts.
+ReviewRule: Any added/removed public types or members requires release-notes update.

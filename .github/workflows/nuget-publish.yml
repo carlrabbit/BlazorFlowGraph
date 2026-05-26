@@ -36,21 +36,10 @@ jobs:
           INPUT_RELEASE_VERSION: ${{ inputs.release_version }}
         run: bun run tooling/release/prepare-release.mjs
 
-      - name: Restore
-        run: ./eng/restore.sh
-
-      - name: Build
+      - name: Release readiness check
         env:
-          RELEASE_VERSION: ${{ steps.release.outputs.release_version }}
           RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
-          REFRESH_PACKAGED_BROWSER_BUNDLE: "1"
-        run: ./eng/build.sh
-
-      - name: Pack NuGet packages
-        env:
-          RELEASE_VERSION: ${{ steps.release.outputs.release_version }}
-          RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
-        run: ./eng/package.sh
+        run: ./eng/release-check.sh ${{ steps.release.outputs.release_version }}
 
       - name: Publish NuGet packages
         env:

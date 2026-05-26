@@ -1,0 +1,4 @@
+PackageId: BlazorFlowGraph.Diffing
+PublicApiBaseline: v1
+Intent: Diff generation and change representation contracts.
+ReviewRule: Any added/removed public types or members requires release-notes update.

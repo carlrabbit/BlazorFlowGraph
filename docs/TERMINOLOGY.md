@@ -38,6 +38,24 @@ A deterministic graph entity identifier required for reconciliation, layout pres
 # Overlay
 A lightweight semantic decoration applied independently of the core graph structure.
 
+# Public Documentation
+Consumer-facing documentation sources that explain package usage, concepts, diagnostics, and release/version guidance.
+
+# Consumer
+An external user of BlazorFlowGraph packages, APIs, diagnostics, and samples.
+
+# Public Documentation Surface
+The required files and folders under `public-docs/` governed by `docs/PUBLIC-DOCS.md`.
+
+# Package README
+The NuGet-facing package documentation source, currently `public-docs/nuget/package-readme.md`.
+
+# Diagnostics Reference
+Consumer-facing diagnostic guidance, including `public-docs/diagnostics.md` and pages under `public-docs/diagnostics/`.
+
+# Public API Baseline
+Baseline declaration files under `tests/package-smoke/public-api/` used by `./eng/public-api.sh` to keep API changes intentional and release-noted.
+
 # Specification
 A durable behavior document that defines invariants, contracts, failure semantics, and validation expectations for a named area.
 

@@ -1,0 +1,4 @@
+PackageId: BlazorFlowGraph.Blazor
+PublicApiBaseline: v1
+Intent: Blazor host public surface for rendering and service registration.
+ReviewRule: Any added/removed public types or members requires release-notes update.

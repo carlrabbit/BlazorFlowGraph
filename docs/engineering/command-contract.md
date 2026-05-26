@@ -28,36 +28,24 @@ Builds the repository without restoring. Requires a prior `./eng/restore.sh`.
 
 Runs:
 - `dotnet build BlazorFlowGraph.slnx --no-restore --configuration Release`
-- `bun run --filter '*' build` (Vite + tsc for all TypeScript packages)
+- `bun run --cwd <package> build` for TypeScript packages
 
 Optional environment variables:
-- `RELEASE_VERSION` — when set, build applies release version properties to .NET build outputs
+- `RELEASE_VERSION` — optional release version properties for build outputs
 - `RELEASE_TAG` — optional informational version tag (defaults to `RELEASE_VERSION`)
-- `REFRESH_PACKAGED_BROWSER_BUNDLE=1` — refreshes `src/DotNet/BlazorFlowGraph.Blazor/wwwroot/js/dataflow-visualizer.js` from the host package build output
+- `REFRESH_PACKAGED_BROWSER_BUNDLE=1` — refreshes `src/DotNet/BlazorFlowGraph.Blazor/wwwroot/js/dataflow-visualizer.js`
 
 ### `./eng/test.sh`
 
-Runs fast (default) tests only. Excludes slow, e2e, and benchmark work.
+Runs fast (default) tests only. Excludes slow, e2e, benchmark, and package-smoke work.
 
 ```sh
 ./eng/test.sh
 ```
 
 Runs:
-- `dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.*.Tests --configuration Release` for each test project
-- `bun run --filter '*' test` (Vitest for all TypeScript packages)
-
-**Test framework note:** TUnit uses Microsoft Testing Platform (MTP), which requires `dotnet run` rather than `dotnet test`. This is documented in [`docs/engineering/typescript-tools.md`](typescript-tools.md) and reflected in `eng/test.sh`.
-
-**Test categories:**
-
-| Category | Default run | Description |
-|---|:---:|---|
-| Unit | Yes | Fast, isolated. No network, database, or browser. |
-| Integration | No | Uses real services or I/O. Run explicitly when needed. |
-| Slow | No | Expensive unit tests. Tagged `Slow`. Excluded from default path. |
-| E2E | No | Browser/system tests. Run via `eng/e2e.sh` when added. |
-| Benchmark | Never | BenchmarkDotNet only. Run via `eng/benchmark.sh`. |
+- `dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.*.Tests --configuration Release`
+- `bun run --cwd <package> test` for TypeScript packages
 
 ### `./eng/format.sh`
 
@@ -67,13 +55,9 @@ Formats all .NET and TypeScript/JavaScript source files.
 ./eng/format.sh
 ```
 
-Runs:
-- `dotnet format BlazorFlowGraph.slnx`
-- `biome check --write .`
-
 ### `./eng/check.sh`
 
-Canonical completion gate. Agents must run this before declaring work complete.
+Canonical completion gate. Agents must run this before declaring implementation work complete.
 
 ```sh
 ./eng/check.sh
@@ -84,25 +68,90 @@ Runs in order:
 2. `./eng/build.sh`
 3. `./eng/test.sh`
 4. `dotnet format BlazorFlowGraph.slnx --verify-no-changes`
-5. `bun run check` (Biome lint + format check + TypeScript typecheck)
-
-If this command exits with code 0, the repository is in a valid state.
+5. `bun run check` + TypeScript typechecks
 
 ### `./eng/benchmark.sh`
 
-Runs benchmarks. This command is **expensive** and **non-default**. Never run as part of normal validation.
+Runs benchmarks (non-default).
 
 ```sh
 ./eng/benchmark.sh
 ```
 
-No benchmark project is currently configured. Update this script when one is added under `benchmarks/`.
+### `./eng/package.sh <version>`
+
+Packs all `IsPackable` projects from `src/DotNet` into `artifacts/nuget`.
+
+```sh
+./eng/package.sh 1.0.0
+```
+
+Equivalent environment form is also supported:
+
+```sh
+RELEASE_VERSION=1.0.0 ./eng/package.sh
+```
+
+### `./eng/package-smoke.sh <version>`
+
+Validates local package artifacts as a real consumer.
+
+```sh
+./eng/package-smoke.sh 1.0.0
+```
+
+Validation includes:
+- local artifact presence checks
+- clean consumer project restore/build using local package source
+- public API usage compile check
+- static web asset presence check for Blazor package
+
+### `./eng/public-api.sh`
+
+Validates intentional public API changes using explicit baseline declarations.
+
+```sh
+./eng/public-api.sh
+```
+
+Strategy (current explicit stub):
+- maintain one baseline declaration file per packable package in `tests/package-smoke/public-api/*.txt`
+- require an exact `PackageId: <id>` header per file
+- fail when a packable project has no matching baseline declaration
+- require release notes updates for intentional public API changes
+
+### `./eng/public-docs.sh`
+
+Validates required public documentation files and directories.
+
+```sh
+./eng/public-docs.sh
+```
+
+### `./eng/release-check.sh <version>`
+
+Runs non-publishing release-readiness validation.
+
+```sh
+./eng/release-check.sh 0.0.0-local
+```
+
+Runs in order:
+1. `./eng/check.sh`
+2. `./eng/build.sh`
+3. `./eng/package.sh <version>`
+4. `./eng/package-smoke.sh <version>`
+5. `./eng/samples.sh --dry-run`
+6. `./eng/public-api.sh`
+7. `./eng/public-docs.sh`
+
+Publishing is never part of `eng/release-check.sh`.
 
 ## Optional commands
 
 ### `./eng/samples.sh`
 
-Starts all sample apps. Delegates to `tooling/scripts/run-samples-all.sh`.
+Starts all sample apps.
 
 ```sh
 ./eng/samples.sh
@@ -110,40 +159,17 @@ Starts all sample apps. Delegates to `tooling/scripts/run-samples-all.sh`.
 ./eng/samples.sh --detach
 ```
 
-Sample ports: `5100`–`5105`. See [`samples/SAMPLES.json`](../../samples/SAMPLES.json).
-
-### `./eng/package.sh`
-
-Packs all `IsPackable` projects from `src/DotNet` into `artifacts/nuget`.
-
-```sh
-RELEASE_VERSION=1.0.0.0 RELEASE_TAG=v1.0.0.0 ./eng/package.sh
-```
-
-Requires:
-- `RELEASE_VERSION` — dotted numeric version string
-- `RELEASE_TAG` — full tag string (defaults to `RELEASE_VERSION`)
-- A prior successful `./eng/build.sh` run
-
-Packaging is never part of `eng/check.sh`.
-
 ### `./eng/publish.sh`
 
-Publishes all `.nupkg` files from `artifacts/nuget` to NuGet.org.
+Publishes `.nupkg` files from `artifacts/nuget` to NuGet.org.
 
 ```sh
 NUGET_API_KEY=... ./eng/publish.sh
 ```
 
-Requires:
-- `NUGET_API_KEY` — NuGet API key with push permissions
-- A prior `./eng/package.sh` run that produced packages
-
-Publishing is never part of `eng/check.sh`.
-
 ## Validation path
 
-Minimal local validation:
+Required local validation:
 
 ```sh
 ./eng/restore.sh
@@ -152,4 +178,8 @@ Minimal local validation:
 ./eng/check.sh
 ```
 
-Do not run benchmarks, e2e tests, packaging, or publishing unless explicitly requested.
+Release-readiness validation:
+
+```sh
+./eng/release-check.sh 0.0.0-local
+```

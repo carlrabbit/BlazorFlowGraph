@@ -1,0 +1,4 @@
+PackageId: BlazorFlowGraph.Semantics
+PublicApiBaseline: v1
+Intent: Semantic graph modeling contracts.
+ReviewRule: Any added/removed public types or members requires release-notes update.

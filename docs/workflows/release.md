@@ -2,19 +2,17 @@
 
 # Goal
 
-Define the controlled workflow that packages and publishes versioned NuGet artifacts from validated release commits.
+Define the controlled workflow that validates release readiness and then publishes versioned NuGet artifacts.
 
 # Constraints
 
-- release input must be an explicit `vX.X.X.X` tag or manual dispatch input
-- release preparation must verify commit reachability from `main`
-- repository restore/build/package/publish steps must route through canonical `eng/` commands
-- publishing must be credential-gated with `NUGET_API_KEY`
-- publishing remains explicit and is never part of default `eng/check.sh` validation
+- release input must be an explicit version/tag
+- repository release validation must route through `./eng/release-check.sh <version>`
+- publish remains explicitly credential-gated with `NUGET_API_KEY`
+- publishing is never part of default `eng/check.sh`
 
 # Non-Goals
 
-- replacing local packaging guidance
 - making package publication part of normal PR validation
 
 # Triggers
@@ -34,20 +32,17 @@ Define the controlled workflow that packages and publishes versioned NuGet artif
 - published NuGet packages for packable projects
 - uploaded workflow artifacts for release inspection
 
-# Test Categories
-
-- release-gated packaging and publish validation (explicit workflow path)
-
 # Relevant Other Workflows
 
 - [`build.md`](build.md)
 - [`test-short.md`](test-short.md)
-- [`test-long.md`](test-long.md)
 - [`package.md`](package.md)
+- [`public-docs.md`](public-docs.md)
+- [`release-check.md`](release-check.md)
 
 # Validation
 
-- `.github/workflows/nuget-publish.yml` uses `./eng/restore.sh`, `./eng/build.sh`, `./eng/package.sh`, and `./eng/publish.sh`
+- `.github/workflows/nuget-publish.yml` uses `./eng/release-check.sh <version>` before `./eng/publish.sh`
 - publish step is explicitly gated by required credentials
 - release/package flow remains outside default `eng/check.sh`
 
@@ -61,5 +56,6 @@ When this workflow intent changes, review:
 - `.github/workflows/nuget-publish.yml`
 - `docs/WORKFLOWS.md`
 - `docs/ENGINEERING.md`
+- `docs/workflows/release-check.md`
 - `docs/tbps/release.md`
 - `Nuget.md`
