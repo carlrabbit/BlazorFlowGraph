@@ -1,50 +1,55 @@
 # Purpose
 
-Define the repeatable process for release preparation, package generation, and controlled package publication.
+Define the repeatable process for release preparation, package generation, release-readiness validation, and controlled package publication.
 
 # Preconditions
 
-- release version is known in `vX.X.X.X` format
+- release version is known
 - commit intended for release is reachable from `main`
 - release workflow intent docs have been reviewed
 
 # Required Reading
 
 - [`../ENGINEERING.md`](../ENGINEERING.md)
+- [`../PUBLIC-DOCS.md`](../PUBLIC-DOCS.md)
 - [`../WORKFLOWS.md`](../WORKFLOWS.md)
-- [`../workflows/package.md`](../workflows/package.md)
+- [`../workflows/release-check.md`](../workflows/release-check.md)
 - [`../workflows/release.md`](../workflows/release.md)
+- [`public-documentation-update.md`](public-documentation-update.md)
 - [`workflow-changes.md`](workflow-changes.md)
 
 # Execution Steps
 
 1. Confirm release intent and constraints in workflow docs before changing release automation.
 2. Prepare release metadata and verify commit ancestry from `main`.
-3. Run repository release steps through canonical commands: `./eng/restore.sh`, `./eng/build.sh`, `./eng/package.sh`, `./eng/publish.sh`.
-4. Ensure publish is explicitly credential-gated and never merged into default validation flows.
-5. Capture release artifacts and update synchronized documentation when release flow changes.
+3. Run release readiness through `./eng/release-check.sh <version>`.
+4. Publish only after release-check success, via `./eng/publish.sh` with explicit credentials.
+5. Update `public-docs/release-notes.md` for consumer-visible changes.
 
 # Validation
 
 - release workflow uses canonical `eng/` command contract
+- `./eng/release-check.sh <version>` completes before publish
 - package/publish remain explicit and outside default `eng/check.sh`
-- release version and credential requirements are enforced
+- public docs and public API checks are included in release readiness
 
 # Common Failures
 
-- publishing without explicit version validation
+- publishing without release-check validation
 - duplicating raw build/pack/publish logic in workflow YAML instead of `eng/` scripts
 - drifting workflow docs from workflow implementation
+- shipping consumer-visible changes without public docs/release notes updates
 
 # Synchronization Requirements
 
-- keep `.github/workflows/nuget-publish.yml` synchronized with `docs/workflows/release.md`
-- keep package/release guidance synchronized across `docs/WORKFLOWS.md`, `docs/ENGINEERING.md`, and `Nuget.md`
+- keep `.github/workflows/nuget-publish.yml` synchronized with `docs/workflows/release-check.md` and `docs/workflows/release.md`
+- keep package/release guidance synchronized across `docs/WORKFLOWS.md`, `docs/ENGINEERING.md`, and `docs/PUBLIC-DOCS.md`
 
 # Related Documents
 
 - [`workflow-changes.md`](workflow-changes.md)
 - [`documentation-changes.md`](documentation-changes.md)
+- [`public-documentation-update.md`](public-documentation-update.md)
 
 # Authority
 

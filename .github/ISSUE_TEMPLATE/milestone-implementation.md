@@ -12,8 +12,10 @@ labels: ["planning"]
 - docs/TERMINOLOGY.md
 - docs/GUARDRAILS.md
 - docs/ENGINEERING.md
+- docs/PUBLIC-DOCS.md (if public-facing behavior may change)
 - docs/TBPS.md
 - docs/tbps/feature-implementation.md
+- docs/tbps/public-documentation-update.md (if public-facing behavior may change)
 - milestone document
 - required specs
 - related architecture and decisions
@@ -37,6 +39,12 @@ List applicable TBPs.
 ## Engineering Commands
 
 List expected minimal validation commands from docs/ENGINEERING.md.
+
+## Public Documentation Impact
+
+Does this work affect public behavior, package usage, diagnostics, samples, public API, or release behavior?
+
+If yes, list required updates under `public-docs/` and `docs/PUBLIC-DOCS.md`.
 
 ## Implementation Notes
 

@@ -26,6 +26,9 @@ jobs:
       - name: Check
         run: ./eng/check.sh
 
+      - name: Validate public docs
+        run: ./eng/public-docs.sh
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -87,4 +90,3 @@ jobs:
           path: |
             artifacts/ci-pack/*.nupkg
             artifacts/ci-pack/*.snupkg
-

@@ -6,19 +6,17 @@ Define package generation workflow intent using canonical repository packaging c
 
 # Constraints
 
-- package generation must use `./eng/package.sh`
-- packaging requires explicit release version inputs (`RELEASE_VERSION`, `RELEASE_TAG`)
+- package generation must use `./eng/package.sh <version>`
 - packaging remains explicit and separate from default `eng/check.sh` validation
+- package smoke validation is release-oriented via `./eng/package-smoke.sh <version>`
 
 # Non-Goals
 
 - publishing packages to NuGet.org
-- replacing local developer packaging guidance in `Nuget.md`
 
 # Triggers
 
-- explicit packaging validation in CI
-- release workflow packaging stage
+- explicit packaging validation in CI/release flows
 
 # Inputs
 
@@ -27,22 +25,18 @@ Define package generation workflow intent using canonical repository packaging c
 
 # Outputs
 
-- `.nupkg` and `.snupkg` artifacts under `artifacts/nuget` (release path)
-- CI validation artifacts under `artifacts/ci-pack` (see `.github/workflows/ci.yml`)
-
-# Test Categories
-
-- package-generation validation only (not a test runner category)
+- `.nupkg` and `.snupkg` artifacts under `artifacts/nuget`
 
 # Relevant Other Workflows
 
 - [`build.md`](build.md)
 - [`test-short.md`](test-short.md)
+- [`release-check.md`](release-check.md)
 - [`release.md`](release.md)
 
 # Validation
 
-- package generation in workflow YAML routes through `./eng/package.sh` for release workflows
+- package generation in workflow YAML routes through `./eng/package.sh`
 - package generation is not part of `eng/check.sh`
 
 # Authority

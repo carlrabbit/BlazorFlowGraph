@@ -17,7 +17,7 @@ TBPs do **not** define:
 
 ## TBP Layers
 
-- **Foundational TBPs** establish how the repository creates and maintains its durable documentation and planning layers.
+- **Foundational TBPs** establish how the repository creates and maintains durable documentation and planning layers.
 - **Governance TBPs** keep routing, indexing, and documentation authority synchronized.
 - **Implementation TBPs** describe repeatable methods for feature work, bug work, and refactor work.
 - **Operational TBPs** describe repeatable workflow and automation processes.
@@ -32,11 +32,12 @@ TBPs do **not** define:
 | Foundational | [`documentation-review.md`](tbps/documentation-review.md) | Review documentation authority, routing, links, and synchronization |
 | Foundational | [`terminology-management.md`](tbps/terminology-management.md) | Manage canonical repository terms across durable docs |
 | Governance | [`documentation-changes.md`](tbps/documentation-changes.md) | Keep authoritative documentation, indexes, and routing documents synchronized |
+| Governance | [`public-documentation-update.md`](tbps/public-documentation-update.md) | Update consumer-facing public docs and keep release/public-doc validation synchronized |
 | Implementation | [`feature-implementation.md`](tbps/feature-implementation.md) | Route feature work through specs, architecture, decisions, workflows, and TBPs |
 | Implementation | [`bug-investigation.md`](tbps/bug-investigation.md) | Investigate bugs against authoritative expected behavior |
 | Implementation | [`refactor-planning.md`](tbps/refactor-planning.md) | Plan structural changes while preserving documented behavior |
 | Operational | [`workflow-changes.md`](tbps/workflow-changes.md) | Update workflow intent before changing GitHub Actions implementation |
-| Operational | [`release.md`](tbps/release.md) | Execute release preparation, packaging, and publish gating through canonical workflow and commands |
+| Operational | [`release.md`](tbps/release.md) | Execute release preparation, packaging, release-check, and publish gating through canonical workflow and commands |
 
 # Authority
 

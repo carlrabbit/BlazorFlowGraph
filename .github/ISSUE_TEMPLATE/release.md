@@ -12,8 +12,10 @@ labels: ["release"]
 - docs/TERMINOLOGY.md
 - docs/GUARDRAILS.md
 - docs/ENGINEERING.md
+- docs/PUBLIC-DOCS.md
 - docs/TBPS.md
 - docs/tbps/release.md
+- docs/tbps/public-documentation-update.md
 - docs/WORKFLOWS.md
 - relevant workflow specs
 
@@ -27,15 +29,15 @@ List completed milestones included in the release.
 
 ## Required Validation
 
-List required release validation.
+List required release validation (`./eng/release-check.sh <version>` and any additional checks).
 
 ## Long-Running Checks
 
 List long-running tests or workflows that must be triggered explicitly.
 
-## Documentation Updates
+## Public Documentation Impact
 
-List required documentation updates.
+List required public documentation updates under `public-docs/` and release notes updates.
 
 ## Release Notes
 

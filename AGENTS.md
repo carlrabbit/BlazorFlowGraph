@@ -8,6 +8,7 @@ Read first:
 - docs/SPECS.md
 - docs/ENGINEERING.md
 - docs/engineering/command-contract.md
+- docs/PUBLIC-DOCS.md (when public-facing behavior may change)
 - docs/ARCHITECTURE.md
 - docs/DECISIONS.md
 - docs/MILESTONES.md
@@ -24,6 +25,14 @@ Before completing implementation work, run:
 ```
 
 If this command fails, fix the failure or document exactly why it could not be fixed.
+
+Use release validation only for release work:
+
+```sh
+./eng/release-check.sh <version>
+```
+
+Do not run package smoke tests or release checks unless explicitly requested.
 
 ## Repository rules
 
@@ -43,6 +52,7 @@ If this command fails, fix the failure or document exactly why it could not be f
 - Package and publish are never part of `eng/check.sh`.
 - Follow `docs/guardrails/implementation.md` and `docs/guardrails/testing.md` before implementation and validation.
 - Follow language guardrails in `docs/guardrails/languages/` when applicable.
+- Update `public-docs/` when public behavior, packages, diagnostics, samples, release behavior, or public API changes.
 
 ## Routing rules
 
@@ -55,6 +65,8 @@ If this command fails, fix the failure or document exactly why it could not be f
 - workflow implementation changes → `.github/workflows/`
 - engineering substrate changes → `docs/ENGINEERING.md` and `docs/engineering/`
 - guardrail changes → `docs/GUARDRAILS.md` and `docs/guardrails/`
+- public documentation authority/contract changes → `docs/PUBLIC-DOCS.md`
+- public documentation content changes → `public-docs/`
 
 When changing architecture or runtime boundaries:
 - update docs/ARCHITECTURE.md and docs/architecture/ first

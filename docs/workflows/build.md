@@ -8,12 +8,6 @@ Define how repository builds are executed in automation using canonical `eng/` c
 
 - build execution must use canonical repository commands from `docs/ENGINEERING.md`
 - build validation must cover both .NET and TypeScript stacks
-- workflow YAML remains implementation-focused
-
-# Non-Goals
-
-- publishing release artifacts
-- running long-running tests or benchmarks by default
 
 # Triggers
 
@@ -29,21 +23,17 @@ Define how repository builds are executed in automation using canonical `eng/` c
 
 - build success or failure status for repository code
 
-# Test Categories
-
-- none directly; test execution is documented in `test-short.md` and `test-long.md`
-
 # Relevant Other Workflows
 
 - [`test-short.md`](test-short.md)
-- [`test-long.md`](test-long.md)
 - [`package.md`](package.md)
+- [`public-docs.md`](public-docs.md)
+- [`release-check.md`](release-check.md)
 - [`release.md`](release.md)
 
 # Validation
 
-- `.github/workflows/ci.yml` runs canonical `eng/` build path (`./eng/check.sh`, `./eng/build.sh`)
-- no duplicated raw repository build logic is added to workflow YAML
+- `.github/workflows/ci.yml` runs canonical `eng/` build path (`./eng/check.sh`)
 
 # Authority
 

@@ -7,13 +7,8 @@ Define default short-running automated test validation for pull requests and mai
 # Constraints
 
 - short-running validation must use canonical `eng/` commands
-- default path excludes long-running, e2e, and benchmark categories
+- default path excludes long-running, e2e, benchmark, and package-smoke categories
 - .NET test execution follows Microsoft Testing Platform expectations (`dotnet run` test executables)
-
-# Non-Goals
-
-- running long-running or benchmark test categories by default
-- publishing artifacts to external package registries
 
 # Triggers
 
@@ -28,23 +23,18 @@ Define default short-running automated test validation for pull requests and mai
 # Outputs
 
 - pass/fail status for default repository test path
-- uploaded short-test artifacts when workflow YAML provides them
-
-# Test Categories
-
-- .NET short-running tests
-- TypeScript short-running tests
 
 # Relevant Other Workflows
 
 - [`build.md`](build.md)
 - [`test-long.md`](test-long.md)
 - [`package.md`](package.md)
+- [`release-check.md`](release-check.md)
 
 # Validation
 
 - `.github/workflows/ci.yml` runs `./eng/check.sh` for canonical short validation
-- long-running tests stay opt-in and outside default workflow path
+- package-smoke remains outside default `./eng/test.sh` and is owned by release-check
 
 # Authority
 
