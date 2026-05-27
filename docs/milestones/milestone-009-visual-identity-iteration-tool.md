@@ -1,8 +1,8 @@
 # Goal
 
-Purpose: create the first implementation slice for designing the default visual identity of BlazorFlowGraph diagrams.
+Create the first implementation slice for designing the default visual identity of BlazorFlowGraph diagrams.
 
-Goal: create a practical iteration tool so the project owner and AI agents can evaluate representative diagram scenarios using editable design tokens and importable/exportable theme drafts without finalizing the production visual design. The milestone is complete when visual identity work can continue from explicit artifacts instead of hidden assumptions.
+The specific goal of this milestone is to create a practical iteration tool so the project owner and AI agents can evaluate representative diagram scenarios using editable design tokens and importable/exportable theme drafts without finalizing the production visual design. The milestone is complete when visual identity work can continue from explicit artifacts instead of hidden assumptions.
 
 # Scope
 
@@ -231,7 +231,7 @@ Create an interactive sample page dedicated to visual identity iteration. It sho
 - all representative design scenarios visible on one page as separate diagrams
 - enough layout structure to compare scenarios without page-to-page navigation
 
-The sample may be implemented as a Blazor sample, a TypeScript/browser sample, or another repository-appropriate sample form, but it must respect the current architecture and the engineering command contract defined by `docs/ENGINEERING.md` and `docs/engineering/command-contract.md`.
+The sample may be implemented as a Blazor sample, a TypeScript/browser sample, or another repository-appropriate sample form, but it must respect the current architecture and the engineering command contract defined by `docs/engineering/command-contract.md`.
 
 ## Representative Design Scenarios
 
