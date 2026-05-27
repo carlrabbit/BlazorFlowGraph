@@ -921,8 +921,13 @@ function escapeXmlAttr(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-
-export type FlowGraphChangeState = "added" | "changed" | "removed" | "moved" | "relayouted" | "stale";
+export type FlowGraphChangeState =
+  | "added"
+  | "changed"
+  | "removed"
+  | "moved"
+  | "relayouted"
+  | "stale";
 export type FlowGraphDiagnosticState = "warning" | "error" | "unavailable";
 
 export interface RenderVisualState {
@@ -951,8 +956,12 @@ export interface RenderVisualStateInput {
   readonly downstreamHighlightedNodeIds?: readonly string[] | ReadonlySet<string>;
   readonly highlightedEdgeIds?: readonly string[] | ReadonlySet<string>;
   readonly mutedEdgeIds?: readonly string[] | ReadonlySet<string>;
-  readonly nodeChangeStates?: Readonly<Record<string, FlowGraphChangeState>> | ReadonlyMap<string, FlowGraphChangeState>;
-  readonly edgeChangeStates?: Readonly<Record<string, FlowGraphChangeState>> | ReadonlyMap<string, FlowGraphChangeState>;
+  readonly nodeChangeStates?:
+    | Readonly<Record<string, FlowGraphChangeState>>
+    | ReadonlyMap<string, FlowGraphChangeState>;
+  readonly edgeChangeStates?:
+    | Readonly<Record<string, FlowGraphChangeState>>
+    | ReadonlyMap<string, FlowGraphChangeState>;
   readonly nodeDiagnosticStates?:
     | Readonly<Record<string, FlowGraphDiagnosticState>>
     | ReadonlyMap<string, FlowGraphDiagnosticState>;
@@ -1059,7 +1068,7 @@ function buildThemedFrameMarkup(
       `<g class="dfv-group" data-group-id="${escapeXmlAttr(group.id)}" role="graphics-object" aria-label="${escapeXmlAttr(group.label)} group">`,
       `  <rect x="${group.x}" y="${group.y}" width="${group.width}" height="${group.height}" rx="${style.rx}" ry="${style.rx}" fill="${escapeXmlAttr(theme.color.groupBackground)}" fill-opacity="0.45" stroke="${escapeXmlAttr(theme.color.groupBorder)}" stroke-width="1.25" stroke-dasharray="5 3"/>`,
       `  <text x="${group.x + 12}" y="${group.y + 18}" font-size="${theme.typography.groupLabelSize}" fill="${escapeXmlAttr(theme.color.groupText)}" font-weight="600">${escapeXml(group.label)}</text>`,
-      `</g>`,
+      "</g>",
     ].join("\n");
   });
 
@@ -1094,7 +1103,8 @@ function buildThemedFrameMarkup(
       annotationText != null
         ? `<text x="${Math.floor(node.width / 2)}" y="${node.height + 16}" text-anchor="middle" font-size="${theme.typography.metadataSize}" fill="${escapeXmlAttr(theme.color.nodeMutedText)}">${escapeXml(annotationText)}</text>`
         : "";
-    const overlayMarkup = overlay != null ? buildOverlayMarkup(overlay, node.width, node.height) : "";
+    const overlayMarkup =
+      overlay != null ? buildOverlayMarkup(overlay, node.width, node.height) : "";
     const style = resolveStyleToken(node.kind, styleTokens);
     const headerHeight = theme.color.nodeHeaderBackground != null ? 18 : 0;
     const headerMarkup =
@@ -1117,7 +1127,7 @@ function buildThemedFrameMarkup(
       diagnosticBadge,
       overlayMarkup,
       annotationMarkup,
-      `</g>`,
+      "</g>",
     ]
       .filter(Boolean)
       .join("\n");
@@ -1171,7 +1181,7 @@ function buildThemedEdgeMarkup(
     edge.label != null
       ? `  <text x="${labelX}" y="${labelY}" text-anchor="middle" font-size="10" fill="${escapeXmlAttr(theme.color.nodeMutedText)}">${escapeXml(edge.label)}</text>`
       : "",
-    `</g>`,
+    "</g>",
   ]
     .filter(Boolean)
     .join("\n");
@@ -1227,7 +1237,7 @@ function buildChangeBadgeMarkup(
     `<g class="dfv-change-badge">`,
     `  <rect x="8" y="-12" width="46" height="18" rx="9" ry="9" fill="${escapeXmlAttr(color)}"/>`,
     `  <text x="31" y="0" text-anchor="middle" font-size="9" font-weight="700" fill="#ffffff">${escapeXml(changeStateToLabel(changeState))}</text>`,
-    `</g>`,
+    "</g>",
   ].join("\n");
 }
 
@@ -1246,7 +1256,7 @@ function buildDiagnosticBadgeMarkup(
     `<g class="dfv-diagnostic-badge">`,
     `  <circle cx="${nodeWidth - 12}" cy="-2" r="10" fill="${escapeXmlAttr(color)}" stroke="#ffffff" stroke-width="1.5"/>`,
     `  <text x="${nodeWidth - 12}" y="2" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">${escapeXml(diagnosticState === "warning" ? "!" : diagnosticState === "error" ? "×" : "?")}</text>`,
-    `</g>`,
+    "</g>",
   ].join("\n");
 }
 
@@ -1288,11 +1298,11 @@ function buildThemedDefs(theme: FlowGraphThemeDraft): string {
       ? [
           `  <pattern id="dfv-grid" width="20" height="20" patternUnits="userSpaceOnUse">`,
           `    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="${escapeXmlAttr(theme.color.canvasGrid)}" stroke-width="1"/>`,
-          `  </pattern>`,
+          "  </pattern>",
         ].join("\n")
       : "";
   return [
-    `<defs>`,
+    "<defs>",
     gridPattern,
     buildArrowMarkerDefinition("dfv-arrow-default", theme.color.edgeDefault),
     buildArrowMarkerDefinition("dfv-arrow-highlight", theme.color.edgeHighlighted),
@@ -1300,7 +1310,7 @@ function buildThemedDefs(theme: FlowGraphThemeDraft): string {
     buildArrowMarkerDefinition("dfv-arrow-changed", theme.color.stateChanged),
     buildArrowMarkerDefinition("dfv-arrow-removed", theme.color.stateRemoved),
     buildArrowMarkerDefinition("dfv-arrow-stale", theme.color.stateStale),
-    `</defs>`,
+    "</defs>",
   ]
     .filter(Boolean)
     .join("\n");
@@ -1310,7 +1320,7 @@ function buildArrowMarkerDefinition(id: string, fill: string): string {
   return [
     `  <marker id="${id}" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">`,
     `    <path d="M0,0 L0,6 L8,3 z" fill="${escapeXmlAttr(fill)}"/>`,
-    `  </marker>`,
+    "  </marker>",
   ].join("\n");
 }
 
@@ -1359,7 +1369,9 @@ function changeStateToLabel(changeState: FlowGraphChangeState): string {
   }
 }
 
-function extractNodeMetadataText(metadata: Readonly<Record<string, unknown>> | undefined): string | undefined {
+function extractNodeMetadataText(
+  metadata: Readonly<Record<string, unknown>> | undefined,
+): string | undefined {
   if (metadata == null) return undefined;
   const candidateKeys = ["subtitle", "summary", "role", "status"] as const;
   for (const key of candidateKeys) {
@@ -1371,7 +1383,9 @@ function extractNodeMetadataText(metadata: Readonly<Record<string, unknown>> | u
   return undefined;
 }
 
-function toStringSet(value: readonly string[] | ReadonlySet<string> | undefined): ReadonlySet<string> {
+function toStringSet(
+  value: readonly string[] | ReadonlySet<string> | undefined,
+): ReadonlySet<string> {
   if (value == null) return new Set<string>();
   return value instanceof Set ? value : new Set(value);
 }

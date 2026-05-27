@@ -238,18 +238,22 @@ const HIGH_CONTRAST_DRAFT: FlowGraphThemeDraft = {
   },
 };
 
-export const builtInFlowGraphThemes: Readonly<Record<BuiltInFlowGraphThemeName, FlowGraphThemeDraft>> =
-  Object.freeze({
-    "default-light-draft": DEFAULT_LIGHT_DRAFT,
-    "default-dark-draft": DEFAULT_DARK_DRAFT,
-    "high-contrast-draft": HIGH_CONTRAST_DRAFT,
-  });
+export const builtInFlowGraphThemes: Readonly<
+  Record<BuiltInFlowGraphThemeName, FlowGraphThemeDraft>
+> = Object.freeze({
+  "default-light-draft": DEFAULT_LIGHT_DRAFT,
+  "default-dark-draft": DEFAULT_DARK_DRAFT,
+  "high-contrast-draft": HIGH_CONTRAST_DRAFT,
+});
 
 export function cloneFlowGraphThemeDraft(theme: FlowGraphThemeDraft): FlowGraphThemeDraft {
   return JSON.parse(JSON.stringify(theme)) as FlowGraphThemeDraft;
 }
 
-export function getBuiltInFlowGraphThemes(): Record<BuiltInFlowGraphThemeName, FlowGraphThemeDraft> {
+export function getBuiltInFlowGraphThemes(): Record<
+  BuiltInFlowGraphThemeName,
+  FlowGraphThemeDraft
+> {
   return {
     "default-light-draft": cloneFlowGraphThemeDraft(builtInFlowGraphThemes["default-light-draft"]),
     "default-dark-draft": cloneFlowGraphThemeDraft(builtInFlowGraphThemes["default-dark-draft"]),

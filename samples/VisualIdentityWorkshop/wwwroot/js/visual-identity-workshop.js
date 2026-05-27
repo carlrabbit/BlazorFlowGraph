@@ -189,7 +189,12 @@
         input.step = "any";
       }
       input.addEventListener(type === "checkbox" ? "change" : "input", () => {
-        currentTheme[sectionKey][key] = type === "checkbox" ? input.checked : type === "number" ? Number(input.value) : input.value;
+        currentTheme[sectionKey][key] =
+          type === "checkbox"
+            ? input.checked
+            : type === "number"
+              ? Number(input.value)
+              : input.value;
         updatePreview();
       });
       field.append(labelEl, input);
@@ -208,7 +213,10 @@
   });
 
   resetButton.addEventListener("click", () => {
-    loadTheme(cloneTheme(builtInThemes[selectedBuiltInThemeKey]), "Reset to selected built-in theme.");
+    loadTheme(
+      cloneTheme(builtInThemes[selectedBuiltInThemeKey]),
+      "Reset to selected built-in theme.",
+    );
   });
 
   nameInput.addEventListener("input", () => {
@@ -328,7 +336,8 @@
     return [
       {
         title: "1. Small linear dataflow",
-        description: "Baseline spacing, labels, and one metadata line for calm technical readability.",
+        description:
+          "Baseline spacing, labels, and one metadata line for calm technical readability.",
         width: 360,
         height: 220,
         nodeWidth: 150,
@@ -353,7 +362,8 @@
       },
       {
         title: "2. Branching dataflow",
-        description: "Fan-out, fan-in, and one highlighted path for routing balance and edge emphasis.",
+        description:
+          "Fan-out, fan-in, and one highlighted path for routing balance and edge emphasis.",
         width: 360,
         height: 220,
         nodeWidth: 148,
@@ -381,7 +391,8 @@
       },
       {
         title: "3. Grouped subsystem",
-        description: "Group boundaries, labels, and boundary-crossing edges for subsystem hierarchy.",
+        description:
+          "Group boundaries, labels, and boundary-crossing edges for subsystem hierarchy.",
         width: 360,
         height: 220,
         nodeWidth: 148,
@@ -410,7 +421,8 @@
       },
       {
         title: "4. Dense graph with search result",
-        description: "Matched nodes stay prominent while non-matching nodes are de-emphasized without disappearing.",
+        description:
+          "Matched nodes stay prominent while non-matching nodes are de-emphasized without disappearing.",
         width: 360,
         height: 240,
         nodeWidth: 138,
@@ -418,12 +430,25 @@
         snapshot: {
           version: 1,
           nodes: Array.from({ length: 9 }, (_, index) =>
-            node(`n${index + 1}`, `Node ${index + 1}`, index % 4 === 0 ? "gateway" : index % 3 === 0 ? "datastore" : "service", {
-              subtitle: index === 3 || index === 6 ? "search hit" : "context",
-            }),
+            node(
+              `n${index + 1}`,
+              `Node ${index + 1}`,
+              index % 4 === 0 ? "gateway" : index % 3 === 0 ? "datastore" : "service",
+              {
+                subtitle: index === 3 || index === 6 ? "search hit" : "context",
+              },
+            ),
           ),
           edges: [
-            edge("e1", "n1", "n2"), edge("e2", "n1", "n3"), edge("e3", "n2", "n4"), edge("e4", "n3", "n5"), edge("e5", "n4", "n6"), edge("e6", "n5", "n6"), edge("e7", "n6", "n7"), edge("e8", "n6", "n8"), edge("e9", "n8", "n9"),
+            edge("e1", "n1", "n2"),
+            edge("e2", "n1", "n3"),
+            edge("e3", "n2", "n4"),
+            edge("e4", "n3", "n5"),
+            edge("e5", "n4", "n6"),
+            edge("e6", "n5", "n6"),
+            edge("e7", "n6", "n7"),
+            edge("e8", "n6", "n8"),
+            edge("e9", "n8", "n9"),
           ],
         },
         visualState: {
@@ -433,7 +458,8 @@
       },
       {
         title: "5. Selected node with dependency context",
-        description: "Selection outline, focus ring, and upstream/downstream highlighting share the same token set.",
+        description:
+          "Selection outline, focus ring, and upstream/downstream highlighting share the same token set.",
         width: 360,
         height: 220,
         nodeWidth: 148,
@@ -464,7 +490,8 @@
       },
       {
         title: "6. Incremental update state",
-        description: "Added, changed, removed, moved, relayouted, and stale markers stay legible without snapshot noise.",
+        description:
+          "Added, changed, removed, moved, relayouted, and stale markers stay legible without snapshot noise.",
         width: 360,
         height: 240,
         nodeWidth: 146,
@@ -540,7 +567,8 @@
       },
       {
         title: "8. Dark mode rendering",
-        description: "Use the built-in dark draft to confirm there are no accidental light-surface assumptions.",
+        description:
+          "Use the built-in dark draft to confirm there are no accidental light-surface assumptions.",
         width: 360,
         height: 220,
         nodeWidth: 148,
@@ -566,7 +594,8 @@
       },
       {
         title: "9. High-contrast rendering",
-        description: "Use the high-contrast draft to verify focus, selection, and diagnostics remain distinguishable.",
+        description:
+          "Use the high-contrast draft to verify focus, selection, and diagnostics remain distinguishable.",
         width: 360,
         height: 220,
         nodeWidth: 148,

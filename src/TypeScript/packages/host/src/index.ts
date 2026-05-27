@@ -5,17 +5,17 @@
 import { bridge } from "@dataflow-visualizer/interop";
 import { computeLayout } from "@dataflow-visualizer/layout";
 import type { GraphSnapshot } from "@dataflow-visualizer/protocol";
-import { applySnapshot } from "@dataflow-visualizer/runtime";
 import {
+  type FlowGraphThemeDraft,
+  type RenderVisualStateInput,
   getBuiltInFlowGraphThemes,
   parseFlowGraphThemeDraftJson,
   renderInnerSvg,
   renderThemedSvg,
   serializeFlowGraphThemeDraft,
   validateFlowGraphThemeDraft,
-  type FlowGraphThemeDraft,
-  type RenderVisualStateInput,
 } from "@dataflow-visualizer/renderer-svg";
+import { applySnapshot } from "@dataflow-visualizer/runtime";
 
 declare const __BLAZORFLOWGRAPH_VERSION__: string;
 
@@ -61,7 +61,6 @@ const ARROW_DEFS = `<defs>
     <path d="M0,0 L0,6 L8,3 z" fill="#9ca3af"/>
   </marker>
 </defs>`;
-
 
 export interface StaticSvgRenderOptions {
   readonly width: number;
@@ -118,7 +117,7 @@ function renderToDefaultSvg(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${options.width}" height="${options.height}" viewBox="0 0 ${options.width} ${options.height}" role="graphics-document" aria-label="Dataflow graph">`,
     ARROW_DEFS,
     inner,
-    `</svg>`,
+    "</svg>",
   ].join("\n");
 }
 /**

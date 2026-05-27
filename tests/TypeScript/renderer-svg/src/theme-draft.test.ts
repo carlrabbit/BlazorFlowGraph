@@ -41,7 +41,9 @@ describe("flow graph theme drafts", () => {
     };
     const errors = validateFlowGraphThemeDraft(invalid);
     expect(errors.some((error) => error.includes(FLOW_GRAPH_THEME_DRAFT_FORMAT))).toBeTrue();
-    expect(errors.some((error) => error.includes(String(FLOW_GRAPH_THEME_DRAFT_VERSION)))).toBeTrue();
+    expect(
+      errors.some((error) => error.includes(String(FLOW_GRAPH_THEME_DRAFT_VERSION))),
+    ).toBeTrue();
   });
 });
 
