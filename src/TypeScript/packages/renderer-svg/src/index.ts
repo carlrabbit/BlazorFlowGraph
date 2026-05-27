@@ -13,8 +13,10 @@ import type {
   ViewportContext,
   VisibleGraph,
 } from "@dataflow-visualizer/runtime";
+import type { FlowGraphThemeDraft } from "./themes";
 
 export type { LayoutResult, VisibleGraph };
+export * from "./themes";
 
 export interface RenderOptions {
   readonly width: number;
@@ -917,4 +919,481 @@ function escapeXmlAttr(value: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+export type FlowGraphChangeState =
+  | "added"
+  | "changed"
+  | "removed"
+  | "moved"
+  | "relayouted"
+  | "stale";
+export type FlowGraphDiagnosticState = "warning" | "error" | "unavailable";
+
+export interface RenderVisualState {
+  readonly selectedNodeIds: ReadonlySet<string>;
+  readonly focusedNodeIds: ReadonlySet<string>;
+  readonly dimmedNodeIds: ReadonlySet<string>;
+  readonly hiddenNodeIds: ReadonlySet<string>;
+  readonly searchMatchNodeIds: ReadonlySet<string>;
+  readonly upstreamHighlightedNodeIds: ReadonlySet<string>;
+  readonly downstreamHighlightedNodeIds: ReadonlySet<string>;
+  readonly highlightedEdgeIds: ReadonlySet<string>;
+  readonly mutedEdgeIds: ReadonlySet<string>;
+  readonly nodeChangeStates: ReadonlyMap<string, FlowGraphChangeState>;
+  readonly edgeChangeStates: ReadonlyMap<string, FlowGraphChangeState>;
+  readonly nodeDiagnosticStates: ReadonlyMap<string, FlowGraphDiagnosticState>;
+  readonly nodeAnnotations: ReadonlyMap<string, string>;
+}
+
+export interface RenderVisualStateInput {
+  readonly selectedNodeIds?: readonly string[] | ReadonlySet<string>;
+  readonly focusedNodeIds?: readonly string[] | ReadonlySet<string>;
+  readonly dimmedNodeIds?: readonly string[] | ReadonlySet<string>;
+  readonly hiddenNodeIds?: readonly string[] | ReadonlySet<string>;
+  readonly searchMatchNodeIds?: readonly string[] | ReadonlySet<string>;
+  readonly upstreamHighlightedNodeIds?: readonly string[] | ReadonlySet<string>;
+  readonly downstreamHighlightedNodeIds?: readonly string[] | ReadonlySet<string>;
+  readonly highlightedEdgeIds?: readonly string[] | ReadonlySet<string>;
+  readonly mutedEdgeIds?: readonly string[] | ReadonlySet<string>;
+  readonly nodeChangeStates?:
+    | Readonly<Record<string, FlowGraphChangeState>>
+    | ReadonlyMap<string, FlowGraphChangeState>;
+  readonly edgeChangeStates?:
+    | Readonly<Record<string, FlowGraphChangeState>>
+    | ReadonlyMap<string, FlowGraphChangeState>;
+  readonly nodeDiagnosticStates?:
+    | Readonly<Record<string, FlowGraphDiagnosticState>>
+    | ReadonlyMap<string, FlowGraphDiagnosticState>;
+  readonly nodeAnnotations?: Readonly<Record<string, string>> | ReadonlyMap<string, string>;
+}
+
+export function normalizeRenderVisualState(input?: RenderVisualStateInput): RenderVisualState {
+  return {
+    selectedNodeIds: toStringSet(input?.selectedNodeIds),
+    focusedNodeIds: toStringSet(input?.focusedNodeIds),
+    dimmedNodeIds: toStringSet(input?.dimmedNodeIds),
+    hiddenNodeIds: toStringSet(input?.hiddenNodeIds),
+    searchMatchNodeIds: toStringSet(input?.searchMatchNodeIds),
+    upstreamHighlightedNodeIds: toStringSet(input?.upstreamHighlightedNodeIds),
+    downstreamHighlightedNodeIds: toStringSet(input?.downstreamHighlightedNodeIds),
+    highlightedEdgeIds: toStringSet(input?.highlightedEdgeIds),
+    mutedEdgeIds: toStringSet(input?.mutedEdgeIds),
+    nodeChangeStates: toStringMap(input?.nodeChangeStates),
+    edgeChangeStates: toStringMap(input?.edgeChangeStates),
+    nodeDiagnosticStates: toStringMap(input?.nodeDiagnosticStates),
+    nodeAnnotations: toStringMap(input?.nodeAnnotations),
+  };
+}
+
+export function createStyleTokensFromTheme(theme: FlowGraphThemeDraft): Record<string, StyleToken> {
+  const nodeToken = {
+    fill: theme.color.nodeBackground,
+    stroke: theme.color.nodeBorder,
+    strokeWidth: theme.size.nodeBorderWidth,
+    textColor: theme.color.nodeText,
+    rx: theme.size.nodeRadius,
+  } satisfies StyleToken;
+
+  return {
+    default: nodeToken,
+    service: { ...nodeToken },
+    datastore: { ...nodeToken },
+    gateway: { ...nodeToken },
+    queue: { ...nodeToken },
+    group: {
+      fill: theme.color.groupBackground,
+      stroke: theme.color.groupBorder,
+      strokeWidth: theme.size.nodeBorderWidth,
+      textColor: theme.color.groupText,
+      rx: theme.size.groupRadius,
+    },
+  };
+}
+
+export function renderThemedSvg(
+  state: GraphState,
+  layout: LayoutResult,
+  options: RenderOptions,
+  theme: FlowGraphThemeDraft,
+  visualStateInput?: RenderVisualStateInput,
+): string {
+  const width = toSafeInt(options.width);
+  const height = toSafeInt(options.height);
+  const visualState = normalizeRenderVisualState(visualStateInput);
+  const frameOptions: {
+    nodeWidth?: number;
+    nodeHeight?: number;
+  } = {};
+  if (options.nodeWidth != null) {
+    frameOptions.nodeWidth = options.nodeWidth;
+  }
+  if (options.nodeHeight != null) {
+    frameOptions.nodeHeight = options.nodeHeight;
+  }
+
+  const frame = buildRenderFrame(state, layout, frameOptions);
+
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="graphics-document" aria-label="Dataflow graph" style="background:${escapeXmlAttr(theme.color.canvasBackground)};font-family:${escapeXmlAttr(theme.typography.fontFamily)}">`,
+    buildThemedDefs(theme),
+    buildCanvasBackdrop(theme, width, height),
+    buildThemedFrameMarkup(state, frame, theme, visualState),
+    "</svg>",
+  ].join("\n");
+}
+
+function buildThemedFrameMarkup(
+  state: GraphState,
+  frame: RenderFrame,
+  theme: FlowGraphThemeDraft,
+  visualState: RenderVisualState,
+): string {
+  const styleTokens = createStyleTokensFromTheme(theme);
+  const overlayByNode = new Map<string, RenderOverlay>();
+  for (const overlay of frame.overlays) {
+    overlayByNode.set(overlay.nodeId, overlay);
+  }
+
+  const outgoingCounts = new Map<string, number>();
+  const incomingCounts = new Map<string, number>();
+  for (const edge of state.edges.values()) {
+    outgoingCounts.set(edge.sourceId, (outgoingCounts.get(edge.sourceId) ?? 0) + 1);
+    incomingCounts.set(edge.targetId, (incomingCounts.get(edge.targetId) ?? 0) + 1);
+  }
+
+  const groupElements = frame.groups.map((group) => {
+    const style = resolveStyleToken(group.kind, styleTokens);
+    return [
+      `<g class="dfv-group" data-group-id="${escapeXmlAttr(group.id)}" role="graphics-object" aria-label="${escapeXmlAttr(group.label)} group">`,
+      `  <rect x="${group.x}" y="${group.y}" width="${group.width}" height="${group.height}" rx="${style.rx}" ry="${style.rx}" fill="${escapeXmlAttr(theme.color.groupBackground)}" fill-opacity="0.45" stroke="${escapeXmlAttr(theme.color.groupBorder)}" stroke-width="1.25" stroke-dasharray="5 3"/>`,
+      `  <text x="${group.x + 12}" y="${group.y + 18}" font-size="${theme.typography.groupLabelSize}" fill="${escapeXmlAttr(theme.color.groupText)}" font-weight="600">${escapeXml(group.label)}</text>`,
+      "</g>",
+    ].join("\n");
+  });
+
+  const edgeElements = frame.edges.map((edge) => buildThemedEdgeMarkup(edge, theme, visualState));
+
+  const nodeElements = frame.nodes.map((node) => {
+    const nodeRecord = state.nodes.get(node.id);
+    const metadataText = extractNodeMetadataText(nodeRecord?.metadata);
+    const annotationText = visualState.nodeAnnotations.get(node.id);
+    const diagnosticState = visualState.nodeDiagnosticStates.get(node.id);
+    const changeState = visualState.nodeChangeStates.get(node.id);
+    const overlay = overlayByNode.get(node.id);
+    const opacity = visualState.hiddenNodeIds.has(node.id)
+      ? 0.16
+      : visualState.dimmedNodeIds.has(node.id)
+        ? 0.38
+        : 1;
+    const labelY = theme.color.nodeHeaderBackground != null ? 14 : metadataText != null ? 22 : 30;
+    const metadataY = theme.color.nodeHeaderBackground != null ? 32 : 40;
+    const outlineMarkup = buildNodeOutlineMarkup(node, theme, visualState);
+    const changeBadge =
+      changeState != null ? buildChangeBadgeMarkup(changeState, theme, node.width) : "";
+    const diagnosticBadge =
+      diagnosticState != null ? buildDiagnosticBadgeMarkup(diagnosticState, theme, node.width) : "";
+    const portMarkup = buildPortMarkup(
+      node,
+      theme,
+      (incomingCounts.get(node.id) ?? 0) > 0,
+      (outgoingCounts.get(node.id) ?? 0) > 0,
+    );
+    const annotationMarkup =
+      annotationText != null
+        ? `<text x="${Math.floor(node.width / 2)}" y="${node.height + 16}" text-anchor="middle" font-size="${theme.typography.metadataSize}" fill="${escapeXmlAttr(theme.color.nodeMutedText)}">${escapeXml(annotationText)}</text>`
+        : "";
+    const overlayMarkup =
+      overlay != null ? buildOverlayMarkup(overlay, node.width, node.height) : "";
+    const style = resolveStyleToken(node.kind, styleTokens);
+    const headerHeight = theme.color.nodeHeaderBackground != null ? 18 : 0;
+    const headerMarkup =
+      theme.color.nodeHeaderBackground != null
+        ? `<rect width="${node.width}" height="${headerHeight}" rx="${style.rx}" ry="${style.rx}" fill="${escapeXmlAttr(theme.color.nodeHeaderBackground)}" opacity="0.92"/>`
+        : "";
+    const metadataMarkup =
+      metadataText != null
+        ? `<text x="${Math.floor(node.width / 2)}" y="${metadataY}" text-anchor="middle" font-size="${theme.typography.metadataSize}" fill="${escapeXmlAttr(theme.color.nodeMutedText)}">${escapeXml(metadataText)}</text>`
+        : "";
+    return [
+      `<g class="dfv-node" data-node-id="${escapeXmlAttr(node.id)}" data-kind="${escapeXmlAttr(node.kind)}" transform="translate(${node.x},${node.y})" role="graphics-symbol" aria-label="${escapeXmlAttr(node.label)}" opacity="${opacity}">`,
+      outlineMarkup,
+      `  <rect width="${node.width}" height="${node.height}" rx="${style.rx}" ry="${style.rx}" fill="${escapeXmlAttr(theme.color.nodeBackground)}" stroke="${escapeXmlAttr(theme.color.nodeBorder)}" stroke-width="${theme.size.nodeBorderWidth}"/>`,
+      headerMarkup,
+      `  <text x="${Math.floor(node.width / 2)}" y="${labelY}" text-anchor="middle" font-size="${theme.typography.labelSize}" font-weight="600" fill="${escapeXmlAttr(theme.color.nodeText)}">${escapeXml(node.label)}</text>`,
+      metadataMarkup,
+      portMarkup,
+      changeBadge,
+      diagnosticBadge,
+      overlayMarkup,
+      annotationMarkup,
+      "</g>",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  });
+
+  return [...groupElements, ...edgeElements, ...nodeElements].filter(Boolean).join("\n");
+}
+
+function buildThemedEdgeMarkup(
+  edge: RenderEdge,
+  theme: FlowGraphThemeDraft,
+  visualState: RenderVisualState,
+): string {
+  const section = edge.sections[0];
+  if (section == null) return "";
+  const changeState = visualState.edgeChangeStates.get(edge.id);
+  const color =
+    changeState != null
+      ? resolveChangeColor(changeState, theme)
+      : visualState.highlightedEdgeIds.has(edge.id)
+        ? theme.color.edgeHighlighted
+        : visualState.mutedEdgeIds.has(edge.id)
+          ? theme.color.edgeMuted
+          : theme.color.edgeDefault;
+  const markerId = resolveEdgeMarkerId(
+    changeState,
+    visualState.highlightedEdgeIds.has(edge.id),
+    visualState.mutedEdgeIds.has(edge.id),
+  );
+  const strokeWidth =
+    changeState != null || visualState.highlightedEdgeIds.has(edge.id)
+      ? theme.size.selectedEdgeWidth
+      : theme.size.edgeWidth;
+  const dashArray =
+    changeState === "removed"
+      ? "6 4"
+      : changeState === "stale"
+        ? "2 5"
+        : changeState === "moved" || changeState === "relayouted"
+          ? "10 4"
+          : undefined;
+  const x1 = Math.floor(section.startPoint.x);
+  const y1 = Math.floor(section.startPoint.y);
+  const x2 = Math.floor(section.endPoint.x);
+  const y2 = Math.floor(section.endPoint.y);
+  const labelX = Math.floor((x1 + x2) / 2);
+  const labelY = Math.floor((y1 + y2) / 2) - 4;
+  return [
+    `<g class="dfv-edge" data-edge-id="${escapeXmlAttr(edge.id)}" role="graphics-symbol" aria-label="${edge.label != null ? escapeXmlAttr(edge.label) : "edge"}" opacity="${visualState.mutedEdgeIds.has(edge.id) ? "0.58" : "1"}">`,
+    `  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${escapeXmlAttr(color)}" stroke-width="${strokeWidth}"${dashArray != null ? ` stroke-dasharray="${dashArray}"` : ""} marker-end="url(#${markerId})"/>`,
+    edge.label != null
+      ? `  <text x="${labelX}" y="${labelY}" text-anchor="middle" font-size="10" fill="${escapeXmlAttr(theme.color.nodeMutedText)}">${escapeXml(edge.label)}</text>`
+      : "",
+    "</g>",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function buildNodeOutlineMarkup(
+  node: RenderNode,
+  theme: FlowGraphThemeDraft,
+  visualState: RenderVisualState,
+): string {
+  const outlines: string[] = [];
+
+  if (visualState.selectedNodeIds.has(node.id)) {
+    outlines.push(
+      `<rect x="-4" y="-4" width="${node.width + 8}" height="${node.height + 8}" rx="${theme.size.nodeRadius + 3}" ry="${theme.size.nodeRadius + 3}" fill="none" stroke="${escapeXmlAttr(theme.color.selection)}" stroke-width="3"/>`,
+    );
+  }
+
+  if (visualState.focusedNodeIds.has(node.id)) {
+    outlines.push(
+      `<rect x="-8" y="-8" width="${node.width + 16}" height="${node.height + 16}" rx="${theme.size.nodeRadius + 5}" ry="${theme.size.nodeRadius + 5}" fill="none" stroke="${escapeXmlAttr(theme.color.focus)}" stroke-width="2" stroke-dasharray="6 4"/>`,
+    );
+  }
+
+  if (visualState.searchMatchNodeIds.has(node.id)) {
+    outlines.push(
+      `<rect x="4" y="${node.height - 8}" width="${Math.max(20, node.width - 8)}" height="4" rx="2" ry="2" fill="${escapeXmlAttr(theme.color.searchMatch)}"/>`,
+    );
+  }
+
+  if (visualState.upstreamHighlightedNodeIds.has(node.id)) {
+    outlines.push(
+      `<rect x="-10" y="6" width="4" height="${Math.max(10, node.height - 12)}" rx="2" ry="2" fill="${escapeXmlAttr(theme.color.edgeHighlighted)}" opacity="0.9"/>`,
+    );
+  }
+
+  if (visualState.downstreamHighlightedNodeIds.has(node.id)) {
+    outlines.push(
+      `<rect x="${node.width + 6}" y="6" width="4" height="${Math.max(10, node.height - 12)}" rx="2" ry="2" fill="${escapeXmlAttr(theme.color.edgeHighlighted)}" opacity="0.9"/>`,
+    );
+  }
+
+  return outlines.join("\n");
+}
+
+function buildChangeBadgeMarkup(
+  changeState: FlowGraphChangeState,
+  theme: FlowGraphThemeDraft,
+  _nodeWidth: number,
+): string {
+  const color = resolveChangeColor(changeState, theme);
+  return [
+    `<g class="dfv-change-badge">`,
+    `  <rect x="8" y="-12" width="46" height="18" rx="9" ry="9" fill="${escapeXmlAttr(color)}"/>`,
+    `  <text x="31" y="0" text-anchor="middle" font-size="9" font-weight="700" fill="#ffffff">${escapeXml(changeStateToLabel(changeState))}</text>`,
+    "</g>",
+  ].join("\n");
+}
+
+function buildDiagnosticBadgeMarkup(
+  diagnosticState: FlowGraphDiagnosticState,
+  theme: FlowGraphThemeDraft,
+  nodeWidth: number,
+): string {
+  const color =
+    diagnosticState === "warning"
+      ? theme.color.stateWarning
+      : diagnosticState === "error"
+        ? theme.color.stateError
+        : theme.color.stateStale;
+  return [
+    `<g class="dfv-diagnostic-badge">`,
+    `  <circle cx="${nodeWidth - 12}" cy="-2" r="10" fill="${escapeXmlAttr(color)}" stroke="#ffffff" stroke-width="1.5"/>`,
+    `  <text x="${nodeWidth - 12}" y="2" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">${escapeXml(diagnosticState === "warning" ? "!" : diagnosticState === "error" ? "×" : "?")}</text>`,
+    "</g>",
+  ].join("\n");
+}
+
+function buildPortMarkup(
+  node: RenderNode,
+  theme: FlowGraphThemeDraft,
+  hasIncoming: boolean,
+  hasOutgoing: boolean,
+): string {
+  const ports: string[] = [];
+  const centerY = Math.floor(node.height / 2);
+  if (hasIncoming) {
+    ports.push(
+      `<circle cx="0" cy="${centerY}" r="${theme.size.portRadius}" fill="${escapeXmlAttr(theme.color.portFill)}" stroke="${escapeXmlAttr(theme.color.portBorder)}" stroke-width="1.5"/>`,
+    );
+  }
+  if (hasOutgoing) {
+    ports.push(
+      `<circle cx="${node.width}" cy="${centerY}" r="${theme.size.portRadius}" fill="${escapeXmlAttr(theme.color.portFill)}" stroke="${escapeXmlAttr(theme.color.portBorder)}" stroke-width="1.5"/>`,
+    );
+  }
+  return ports.join("\n");
+}
+
+function buildCanvasBackdrop(theme: FlowGraphThemeDraft, width: number, height: number): string {
+  return [
+    `<rect width="${width}" height="${height}" fill="${escapeXmlAttr(theme.color.canvasBackground)}"/>`,
+    theme.color.canvasGrid != null
+      ? `<rect width="${width}" height="${height}" fill="url(#dfv-grid)" opacity="0.8"/>`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function buildThemedDefs(theme: FlowGraphThemeDraft): string {
+  const gridPattern =
+    theme.color.canvasGrid != null
+      ? [
+          `  <pattern id="dfv-grid" width="20" height="20" patternUnits="userSpaceOnUse">`,
+          `    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="${escapeXmlAttr(theme.color.canvasGrid)}" stroke-width="1"/>`,
+          "  </pattern>",
+        ].join("\n")
+      : "";
+  return [
+    "<defs>",
+    gridPattern,
+    buildArrowMarkerDefinition("dfv-arrow-default", theme.color.edgeDefault),
+    buildArrowMarkerDefinition("dfv-arrow-highlight", theme.color.edgeHighlighted),
+    buildArrowMarkerDefinition("dfv-arrow-muted", theme.color.edgeMuted),
+    buildArrowMarkerDefinition("dfv-arrow-changed", theme.color.stateChanged),
+    buildArrowMarkerDefinition("dfv-arrow-removed", theme.color.stateRemoved),
+    buildArrowMarkerDefinition("dfv-arrow-stale", theme.color.stateStale),
+    "</defs>",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function buildArrowMarkerDefinition(id: string, fill: string): string {
+  return [
+    `  <marker id="${id}" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">`,
+    `    <path d="M0,0 L0,6 L8,3 z" fill="${escapeXmlAttr(fill)}"/>`,
+    "  </marker>",
+  ].join("\n");
+}
+
+function resolveEdgeMarkerId(
+  changeState: FlowGraphChangeState | undefined,
+  highlighted: boolean,
+  muted: boolean,
+): string {
+  if (changeState === "changed") return "dfv-arrow-changed";
+  if (changeState === "removed") return "dfv-arrow-removed";
+  if (changeState === "stale") return "dfv-arrow-stale";
+  if (highlighted) return "dfv-arrow-highlight";
+  if (muted) return "dfv-arrow-muted";
+  return "dfv-arrow-default";
+}
+
+function resolveChangeColor(changeState: FlowGraphChangeState, theme: FlowGraphThemeDraft): string {
+  switch (changeState) {
+    case "added":
+      return theme.color.stateAdded;
+    case "changed":
+    case "moved":
+    case "relayouted":
+      return theme.color.stateChanged;
+    case "removed":
+      return theme.color.stateRemoved;
+    case "stale":
+      return theme.color.stateStale;
+  }
+}
+
+function changeStateToLabel(changeState: FlowGraphChangeState): string {
+  switch (changeState) {
+    case "added":
+      return "ADDED";
+    case "changed":
+      return "CHG";
+    case "removed":
+      return "REM";
+    case "moved":
+      return "MOVE";
+    case "relayouted":
+      return "LAYOUT";
+    case "stale":
+      return "STALE";
+  }
+}
+
+function extractNodeMetadataText(
+  metadata: Readonly<Record<string, unknown>> | undefined,
+): string | undefined {
+  if (metadata == null) return undefined;
+  const candidateKeys = ["subtitle", "summary", "role", "status"] as const;
+  for (const key of candidateKeys) {
+    const value = metadata[key];
+    if (typeof value === "string" && value.length > 0) {
+      return value;
+    }
+  }
+  return undefined;
+}
+
+function toStringSet(
+  value: readonly string[] | ReadonlySet<string> | undefined,
+): ReadonlySet<string> {
+  if (value == null) return new Set<string>();
+  return value instanceof Set ? value : new Set(value);
+}
+
+function toStringMap<T extends string>(
+  value: Readonly<Record<string, T>> | ReadonlyMap<string, T> | undefined,
+): ReadonlyMap<string, T> {
+  if (value == null) return new Map<string, T>();
+  if (value instanceof Map) return value;
+  return new Map(Object.entries(value));
 }

@@ -20,6 +20,7 @@ Decision records are not authoritative for:
 | [`decisions/0002-elk-layout.md`](decisions/0002-elk-layout.md) | Accepted | Records the ELK-backed layout provider decision |
 | [`decisions/0003-diff-protocol.md`](decisions/0003-diff-protocol.md) | Accepted | Records the diff-based synchronization decision |
 | [`decisions/0004-renderer-backend.md`](decisions/0004-renderer-backend.md) | Accepted | Records the renderer backend abstraction decision |
+| [`decisions/0005-default-diagram-visual-direction.md`](decisions/0005-default-diagram-visual-direction.md) | Accepted | Records the calm technical dataflow visual direction decision |
 
 ## Authority
 

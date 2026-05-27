@@ -18,6 +18,10 @@ describe("registerGlobals", () => {
       expect((windowObject as unknown as Record<string, unknown>).DataflowVisualizer).toMatchObject(
         {
           version,
+          renderSnapshotToSvg: expect.any(Function),
+          getBuiltInThemes: expect.any(Function),
+          importThemeDraftJson: expect.any(Function),
+          exportThemeDraftJson: expect.any(Function),
         },
       );
     } finally {

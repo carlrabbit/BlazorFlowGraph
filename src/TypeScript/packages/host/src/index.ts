@@ -5,7 +5,17 @@
 import { bridge } from "@dataflow-visualizer/interop";
 import { computeLayout } from "@dataflow-visualizer/layout";
 import type { GraphSnapshot } from "@dataflow-visualizer/protocol";
-import { renderInnerSvg } from "@dataflow-visualizer/renderer-svg";
+import {
+  type FlowGraphThemeDraft,
+  type RenderVisualStateInput,
+  getBuiltInFlowGraphThemes,
+  parseFlowGraphThemeDraftJson,
+  renderInnerSvg,
+  renderThemedSvg,
+  serializeFlowGraphThemeDraft,
+  validateFlowGraphThemeDraft,
+} from "@dataflow-visualizer/renderer-svg";
+import { applySnapshot } from "@dataflow-visualizer/runtime";
 
 declare const __BLAZORFLOWGRAPH_VERSION__: string;
 
@@ -52,6 +62,64 @@ const ARROW_DEFS = `<defs>
   </marker>
 </defs>`;
 
+export interface StaticSvgRenderOptions {
+  readonly width: number;
+  readonly height: number;
+  readonly nodeWidth?: number;
+  readonly nodeHeight?: number;
+  readonly theme?: FlowGraphThemeDraft;
+  readonly visualState?: RenderVisualStateInput;
+}
+
+export function renderSnapshotToSvg(
+  snapshot: GraphSnapshot,
+  options: StaticSvgRenderOptions,
+): string {
+  const state = applySnapshot(snapshot);
+  const layoutOptions: {
+    nodeWidth?: number;
+    nodeHeight?: number;
+  } = {};
+  if (options.nodeWidth != null) {
+    layoutOptions.nodeWidth = options.nodeWidth;
+  }
+  if (options.nodeHeight != null) {
+    layoutOptions.nodeHeight = options.nodeHeight;
+  }
+
+  const layout = computeLayout(snapshot, layoutOptions);
+
+  if (options.theme != null) {
+    return renderThemedSvg(state, layout, options, options.theme, options.visualState);
+  }
+
+  return renderToDefaultSvg(state, layout, options);
+}
+
+function renderToDefaultSvg(
+  state: ReturnType<typeof applySnapshot>,
+  layout: ReturnType<typeof computeLayout>,
+  options: StaticSvgRenderOptions,
+): string {
+  const renderOptions: {
+    nodeWidth?: number;
+    nodeHeight?: number;
+  } = {};
+  if (options.nodeWidth != null) {
+    renderOptions.nodeWidth = options.nodeWidth;
+  }
+  if (options.nodeHeight != null) {
+    renderOptions.nodeHeight = options.nodeHeight;
+  }
+
+  const inner = renderInnerSvg(state, layout, renderOptions);
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${options.width}" height="${options.height}" viewBox="0 0 ${options.width} ${options.height}" role="graphics-document" aria-label="Dataflow graph">`,
+    ARROW_DEFS,
+    inner,
+    "</svg>",
+  ].join("\n");
+}
 /**
  * Bootstraps the dataflow visualizer into the specified container.
  * Returns an object exposing viewport controls and an unmount function.
@@ -286,6 +354,11 @@ export function registerGlobals(): void {
     version,
     receiveSnapshot: (snapshot: GraphSnapshot) => bridge.receiveSnapshot(snapshot),
     receiveDiff: bridge.receiveDiff.bind(bridge),
+    renderSnapshotToSvg,
+    getBuiltInThemes: () => getBuiltInFlowGraphThemes(),
+    validateThemeDraft: (theme: unknown) => validateFlowGraphThemeDraft(theme),
+    importThemeDraftJson: (json: string) => parseFlowGraphThemeDraftJson(json),
+    exportThemeDraftJson: (theme: FlowGraphThemeDraft) => serializeFlowGraphThemeDraft(theme),
     mount: (opts: HostOptions) => {
       const instance = mount(opts);
       mountedInstances.set(opts.container, instance);
