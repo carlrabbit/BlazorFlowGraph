@@ -1,32 +1,18 @@
-# Milestone: Default Visual Identity Iteration Tool
-
-## Status
-
-Draft milestone.
-
-## Repository Path
-
-Intended repository path after upload:
-
-```text
-docs/milestones/milestone-009-visual-identity-iteration-tool.md
-```
-
-## Purpose
+# Goal
 
 Create the first implementation slice for designing the default visual identity of BlazorFlowGraph diagrams.
 
-The goal of this milestone is not to finalize the visual design. The goal is to create a practical, interactive tool that allows the project owner and AI agents to iterate on the diagram visual identity using concrete representative scenarios, editable design tokens, and import/exportable theme data.
+This milestone does not finalize the production visual design. It creates a practical iteration tool so the project owner and AI agents can evaluate representative diagram scenarios using editable design tokens and importable/exportable theme drafts. The milestone is complete when visual identity work can continue from explicit artifacts instead of hidden assumptions.
 
-This milestone should produce enough infrastructure to make future visual identity decisions empirical rather than abstract.
+# Scope
 
-## Background
+- define an initial renderer-facing visual role and design-token model for diagram themes
+- create an interactive sample that renders representative visual scenarios on one page
+- support built-in draft themes, token editing, JSON import, and JSON export for theme iteration
+- keep theme behavior close to the real renderer so iteration findings are meaningful
+- document the milestone, the milestone index, and any directly affected spec, decision, or engineering documents
 
-BlazorFlowGraph is intended to visualize dataflow-like systems. The default visual identity should support comprehension of dataflow structure, incremental updates, selection, grouping, search, and semantic annotations. It should not drift into an overly decorative graph style, a dashboard aesthetic, or a generic node editor identity.
-
-The visual identity should be treated as a first-class project concern. It should be described through semantic visual roles and design tokens rather than scattered renderer constants or arbitrary CSS.
-
-The renderer should own browser-side visual behavior. The Blazor side should continue to provide semantic graph state, selection state, annotation state, and update/change state.
+BlazorFlowGraph is intended to visualize dataflow-like systems. The default visual identity should support comprehension of dataflow structure, incremental updates, selection, grouping, search, and semantic annotations without drifting into decorative graph, dashboard, or node-editor styling.
 
 ## Required Reading
 
@@ -47,53 +33,9 @@ Before implementation, read:
 - `docs/research/project-setup-guide-v5.md`
 - `docs/research/engineering-guide-v4.md`
 
-## Authority
-
-This milestone is authoritative for:
-
-- the implementation scope of the initial visual identity iteration tool;
-- the required representative visual scenarios for this milestone;
-- the initial theme import/export capability required for design iteration;
-- the expected milestone acceptance criteria.
-
-This milestone is not authoritative for:
-
-- the final default visual identity;
-- final public theming API compatibility;
-- final renderer architecture;
-- final design token naming if a later specification supersedes it;
-- public documentation structure beyond this milestone's direct impact.
-
-## Milestone Goal
-
-Create an interactive sample that displays representative diagram scenarios on one page and allows users to:
-
-- inspect the current theme;
-- switch between built-in themes;
-- edit visual design tokens;
-- import a theme from a simple intermediate format;
-- export the current theme to the same simple intermediate format;
-- use the exported theme as input for later design discussions and implementation iterations.
-
-The milestone is complete when the project has a working design iteration tool and enough supporting documentation to continue visual identity work without relying on hidden assumptions.
-
-## Non-Goals
-
-This milestone must not attempt to:
-
-- finalize the default production theme;
-- create a full theme marketplace or plugin system;
-- build a general-purpose diagram editor;
-- persist themes to a server;
-- create user accounts or cloud synchronization;
-- implement every future renderer feature;
-- implement a complete accessibility certification process;
-- introduce a large frontend framework solely for this tool;
-- turn samples into production application architecture.
-
 ## Design Direction
 
-The initial design direction is:
+Initial design direction:
 
 ```text
 Calm technical dataflow diagrams optimized for incremental comprehension.
@@ -101,113 +43,93 @@ Calm technical dataflow diagrams optimized for incremental comprehension.
 
 This means:
 
-- diagrams should feel like interactive technical documentation;
-- the visual hierarchy should favor graph comprehension over decoration;
-- nodes should be easier to read than edges;
-- edges should communicate flow without dominating the canvas;
-- color should primarily encode semantic state and interaction state;
-- animation should explain incremental changes, not decorate the UI;
-- the default identity should remain usable in dense diagrams and during update transitions.
+- diagrams should feel like interactive technical documentation
+- the visual hierarchy should favor graph comprehension over decoration
+- nodes should be easier to read than edges
+- edges should communicate flow without dominating the canvas
+- color should primarily encode semantic state and interaction state
+- animation should explain incremental changes instead of decorating the UI
+- the default identity should remain usable in dense diagrams and during update transitions
 
 Avoid:
 
-- neon graph styles;
-- excessive gradients;
-- heavy shadows;
-- animated edge particles;
-- dashboard-like visual noise;
-- large decorative icon sets;
-- arbitrary category coloring without semantic purpose;
-- visual language that implies a node editor when the primary goal is visualization.
+- neon graph styles
+- excessive gradients
+- heavy shadows
+- animated edge particles
+- dashboard-like visual noise
+- large decorative icon sets
+- arbitrary category coloring without semantic purpose
+- visual language that implies a node editor when the primary goal is visualization
 
 ## Conceptual Model
 
-The implementation should separate the following concerns.
+The implementation should separate the semantic graph model from renderer-owned presentation details.
 
 ### Semantic Graph Model
 
-The graph data describes domain structure and semantic state.
-
-Examples:
-
-- nodes;
-- edges;
-- groups;
-- ports;
-- labels;
-- annotations;
-- selection;
-- search results;
-- change sets;
-- warnings;
-- errors.
-
-The semantic graph model should not encode presentation details such as exact colors, shadows, font sizes, or animation durations unless there is an explicitly documented reason.
+Semantic graph data describes domain structure and semantic state, including nodes, edges, groups, ports, labels, annotations, selection, search results, change sets, warnings, and errors. It should not encode exact colors, shadows, font sizes, or animation timings unless that behavior is explicitly documented elsewhere.
 
 ### Visual Roles
 
-Visual roles are renderer-facing categories that map semantic graph data to appearance.
-
 Required initial visual roles:
 
-- canvas;
-- node;
-- node header;
-- node body;
-- node metadata;
-- port;
-- edge;
-- edge label;
-- group;
-- group label;
-- annotation;
-- minimap or overview placeholder, if already present;
-- selection outline;
-- focus outline;
-- search highlight;
-- change marker.
+- canvas
+- node
+- node header
+- node body
+- node metadata
+- port
+- edge
+- edge label
+- group
+- group label
+- annotation
+- minimap or overview placeholder, if already present
+- selection outline
+- focus outline
+- search highlight
+- change marker
 
 ### Interaction States
 
 Required initial interaction states:
 
-- default;
-- hovered;
-- selected;
-- focused;
-- dimmed;
-- hidden by filter;
-- search match;
-- upstream highlighted;
-- downstream highlighted.
+- default
+- hovered
+- selected
+- focused
+- dimmed
+- hidden by filter
+- search match
+- upstream highlighted
+- downstream highlighted
 
 ### Change States
 
 Required initial change states:
 
-- added;
-- changed;
-- removed;
-- moved;
-- relayouted;
-- stale.
+- added
+- changed
+- removed
+- moved
+- relayouted
+- stale
 
 ### Diagnostic States
 
 Required initial diagnostic states:
 
-- normal;
-- warning;
-- error;
-- unavailable or unresolved.
+- normal
+- warning
+- error
+- unavailable or unresolved
 
 ## Theme Token Model
 
-The milestone should introduce an initial design token model for diagram themes.
+Introduce an initial design-token model for diagram themes. The model should stay simple enough to edit manually, import, export, diff, and discuss in issues or chat. It does not need to be the final public API.
 
-The token model should be simple enough to edit manually, import, export, diff, and discuss in issues or chat. It does not need to be the final public API.
-
-The implementation should define a TypeScript representation similar to the following shape, adapted to the actual project conventions:
+The implementation should define a TypeScript representation similar to the following shape, adapted to repository conventions:
 
 ```ts
 export interface FlowGraphThemeDraft {
@@ -217,32 +139,25 @@ export interface FlowGraphThemeDraft {
     name: string;
     description?: string;
   };
-
   color: {
     canvasBackground: string;
     canvasGrid?: string;
-
     nodeBackground: string;
     nodeBorder: string;
     nodeText: string;
     nodeMutedText: string;
     nodeHeaderBackground?: string;
-
     groupBackground: string;
     groupBorder: string;
     groupText: string;
-
     portFill: string;
     portBorder: string;
-
     edgeDefault: string;
     edgeHighlighted: string;
     edgeMuted: string;
-
     selection: string;
     focus: string;
     searchMatch: string;
-
     stateAdded: string;
     stateChanged: string;
     stateRemoved: string;
@@ -250,7 +165,6 @@ export interface FlowGraphThemeDraft {
     stateError: string;
     stateStale: string;
   };
-
   size: {
     nodeRadius: number;
     nodeBorderWidth: number;
@@ -262,7 +176,6 @@ export interface FlowGraphThemeDraft {
     groupRadius: number;
     hitAreaPadding: number;
   };
-
   typography: {
     fontFamily: string;
     monoFontFamily: string;
@@ -270,7 +183,6 @@ export interface FlowGraphThemeDraft {
     metadataSize: number;
     groupLabelSize: number;
   };
-
   motion: {
     updateDurationMs: number;
     selectionDurationMs: number;
@@ -279,255 +191,74 @@ export interface FlowGraphThemeDraft {
 }
 ```
 
-The implementation may reduce or extend this model if necessary, but changes should be documented.
+The implementation may reduce or extend this model if necessary, but any changes should be documented.
 
 ## Intermediate Theme Format
 
-The import/export format should be plain JSON.
+Import and export should use plain JSON with:
 
-Required properties:
+- a format marker
+- a version number
+- a theme name
+- color tokens
+- size tokens
+- typography tokens
+- motion tokens
 
-- format marker;
-- version number;
-- theme name;
-- color tokens;
-- size tokens;
-- typography tokens;
-- motion tokens.
-
-The exported JSON should be stable enough to:
-
-- paste into an issue;
-- commit as a draft file;
-- compare in a normal text diff;
-- re-import without loss of supported token values.
-
-Example:
-
-```json
-{
-  "metadata": {
-    "format": "blazor-flow-graph-theme-draft",
-    "version": 1,
-    "name": "Default Light Draft",
-    "description": "Initial calm technical light theme draft."
-  },
-  "color": {
-    "canvasBackground": "#f8fafc",
-    "canvasGrid": "#e2e8f0",
-    "nodeBackground": "#ffffff",
-    "nodeBorder": "#cbd5e1",
-    "nodeText": "#0f172a",
-    "nodeMutedText": "#64748b",
-    "groupBackground": "#f1f5f9",
-    "groupBorder": "#cbd5e1",
-    "groupText": "#334155",
-    "portFill": "#ffffff",
-    "portBorder": "#64748b",
-    "edgeDefault": "#94a3b8",
-    "edgeHighlighted": "#2563eb",
-    "edgeMuted": "#cbd5e1",
-    "selection": "#2563eb",
-    "focus": "#0f766e",
-    "searchMatch": "#f59e0b",
-    "stateAdded": "#16a34a",
-    "stateChanged": "#2563eb",
-    "stateRemoved": "#dc2626",
-    "stateWarning": "#d97706",
-    "stateError": "#dc2626",
-    "stateStale": "#64748b"
-  },
-  "size": {
-    "nodeRadius": 8,
-    "nodeBorderWidth": 1,
-    "nodePaddingX": 12,
-    "nodePaddingY": 8,
-    "portRadius": 4,
-    "edgeWidth": 1.5,
-    "selectedEdgeWidth": 2.5,
-    "groupRadius": 12,
-    "hitAreaPadding": 6
-  },
-  "typography": {
-    "fontFamily": "system-ui, sans-serif",
-    "monoFontFamily": "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
-    "labelSize": 13,
-    "metadataSize": 11,
-    "groupLabelSize": 12
-  },
-  "motion": {
-    "updateDurationMs": 160,
-    "selectionDurationMs": 100,
-    "reduceMotion": false
-  }
-}
-```
+The exported JSON should be stable enough to paste into issues, commit as a draft artifact, compare in a normal text diff, and re-import without losing supported values.
 
 ## Built-In Draft Themes
 
-The sample should include at least these built-in themes:
+The sample should include at least:
 
-- default light draft;
-- default dark draft;
-- high contrast draft.
+- default light draft
+- default dark draft
+- high-contrast draft
 
-The light theme is the primary identity draft. The dark and high-contrast themes are variants used to test whether the token model is robust.
-
-The built-in themes are not final design decisions.
+The light theme is the primary identity draft. The dark and high-contrast themes exist to test token-model robustness rather than to declare final design decisions.
 
 ## Interactive Sample Requirements
 
-Create an interactive sample page dedicated to visual identity iteration.
+Create an interactive sample page dedicated to visual identity iteration. It should provide:
 
-The sample should provide:
+- a theme switcher for built-in draft themes
+- token editing controls
+- import from JSON
+- export to JSON
+- validation feedback for imported JSON
+- reset to the selected built-in theme
+- all representative design scenarios visible on one page as separate diagrams
+- enough layout structure to compare scenarios without page-to-page navigation
 
-- a theme switcher for built-in draft themes;
-- token editing controls;
-- import from JSON;
-- export to JSON;
-- validation feedback for imported JSON;
-- reset to selected built-in theme;
-- all representative design scenarios visible on one page as separate diagrams;
-- enough layout structure to compare scenarios without navigating between pages.
-
-The sample may be implemented as a Blazor sample, a TypeScript/browser sample, or another repository-appropriate sample form, but it must respect the project architecture and engineering guide.
-
-If TypeScript is used, it should remain scoped and should not introduce a heavy frontend stack beyond the repository's chosen tooling.
+The sample may be implemented as a Blazor sample, a TypeScript/browser sample, or another repository-appropriate sample form, but it must respect the current architecture and engineering command contract.
 
 ## Representative Design Scenarios
 
-The sample page must include separate diagrams for the following scenarios.
+The sample page must include separate diagrams for the following scenarios:
 
-### 1. Small Linear Dataflow
-
-Purpose:
-
-- validate baseline node, edge, label, and spacing decisions;
-- verify that simple diagrams look calm and readable.
-
-Minimum content:
-
-- three to five nodes;
-- directed edges;
-- readable labels;
-- one metadata field or annotation.
-
-### 2. Branching Dataflow
-
-Purpose:
-
-- validate edge routing, fan-out, fan-in, and visual balance.
-
-Minimum content:
-
-- one source node;
-- at least two branches;
-- one merge or sink node;
-- at least one highlighted path.
-
-### 3. Grouped Subsystem
-
-Purpose:
-
-- validate group background, group borders, labels, and hierarchy.
-
-Minimum content:
-
-- one group containing multiple nodes;
-- at least one edge crossing the group boundary;
-- group label;
-- nested metadata or group annotation if supported.
-
-### 4. Dense Graph With Search Result
-
-Purpose:
-
-- validate dimming, search highlight, label legibility, and clutter behavior.
-
-Minimum content:
-
-- enough nodes and edges to create moderate density;
-- one or more search matches;
-- non-matching content visibly de-emphasized but still understandable.
-
-### 5. Selected Node With Upstream/Downstream Highlighting
-
-Purpose:
-
-- validate selection outlines and dependency context.
-
-Minimum content:
-
-- one selected node;
-- upstream path highlight;
-- downstream path highlight;
-- unrelated nodes dimmed or left neutral according to the current token design.
-
-### 6. Incremental Update State
-
-Purpose:
-
-- validate added, changed, removed, moved, stale, and relayouted visual states.
-
-Minimum content:
-
-- at least one added node;
-- at least one changed node;
-- at least one removed or disappearing node representation;
-- at least one changed edge;
-- optional animation or static markers if animation is not yet available.
-
-### 7. Warning And Error Annotations
-
-Purpose:
-
-- validate diagnostic color usage and annotation prominence.
-
-Minimum content:
-
-- at least one warning state;
-- at least one error state;
-- annotation text or icon placeholder;
-- enough surrounding normal content to compare visual weight.
-
-### 8. Dark Mode Rendering
-
-Purpose:
-
-- validate the token model and contrast behavior for dark surfaces.
-
-Minimum content:
-
-- either a dedicated dark-mode scenario or the same scenarios rendered under the dark draft theme;
-- no hard-coded light-theme assumptions.
-
-### 9. High Contrast Rendering
-
-Purpose:
-
-- validate accessibility-oriented token coverage.
-
-Minimum content:
-
-- at least one scenario rendered under the high-contrast draft theme;
-- visible focus and selection indicators;
-- warning and error states distinguishable beyond subtle hue differences where practical.
+1. **Small linear dataflow** — validate baseline node, edge, label, and spacing decisions with three to five nodes, directed edges, readable labels, and one metadata field or annotation.
+2. **Branching dataflow** — validate edge routing, fan-out, fan-in, and visual balance with one source node, at least two branches, one merge or sink node, and at least one highlighted path.
+3. **Grouped subsystem** — validate group background, borders, labels, and hierarchy with one group containing multiple nodes, at least one edge crossing the group boundary, and a visible group label.
+4. **Dense graph with search result** — validate dimming, search highlight, label legibility, and clutter behavior with enough nodes and edges to create moderate density plus visible search matches.
+5. **Selected node with upstream/downstream highlighting** — validate selection outlines and dependency context with one selected node and clear upstream and downstream path emphasis.
+6. **Incremental update state** — validate added, changed, removed, moved, stale, and relayouted states with at least one example of each practical state.
+7. **Warning and error annotations** — validate diagnostic color usage and annotation prominence with warning and error states shown alongside normal content.
+8. **Dark mode rendering** — validate dark-surface token behavior without hard-coded light-theme assumptions.
+9. **High-contrast rendering** — validate accessibility-oriented token coverage, visible focus and selection indicators, and distinguishable warning and error states.
 
 ## Editing Experience
 
-The token editor should be simple and robust.
+The token editor should stay simple and robust. Required behavior:
 
-Required behavior:
-
-- edit color tokens as text values at minimum;
-- edit numeric size tokens;
-- edit typography tokens as text or select inputs;
-- edit motion duration tokens;
-- toggle reduced motion;
-- validate obvious malformed JSON on import;
-- reject unsupported format markers or unsupported versions;
-- preserve unknown future fields only if explicitly implemented and documented;
-- display current theme name.
+- edit color tokens as text values at minimum
+- edit numeric size tokens
+- edit typography tokens as text or select inputs
+- edit motion duration tokens
+- toggle reduced motion
+- validate malformed JSON on import
+- reject unsupported format markers or versions
+- preserve unknown future fields only if that behavior is explicitly implemented and documented
+- display the current theme name
 
 The UI does not need to be polished. It must be useful for iteration.
 
@@ -535,51 +266,46 @@ The UI does not need to be polished. It must be useful for iteration.
 
 Import should:
 
-- accept JSON text;
-- parse the JSON;
-- validate the format marker;
-- validate the version;
-- validate required sections;
-- validate required token types at a basic level;
-- apply the imported theme to all scenarios if valid;
-- show a clear error if invalid.
+- accept JSON text
+- parse the JSON
+- validate the format marker and version
+- validate required sections and basic token types
+- apply the imported theme to all scenarios when valid
+- show a clear error when invalid
 
 ## Export Behavior
 
 Export should:
 
-- serialize the currently active theme as JSON;
-- include metadata;
-- include all supported token groups;
-- produce stable formatting with predictable indentation;
-- allow copy/paste from the sample UI.
+- serialize the currently active theme as JSON
+- include metadata and all supported token groups
+- produce stable formatting with predictable indentation
+- allow copy/paste from the sample UI
 
-A direct file download is optional. Copyable JSON is sufficient for this milestone.
+Direct file download is optional. Copyable JSON is sufficient for this milestone.
 
 ## Renderer Integration Expectations
 
-The implementation should avoid scattering theme constants through rendering code.
+Avoid scattering theme constants through rendering code. Expected structure:
 
-Expected structure:
+- one theme model or type definition
+- one or more built-in draft theme definitions
+- one theme validation or normalization function
+- renderer code that consumes resolved tokens
+- representative diagrams that use common rendering paths where practical
 
-- one theme model/type definition;
-- one or more built-in draft theme definitions;
-- one theme validation or normalization function;
-- renderer code consumes resolved tokens;
-- representative diagrams use common rendering paths where practical.
-
-The sample should be close enough to the actual renderer that theme iteration is meaningful. If placeholders or temporary rendering paths are used, document them clearly.
+The sample should be close enough to the actual renderer that theme iteration remains meaningful. If temporary rendering paths or placeholders are required, document them clearly.
 
 ## Accessibility Requirements
 
 This milestone should include basic accessibility-oriented constraints:
 
-- text must remain readable at normal zoom for built-in themes;
-- selected and focused states must not rely on color alone where practical;
-- warning and error states should be visually distinct;
-- reduced motion token must exist and be respected where animations are implemented;
-- high contrast draft theme must be available;
-- keyboard focus representation should be considered if the sample supports focusable diagram elements.
+- text remains readable at normal zoom for built-in themes
+- selected and focused states do not rely on color alone where practical
+- warning and error states remain visually distinct
+- a reduced-motion token exists and is respected where animation is implemented
+- a high-contrast draft theme is available
+- keyboard focus representation is considered if the sample exposes focusable diagram elements
 
 This milestone does not require a full WCAG audit.
 
@@ -587,128 +313,135 @@ This milestone does not require a full WCAG audit.
 
 Create or update the following documentation as applicable to the repository's current structure:
 
-- this milestone document after upload under `docs/milestones/`;
-- `docs/MILESTONES.md` to include this milestone;
-- `docs/specs/default-visual-identity.md` or equivalent visual identity spec;
-- `docs/decisions/default-diagram-visual-direction.md` or equivalent decision record;
-- `docs/engineering/samples.md` if the sample structure or command contract changes;
-- `docs/engineering/typescript-tools.md` if TypeScript tooling is added or changed;
-- `docs/PUBLIC-DOCS.md` and `public-docs/` only if this milestone affects public behavior or public theming documentation;
-- `README.md` only if the public or contributor entry point needs to reference the new sample.
+- this milestone document under `docs/milestones/`
+- `docs/MILESTONES.md` to include this milestone
+- `docs/specs/default-visual-identity.md` or equivalent visual identity spec
+- `docs/decisions/default-diagram-visual-direction.md` or equivalent decision record
+- `docs/engineering/samples.md` if the sample structure or command contract changes
+- `docs/engineering/typescript-tools.md` if TypeScript tooling is added or changed
+- `docs/PUBLIC-DOCS.md` and `public-docs/` only if this milestone affects public behavior or public theming documentation
+- `README.md` only if the public or contributor entry point needs to reference the new sample
 
-The visual identity spec should define:
+The visual identity spec should define purpose, authority, design principles, visual roles, interaction states, change states, accessibility requirements, the default theme contract, non-goals, and open decisions.
 
-- purpose;
-- authority;
-- design principles;
-- visual roles;
-- interaction states;
-- change states;
-- accessibility requirements;
-- default theme contract;
-- non-goals;
-- open decisions.
-
-The decision record should explain why the project starts with a calm technical dataflow style rather than a decorative graph, dashboard, or node-editor style.
+The decision record should explain why the project starts with a calm technical dataflow style instead of a decorative graph, dashboard, or node-editor style.
 
 ## Engineering Requirements
 
 Implementation must follow the repository engineering command contract.
 
-Use existing canonical commands from `eng/` rather than inventing new ad-hoc commands.
-
-If a new sample command is needed, document it in the engineering docs and keep it consistent with existing script conventions.
-
-If the repository already has sample validation, include this sample in that validation path where practical.
-
-If browser testing exists, do not add broad end-to-end coverage for all visual permutations. Prefer a small smoke-level validation unless explicitly required by a later milestone.
+Use existing canonical `eng/` commands rather than inventing ad-hoc commands. If a new sample command is needed, document it in the engineering docs and keep it consistent with existing script conventions. If sample validation already exists, include this sample in that path where practical. If browser testing exists, prefer a small smoke-level validation over broad visual-permutation coverage unless a later milestone explicitly changes that expectation.
 
 ## Testing Requirements
 
-Testing should be focused and lightweight.
+Testing should stay focused and lightweight. Required validation:
 
-Required tests or validation:
+- theme import accepts a valid exported theme
+- theme import rejects malformed JSON
+- theme import rejects an unsupported format marker
+- theme import rejects an unsupported version
+- built-in draft themes conform to the token model
+- export produces re-importable JSON
+- the representative sample builds through the applicable repository command
 
-- theme import accepts a valid exported theme;
-- theme import rejects malformed JSON;
-- theme import rejects unsupported format marker;
-- theme import rejects unsupported version;
-- built-in draft themes conform to the token model;
-- export produces re-importable JSON;
-- representative sample builds through the applicable repository command.
-
-Do not create slow visual regression infrastructure in this milestone unless the repository already has such infrastructure and it can be used cheaply.
-
-Do not add sleeps to tests.
-
-Do not add broad snapshot tests that make harmless visual iteration painful.
-
-## Acceptance Criteria
-
-The milestone is complete when all of the following are true:
-
-- an interactive visual identity sample exists;
-- the sample shows all required representative design scenarios on one page;
-- the sample supports switching between built-in light, dark, and high-contrast draft themes;
-- the sample supports editing the current theme tokens;
-- the sample supports importing a valid JSON theme draft;
-- the sample supports exporting the current theme as JSON;
-- exported JSON can be re-imported successfully;
-- invalid imports produce clear feedback;
-- theme constants are centralized behind an initial token model;
-- renderer/sample styling uses the token model rather than unrelated hard-coded values where practical;
-- a visual identity spec exists or is updated;
-- a design direction decision record exists or is updated;
-- sample and tooling documentation are updated where applicable;
-- `docs/MILESTONES.md` references this milestone after the document is uploaded;
-- applicable fast validation succeeds through the repository command contract, or failures are documented with exact command and reason.
+Do not create slow visual-regression infrastructure in this milestone unless the repository already has an inexpensive path for it. Do not add sleeps. Do not add broad snapshot suites that make harmless visual iteration painful.
 
 ## Suggested Implementation Slices
 
-### Slice 1: Documentation And Theme Model
+These slices are sequencing guidance inside the milestone, not separate milestones:
 
-Create the visual identity spec, decision record, draft theme model, and built-in draft themes.
-
-### Slice 2: Static Scenario Page
-
-Create the sample page with all representative scenarios rendered using the initial theme tokens.
-
-### Slice 3: Theme Switching And Token Editing
-
-Add built-in theme switching and token editing controls.
-
-### Slice 4: Import And Export
-
-Add JSON import, validation, export, and re-import validation.
-
-### Slice 5: Validation And Documentation Sync
-
-Add lightweight tests and update required repository documentation.
-
-These slices are sequencing guidance. They are not separate milestones.
+1. documentation and theme model
+2. static scenario page
+3. theme switching and token editing
+4. import and export
+5. validation and documentation sync
 
 ## Open Questions
 
 - Should the draft theme format become a public API later or remain a design-time tool format?
 - Should the final renderer support CSS custom properties, TypeScript object themes, or both?
-- Should future visual regression tests be image-based, DOM/SVG-structure-based, or token-contract-based?
+- Should future visual-regression tests be image-based, DOM/SVG-structure-based, or token-contract-based?
 - Which layout algorithms should be represented in the visual identity sample once multiple layouts exist?
 - Should graph scenarios be hand-authored fixtures, generated fixtures, or both?
 
-## Public Documentation Impact
+# Non-Goals
 
-This milestone primarily affects internal design and sample infrastructure.
+This milestone must not attempt to:
 
-Public documentation is required only if the sample, theme format, or theming surface is exposed as supported user-facing behavior.
+- finalize the default production theme
+- create a full theme marketplace or plugin system
+- build a general-purpose diagram editor
+- persist themes to a server
+- create user accounts or cloud synchronization
+- implement every future renderer feature
+- implement a complete accessibility certification process
+- introduce a large frontend framework solely for this tool
+- turn samples into production application architecture
 
-If the theme format is explicitly documented as experimental, that status must be clear.
+# Dependencies
 
-## Milestone Index Update Required
+- `docs/MILESTONES.md`, `docs/SPECS.md`, `docs/ENGINEERING.md`, and milestone-related guardrails/TBPs
+- `docs/research/project-setup-guide-v5.md` for repository documentation structure
+- `docs/research/engineering-guide-v4.md` for engineering command expectations
+- current renderer, runtime, and sample architecture under `src/` and `samples/`
+- milestone completion depends on creating or updating the related spec and decision documents called out in this milestone
 
-After this document is uploaded to `docs/milestones/default-visual-identity-iteration-tool.md`, update:
+# Deliverables
 
-```text
-docs/MILESTONES.md
-```
+- [ ] an interactive visual identity sample with all required representative scenarios on one page
+- [ ] a centralized draft theme model with built-in light, dark, and high-contrast themes
+- [ ] token editing plus JSON import, export, and validation behavior for theme drafts
+- [ ] renderer and sample styling routed through the token model where practical
+- [ ] a visual identity spec and design-direction decision record
+- [ ] synchronized milestone and supporting engineering/public documentation updates where applicable
 
-to reference the new milestone according to the repository milestone index conventions.
+# Validation
+
+Use the canonical engineering commands for milestone validation:
+
+- `./eng/restore.sh`
+- `./eng/build.sh`
+- `./eng/test.sh`
+- `./eng/check.sh`
+- `./eng/samples.sh --dry-run` if sample routing or sample validation changes
+
+Record exact command failures when environment prerequisites block validation.
+
+# Exit Criteria
+
+The milestone is complete when all of the following are true:
+
+- an interactive visual identity sample exists
+- the sample shows all required representative design scenarios on one page
+- the sample supports switching between built-in light, dark, and high-contrast draft themes
+- the sample supports editing the current theme tokens
+- the sample supports importing a valid JSON theme draft
+- the sample supports exporting the current theme as JSON
+- exported JSON can be re-imported successfully
+- invalid imports produce clear feedback
+- theme constants are centralized behind an initial token model
+- renderer or sample styling uses the token model rather than unrelated hard-coded values where practical
+- a visual identity spec exists or is updated
+- a design-direction decision record exists or is updated
+- sample and tooling documentation are updated where applicable
+- `docs/MILESTONES.md` references this milestone
+- applicable fast validation succeeds through the repository command contract, or failures are documented with exact command and reason
+
+# Related Specs
+
+- create or update `docs/specs/default-visual-identity.md` or an equivalent visual identity spec before marking this milestone complete
+- review existing specs for any renderer, sample, or theming behavior made durable by this milestone
+
+# Related Decisions
+
+- create or update `docs/decisions/default-diagram-visual-direction.md` or an equivalent decision record before marking this milestone complete
+
+# Authority
+
+This milestone is authoritative for the implementation scope, sequencing guidance, required representative scenarios, and acceptance criteria of the initial visual identity iteration tool.
+
+Durable behavior discovered during this milestone must move into the appropriate spec, decision, workflow, or engineering document before the milestone is treated as complete.
+
+# Document Contract
+
+Update this document when milestone sequencing, scope, dependencies, deliverables, or exit criteria change. Keep it synchronized with `docs/MILESTONES.md`, `Milestones.md`, milestone-related TBPs, and milestone issue forms. Keep detailed implementation guidance here rather than duplicating it into milestone tracking issues.

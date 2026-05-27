@@ -20,6 +20,7 @@ The current capability roadmap is in [`Milestones.md`](../Milestones.md).
 | Milestone | Purpose |
 |---|---|
 | [`milestones/milestone-08-workspace-sample-launch.md`](milestones/milestone-08-workspace-sample-launch.md) | Workspace sample launch and registry-backed sample index |
+| [`milestones/milestone-009-visual-identity-iteration-tool.md`](milestones/milestone-009-visual-identity-iteration-tool.md) | Default visual identity iteration tool and theme-draft workflow |
 
 ## Milestone Template
 
@@ -37,7 +38,7 @@ Each milestone document should include:
 - Authority
 - Document Contract
 
-Milestones should reference the specs and decisions they depend on. If a milestone discovers durable behavior that is not yet documented, create or update the governing spec before treating the milestone as complete.
+Milestones should reference the specs and decisions they depend on. If a milestone discovers durable behavior that is not yet documented, create or update the governing spec before treating the milestone as complete. Milestone tracking issues should stay lightweight and point to the milestone document; detailed implementation guidance and sequencing belong in the milestone document itself.
 
 ## Authority
 
