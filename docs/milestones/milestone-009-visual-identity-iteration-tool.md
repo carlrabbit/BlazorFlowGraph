@@ -9,7 +9,7 @@ Draft milestone.
 Intended repository path after upload:
 
 ```text
-docs/milestones/default-visual-identity-iteration-tool.md
+docs/milestones/milestone-009-visual-identity-iteration-tool.md
 ```
 
 ## Purpose
