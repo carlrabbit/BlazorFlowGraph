@@ -28,6 +28,7 @@ Use a spec when the repository needs durable behavioral truth. Do not use milest
 | [`specs/sample-port-registry.md`](specs/sample-port-registry.md) | Active | Defines deterministic sample port reservations and sample registry field contracts |
 | [`specs/sample-index.md`](specs/sample-index.md) | Active | Defines sample index rendering and current-origin URL resolution behavior |
 | [`specs/sample-workspace-launch.md`](specs/sample-workspace-launch.md) | Active | Defines launch-all sample tooling and sample-focused dev-container launch behavior |
+| [`specs/default-visual-identity.md`](specs/default-visual-identity.md) | Active | Defines the experimental default visual identity draft contract, roles, and accessibility constraints |
 
 # Authority
 

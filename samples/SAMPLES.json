@@ -47,6 +47,14 @@
       "projectPath": "samples/SemanticAnnotations/SemanticAnnotations.csproj",
       "port": 5105,
       "path": "/"
+    },
+    {
+      "id": "visual-identity-workshop",
+      "name": "Visual Identity Workshop",
+      "description": "Interactive theme-draft workshop for visual identity iteration.",
+      "projectPath": "samples/VisualIdentityWorkshop/VisualIdentityWorkshop.csproj",
+      "port": 5106,
+      "path": "/"
     }
   ]
 }
