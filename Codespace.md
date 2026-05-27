@@ -36,7 +36,7 @@ Use the default devcontainer for day-to-day development. Use the samples devcont
 |------|---------|--------------|
 | .NET SDK | 10 (latest minor) | devcontainer feature `ghcr.io/devcontainers/features/dotnet:2` |
 | Node.js | 22 LTS | devcontainer feature `ghcr.io/devcontainers/features/node:1` |
-| pnpm | 10.11.0 | Corepack (activated in `onCreateCommand`) |
+| Bun | 1.3.14 | devcontainer feature `ghcr.io/devcontainers/features/bun:1` |
 
 ### Lifecycle Commands
 
@@ -44,8 +44,7 @@ The devcontainer runs the following commands automatically:
 
 | Stage | Command | Runs during prebuild? |
 |-------|---------|----------------------|
-| `onCreateCommand` | `corepack enable && corepack prepare pnpm@10.11.0 --activate` | Yes |
-| `updateContentCommand` | `pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx` | Yes |
+| `updateContentCommand` | `./eng/restore.sh` | Yes |
 
 Because `updateContentCommand` runs during each prebuild, the Codespace cache already contains restored packages when you open the environment. Full build validation is reserved for CI rather than devcontainer startup, so a single warning or SDK mismatch does not break container creation.
 
@@ -57,8 +56,7 @@ The following extensions are installed automatically:
 |-----------|---------|
 | `ms-dotnettools.csdevkit` | C# Dev Kit — IntelliSense, refactoring, test explorer |
 | `ms-dotnettools.vscode-dotnet-runtime` | .NET runtime acquisition used by C# tooling |
-| `dbaeumer.vscode-eslint` | ESLint integration for TypeScript packages |
-| `esbenp.prettier-vscode` | Prettier formatter |
+| `biomejs.biome` | Biome linting and formatting for TypeScript/JavaScript/JSON |
 | `EditorConfig.EditorConfig` | Respects the project `.editorconfig` file |
 
 ### Port Forwarding
@@ -101,7 +99,6 @@ Then open the sample index on forwarded port `5100`.
 Use `.devcontainer/samples/devcontainer.json` when you want a Codespace variant dedicated to launching all samples automatically.
 That devcontainer runs `bash tooling/scripts/run-samples-all.sh --detach --log-file /tmp/blazor-flow-graph-samples.log`.
 It marks sample ports `5100` through `5105` as public so each sample and its Blazor static assets can be opened through the forwarded Codespaces URLs.
-The older `tooling/scripts/start-samples-all-background.sh` wrapper remains only so existing callers do not break; avoid it for new usage, use `--detach` mode directly, and expect the wrapper to be removable once no callers remain.
 
 Detached startup is repeatable: if the full sample set is already running, the command exits successfully without starting duplicates.
 Detached sample PID files are stored under `/tmp/blazor-flow-graph-samples`, and partial detached state fails with cleanup guidance instead of launching a second inconsistent set.
@@ -118,30 +115,19 @@ Set `SAMPLES_BIND_HOST=127.0.0.1` when you want loopback-only local runs.
 ### Building
 
 ```bash
-# .NET
-dotnet build BlazorFlowGraph.slnx --configuration Release
-
-# TypeScript
-pnpm build
+./eng/build.sh
 ```
 
 ### Testing
 
 ```bash
-# TypeScript unit tests
-pnpm test
-
-# .NET tests (TUnit projects run as executables)
-dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Protocol.Tests --configuration Release
-dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Diffing.Tests --configuration Release
-dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Projection.Tests --configuration Release
-dotnet run --no-build --project tests/DotNet/BlazorFlowGraph.Semantics.Tests --configuration Release
+./eng/test.sh
 ```
 
 ### TypeScript Typecheck
 
 ```bash
-pnpm typecheck
+./eng/check.sh
 ```
 
 ---
@@ -152,9 +138,9 @@ pnpm typecheck
 
 Prebuilds cache the container image together with the output of `onCreateCommand` and `updateContentCommand`. This means restored packages are already in place when the Codespace starts. Enable prebuilds (see [Manual Steps](#manual-steps-required) below) so contributors never wait for a cold restore.
 
-### Commit `pnpm-lock.yaml` and Restore with `--frozen-lockfile`
+### Commit `bun.lock` and Restore via `eng/restore.sh`
 
-The devcontainer installs pnpm dependencies with `--frozen-lockfile`. Keep `pnpm-lock.yaml` committed and up to date to ensure reproducible installs in Codespaces, CI, and local environments.
+The devcontainer restore path is `./eng/restore.sh`, which runs `bun install --frozen-lockfile` and `.NET` restore. Keep `bun.lock` committed and up to date to ensure reproducible installs in Codespaces, CI, and local environments.
 
 ### Keep the Devcontainer Lean
 
@@ -227,11 +213,10 @@ Port forwarding works the same way — forwarded ports appear in the **Ports** p
 
 | Symptom | Resolution |
 |---------|-----------|
-| `pnpm: command not found` | Run `corepack enable && corepack prepare pnpm@10.11.0 --activate` in the terminal. |
+| `bun: command not found` | Rebuild the Codespace. The devcontainer installs Bun through `ghcr.io/devcontainers/features/bun:1`. |
 | `dotnet: command not found` | The .NET feature may have failed during image build. Rebuild the Codespace via **Codespaces: Rebuild Container**. |
-| Samples did not auto-start in sample devcontainer | Check `/tmp/<repository-name>/run-samples-all.log` for startup errors and verify the launcher process with `[[ -f /tmp/<repository-name>/run-samples-all.pid ]] && kill -0 $(cat /tmp/<repository-name>/run-samples-all.pid)`. |
-| Samples are not running and no active launcher PID exists | Run `bash tooling/scripts/start-samples-all-background.sh` to start sample auto-launch manually. |
-| Sample port returns `502 Bad Gateway` | Samples build before starting and may not be ready yet. Open a terminal and run `ss -ltnp` to see which sample ports are listening. Inspect the log: `cat /tmp/blazorflowgraph/run-samples-all.log`. |
+| Samples did not auto-start in sample devcontainer | Check `/tmp/blazor-flow-graph-samples.log` for startup errors. Verify detached state by inspecting PID files under `/tmp/blazor-flow-graph-samples`. |
+| Sample port returns `502 Bad Gateway` | Samples build before starting and may not be ready yet. Open a terminal and run `ss -ltnp` to see which sample ports are listening. Inspect the log: `cat /tmp/blazor-flow-graph-samples.log`. |
 | Port 5000 not forwarded | Start the Blazor application with `dotnet run`; VS Code detects the listening port and adds it to the **Ports** panel automatically. |
-| Build fails after a merge | Run `pnpm install --frozen-lockfile && dotnet restore BlazorFlowGraph.slnx` to update dependencies after pulling changes that modify lock files. |
+| Build fails after a merge | Run `./eng/restore.sh` to refresh dependencies after pulling lock or project changes. |
 | C# IntelliSense not working | Wait for C# Dev Kit to finish indexing (progress shown in the status bar), or run **Developer: Reload Window** from the Command Palette. |
