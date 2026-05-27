@@ -230,7 +230,7 @@ Create an interactive sample page dedicated to visual identity iteration. It sho
 - all representative design scenarios visible on one page as separate diagrams
 - enough layout structure to compare scenarios without page-to-page navigation
 
-The sample may be implemented as a Blazor sample, a TypeScript/browser sample, or another repository-appropriate sample form, but it must respect the current architecture and engineering command contract.
+The sample may be implemented as a Blazor sample, a TypeScript/browser sample, or another repository-appropriate sample form, but it must respect the current architecture and the engineering command contract defined by `docs/ENGINEERING.md` and `docs/engineering/command-contract.md`.
 
 ## Representative Design Scenarios
 
@@ -330,7 +330,11 @@ The decision record should explain why the project starts with a calm technical 
 
 Implementation must follow the repository engineering command contract.
 
-Use existing canonical `eng/` commands rather than inventing ad-hoc commands. If a new sample command is needed, document it in the engineering docs and keep it consistent with existing script conventions. If sample validation already exists, include this sample in that path where practical. If browser testing exists, prefer a small smoke-level validation over broad visual-permutation coverage unless a later milestone explicitly changes that expectation.
+Use existing canonical `eng/` commands rather than inventing ad-hoc commands.
+
+- If a new sample command is needed, document it in the engineering docs and keep it consistent with existing script conventions.
+- If sample validation already exists, include this sample in that path where practical.
+- If browser testing exists, prefer a small smoke-level validation over broad visual-permutation coverage unless a later milestone explicitly changes that expectation.
 
 ## Testing Requirements
 
