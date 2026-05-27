@@ -1,8 +1,8 @@
 # Goal
 
-Create the first implementation slice for designing the default visual identity of BlazorFlowGraph diagrams.
+Purpose: create the first implementation slice for designing the default visual identity of BlazorFlowGraph diagrams.
 
-This milestone does not finalize the production visual design. It creates a practical iteration tool so the project owner and AI agents can evaluate representative diagram scenarios using editable design tokens and importable/exportable theme drafts. The milestone is complete when visual identity work can continue from explicit artifacts instead of hidden assumptions.
+Goal: create a practical iteration tool so the project owner and AI agents can evaluate representative diagram scenarios using editable design tokens and importable/exportable theme drafts without finalizing the production visual design. The milestone is complete when visual identity work can continue from explicit artifacts instead of hidden assumptions.
 
 # Scope
 
@@ -27,6 +27,7 @@ Before implementation, read:
 - `docs/guardrails/implementation.md`
 - `docs/guardrails/testing.md`
 - `docs/guardrails/languages/typescript.md` if present
+- `docs/engineering/command-contract.md`
 - `docs/engineering/typescript-tools.md` if present
 - `docs/engineering/samples.md` if present
 - `docs/PUBLIC-DOCS.md` if public documentation is already active
