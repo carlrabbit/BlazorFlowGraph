@@ -46,6 +46,12 @@ public sealed partial class DataflowGraph : ComponentBase, IAsyncDisposable
     [Parameter]
     public EventCallback<GraphInspectionPayload> OnOverlayInspected { get; set; }
 
+    [Parameter]
+    public string LayoutStrategy { get; set; } = "Grid";
+
+    [Parameter]
+    public string LayoutDirection { get; set; } = "LeftToRight";
+
     private string ContainerId { get; } = $"dfg-{Guid.NewGuid():N}";
     private bool _initialized;
     private int? _lastSnapshotVersion;
@@ -72,6 +78,8 @@ public sealed partial class DataflowGraph : ComponentBase, IAsyncDisposable
                     container = $"#{ContainerId}",
                     width = Width,
                     height = Height,
+                    layoutStrategy = LayoutStrategy,
+                    layoutDirection = LayoutDirection,
                     inspectionTarget = _inspectionTargetRef,
                     inspectionMethodName = nameof(HandleInspection),
                 });

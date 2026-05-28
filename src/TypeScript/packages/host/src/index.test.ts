@@ -1,7 +1,8 @@
 /// <reference types="bun-types" />
 import { describe, expect, it } from "bun:test";
+import { getBuiltInFlowGraphThemes } from "@dataflow-visualizer/renderer-svg";
 
-import { registerGlobals, version } from "./index";
+import { registerGlobals, renderSnapshotToSvg, version } from "./index";
 
 describe("registerGlobals", () => {
   it("exposes the bundled host version on the global API", () => {
@@ -31,5 +32,31 @@ describe("registerGlobals", () => {
         Object.defineProperty(globalThis, "window", originalWindowDescriptor);
       }
     }
+  });
+});
+
+describe("renderSnapshotToSvg", () => {
+  it("applies path highlighting state for themed rendering", () => {
+    const firstTheme = Object.values(getBuiltInFlowGraphThemes())[0];
+    expect(firstTheme).toBeDefined();
+    const svg = renderSnapshotToSvg(
+      {
+        version: 1,
+        nodes: [
+          { id: "a", label: "A", kind: "default" },
+          { id: "b", label: "B", kind: "default" },
+        ],
+        edges: [{ id: "e1", sourceId: "a", targetId: "b" }],
+      },
+      {
+        width: 400,
+        height: 200,
+        theme: firstTheme!,
+        pathHighlight: { mode: "between", sourceNodeId: "a", targetNodeId: "b" },
+      },
+    );
+
+    expect(svg.includes("dfv-arrow-highlight")).toBe(true);
+    expect(svg.includes('data-edge-id="e1"')).toBe(true);
   });
 });

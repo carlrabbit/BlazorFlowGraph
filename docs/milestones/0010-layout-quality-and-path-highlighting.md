@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Implemented (initial slice)
 
 ## Milestone Number
 
@@ -68,6 +68,18 @@ docs/MILESTONES.md
 ```
 
 so that milestone 0010 is indexed consistently with the repository documentation model.
+
+## Implementation Status (Current Slice)
+
+This milestone now includes:
+
+- layout strategy selection (`Grid`, `Layered`, `ManualHints`) in the TypeScript layout contract;
+- layout direction support (`LeftToRight`, `TopToBottom`);
+- manual hint placement and optional prior-position preservation for incremental stability;
+- deterministic between-node path traversal utilities;
+- path-highlight visual-state derivation for upstream, downstream, and between modes;
+- host rendering support for path highlighting in themed SVG output;
+- Blazor host parameters for layout strategy and direction pass-through.
 
 If repository standards require additional milestone metadata, authority sections, document contracts, status conventions, public documentation impact sections, or validation sections, this document must be updated accordingly.
 
