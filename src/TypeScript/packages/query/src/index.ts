@@ -69,6 +69,23 @@ export interface TraversalOptions {
   readonly edgeFilter?: (edge: GraphEdge) => boolean;
 }
 
+export type PathHighlightMode = "none" | "upstream" | "downstream" | "between";
+
+export interface PathHighlightState {
+  readonly mode: PathHighlightMode;
+  readonly sourceNodeId?: NodeId;
+  readonly targetNodeId?: NodeId;
+}
+
+export interface PathHighlightVisualState {
+  readonly mode: PathHighlightMode;
+  readonly highlightedNodeIds: ReadonlySet<NodeId>;
+  readonly highlightedEdgeIds: ReadonlySet<string>;
+  readonly dimmedNodeIds: ReadonlySet<NodeId>;
+  readonly upstreamHighlightedNodeIds: ReadonlySet<NodeId>;
+  readonly downstreamHighlightedNodeIds: ReadonlySet<NodeId>;
+}
+
 // ---------------------------------------------------------------------------
 // Traversal functions
 // ---------------------------------------------------------------------------
@@ -201,6 +218,127 @@ export function extractSubgraph(
   return { nodeIds, edgeIds };
 }
 
+/** Finds a deterministic shortest directed path between two nodes using BFS. */
+export function findPathBetween(
+  sourceNodeId: NodeId,
+  targetNodeId: NodeId,
+  index: TopologyIndex,
+): readonly NodeId[] {
+  if (sourceNodeId === targetNodeId) {
+    return [sourceNodeId];
+  }
+
+  const visited = new Set<NodeId>([sourceNodeId]);
+  const queue: NodeId[] = [sourceNodeId];
+  let cursor = 0;
+  const previous = new Map<NodeId, NodeId>();
+
+  while (cursor < queue.length) {
+    const current = queue[cursor];
+    cursor += 1;
+    if (current == null) break;
+    const outgoing = [...(index.outgoingEdgesByNodeId.get(current) ?? [])].sort((a, b) =>
+      a.id.localeCompare(b.id),
+    );
+    for (const edge of outgoing) {
+      const next = edge.targetId;
+      if (visited.has(next)) continue;
+      visited.add(next);
+      previous.set(next, current);
+      if (next === targetNodeId) {
+        return reconstructPath(sourceNodeId, targetNodeId, previous);
+      }
+      queue.push(next);
+    }
+  }
+
+  return [];
+}
+
+/**
+ * Resolves path highlighting state into concrete node/edge sets for rendering.
+ */
+export function resolvePathHighlightVisualState(
+  highlight: PathHighlightState | undefined,
+  index: TopologyIndex,
+  options?: {
+    readonly allNodeIds?: Iterable<NodeId>;
+    readonly dimUnrelated?: boolean;
+  },
+): PathHighlightVisualState {
+  const mode = highlight?.mode ?? "none";
+  const sourceNodeId = highlight?.sourceNodeId;
+  const targetNodeId = highlight?.targetNodeId;
+  const highlightedNodeIds = new Set<NodeId>();
+  const highlightedEdgeIds = new Set<string>();
+  const upstreamHighlightedNodeIds = new Set<NodeId>();
+  const downstreamHighlightedNodeIds = new Set<NodeId>();
+
+  if (mode === "upstream" && sourceNodeId != null) {
+    highlightedNodeIds.add(sourceNodeId);
+    upstreamHighlightedNodeIds.add(sourceNodeId);
+    for (const nodeId of findUpstream(sourceNodeId, index)) {
+      highlightedNodeIds.add(nodeId);
+      upstreamHighlightedNodeIds.add(nodeId);
+    }
+    for (const nodeId of highlightedNodeIds) {
+      for (const edge of index.incomingEdgesByNodeId.get(nodeId) ?? []) {
+        if (highlightedNodeIds.has(edge.sourceId)) {
+          highlightedEdgeIds.add(edge.id);
+        }
+      }
+    }
+  } else if (mode === "downstream" && sourceNodeId != null) {
+    highlightedNodeIds.add(sourceNodeId);
+    downstreamHighlightedNodeIds.add(sourceNodeId);
+    for (const nodeId of findDownstream(sourceNodeId, index)) {
+      highlightedNodeIds.add(nodeId);
+      downstreamHighlightedNodeIds.add(nodeId);
+    }
+    for (const nodeId of highlightedNodeIds) {
+      for (const edge of index.outgoingEdgesByNodeId.get(nodeId) ?? []) {
+        if (highlightedNodeIds.has(edge.targetId)) {
+          highlightedEdgeIds.add(edge.id);
+        }
+      }
+    }
+  } else if (mode === "between" && sourceNodeId != null && targetNodeId != null) {
+    const path = findPathBetween(sourceNodeId, targetNodeId, index);
+    for (const nodeId of path) {
+      highlightedNodeIds.add(nodeId);
+    }
+    for (let i = 0; i < path.length - 1; i += 1) {
+      const source = path[i];
+      const target = path[i + 1];
+      if (source == null || target == null) continue;
+      const edge = [...(index.outgoingEdgesByNodeId.get(source) ?? [])]
+        .sort((a, b) => a.id.localeCompare(b.id))
+        .find((candidate) => candidate.targetId === target);
+      if (edge != null) {
+        highlightedEdgeIds.add(edge.id);
+      }
+    }
+  }
+
+  const dimmedNodeIds = new Set<NodeId>();
+  if (options?.dimUnrelated === true && options.allNodeIds != null && highlightedNodeIds.size > 0) {
+    for (const nodeId of options.allNodeIds) {
+      if (!highlightedNodeIds.has(nodeId)) {
+        dimmedNodeIds.add(nodeId);
+      }
+    }
+  }
+
+  return {
+    mode,
+    highlightedNodeIds,
+    highlightedEdgeIds,
+    dimmedNodeIds,
+    upstreamHighlightedNodeIds,
+    downstreamHighlightedNodeIds,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // BFS implementation
 // ---------------------------------------------------------------------------
@@ -256,4 +394,23 @@ function bfs(
   }
 
   return visited;
+}
+
+function reconstructPath(
+  sourceNodeId: NodeId,
+  targetNodeId: NodeId,
+  previous: ReadonlyMap<NodeId, NodeId>,
+): readonly NodeId[] {
+  const path: NodeId[] = [targetNodeId];
+  let cursor = targetNodeId;
+  while (cursor !== sourceNodeId) {
+    const prior = previous.get(cursor);
+    if (prior == null) {
+      return [];
+    }
+    path.push(prior);
+    cursor = prior;
+  }
+  path.reverse();
+  return path;
 }

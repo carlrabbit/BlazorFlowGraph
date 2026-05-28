@@ -6,6 +6,11 @@ import { bridge } from "@dataflow-visualizer/interop";
 import { computeLayout } from "@dataflow-visualizer/layout";
 import type { GraphSnapshot } from "@dataflow-visualizer/protocol";
 import {
+  type PathHighlightState,
+  buildTopologyIndex,
+  resolvePathHighlightVisualState,
+} from "@dataflow-visualizer/query";
+import {
   type FlowGraphThemeDraft,
   type RenderVisualStateInput,
   getBuiltInFlowGraphThemes,
@@ -31,6 +36,8 @@ export interface HostOptions {
   readonly height?: number;
   readonly nodeWidth?: number;
   readonly nodeHeight?: number;
+  readonly layoutStrategy?: "Layered" | "Grid" | "ManualHints";
+  readonly layoutDirection?: "LeftToRight" | "TopToBottom";
   /** Optional .NET object reference used for semantic inspection callbacks. */
   readonly inspectionTarget?: {
     invokeMethodAsync(method: string, payload: unknown): Promise<unknown>;
@@ -69,6 +76,8 @@ export interface StaticSvgRenderOptions {
   readonly nodeHeight?: number;
   readonly theme?: FlowGraphThemeDraft;
   readonly visualState?: RenderVisualStateInput;
+  readonly pathHighlight?: PathHighlightState;
+  readonly dimUnrelatedOnPathHighlight?: boolean;
 }
 
 export function renderSnapshotToSvg(
@@ -88,12 +97,74 @@ export function renderSnapshotToSvg(
   }
 
   const layout = computeLayout(snapshot, layoutOptions);
+  const pathHighlightVisualState = resolvePathHighlightVisualState(
+    options.pathHighlight,
+    buildTopologyIndex(state),
+    {
+      allNodeIds: state.nodes.keys(),
+      dimUnrelated: options.dimUnrelatedOnPathHighlight ?? true,
+    },
+  );
+  const visualState = mergeRenderVisualStateInputs(options.visualState, {
+    dimmedNodeIds: pathHighlightVisualState.dimmedNodeIds,
+    upstreamHighlightedNodeIds: pathHighlightVisualState.upstreamHighlightedNodeIds,
+    downstreamHighlightedNodeIds: pathHighlightVisualState.downstreamHighlightedNodeIds,
+    highlightedEdgeIds: pathHighlightVisualState.highlightedEdgeIds,
+  });
 
   if (options.theme != null) {
-    return renderThemedSvg(state, layout, options, options.theme, options.visualState);
+    return renderThemedSvg(state, layout, options, options.theme, visualState);
   }
 
   return renderToDefaultSvg(state, layout, options);
+}
+
+function mergeRenderVisualStateInputs(
+  base: RenderVisualStateInput | undefined,
+  highlight: RenderVisualStateInput,
+): RenderVisualStateInput {
+  return {
+    ...base,
+    dimmedNodeIds: unionStringCollections(base?.dimmedNodeIds, highlight.dimmedNodeIds),
+    upstreamHighlightedNodeIds: unionStringCollections(
+      base?.upstreamHighlightedNodeIds,
+      highlight.upstreamHighlightedNodeIds,
+    ),
+    downstreamHighlightedNodeIds: unionStringCollections(
+      base?.downstreamHighlightedNodeIds,
+      highlight.downstreamHighlightedNodeIds,
+    ),
+    highlightedEdgeIds: unionStringCollections(
+      base?.highlightedEdgeIds,
+      highlight.highlightedEdgeIds,
+    ),
+  };
+}
+
+function unionStringCollections(
+  left: readonly string[] | ReadonlySet<string> | undefined,
+  right: readonly string[] | ReadonlySet<string> | undefined,
+): ReadonlySet<string> {
+  const merged = new Set<string>();
+  for (const value of toStringSet(left)) {
+    merged.add(value);
+  }
+  for (const value of toStringSet(right)) {
+    merged.add(value);
+  }
+  return merged;
+}
+
+function toStringSet(
+  value: readonly string[] | ReadonlySet<string> | undefined,
+): ReadonlySet<string> {
+  if (value == null) {
+    return new Set();
+  }
+  if (value instanceof Set) {
+    return value;
+  }
+  return new Set(value);
 }
 
 function renderToDefaultSvg(
@@ -136,6 +207,8 @@ export function mount(options: HostOptions): {
     height = 600,
     nodeWidth = 120,
     nodeHeight = 40,
+    layoutStrategy = "Grid",
+    layoutDirection = "LeftToRight",
     inspectionTarget,
     inspectionMethodName = "HandleInspection",
   } = options;
@@ -181,7 +254,12 @@ export function mount(options: HostOptions): {
       nodes: Array.from(state.nodes.values()),
       edges: Array.from(state.edges.values()),
     };
-    const layout = computeLayout(snapshot, { nodeWidth, nodeHeight });
+    const layout = computeLayout(snapshot, {
+      nodeWidth,
+      nodeHeight,
+      strategy: layoutStrategy,
+      direction: layoutDirection,
+    });
     layoutWidth = layout.width;
     layoutHeight = layout.height;
     viewportGroup.innerHTML = renderInnerSvg(state, layout, {

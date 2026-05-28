@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target browser --format esm --sourcemap=external -e @dataflow-visualizer/interop -e @dataflow-visualizer/layout -e @dataflow-visualizer/protocol -e @dataflow-visualizer/renderer-svg -e @dataflow-visualizer/runtime && bun build src/browser.ts --outdir dist --entry-naming 'browser.iife.[ext]' --target browser --format iife --sourcemap=external && tsc -p tsconfig.json --emitDeclarationOnly",
+    "build": "bun build src/index.ts --outdir dist --target browser --format esm --sourcemap=external -e @dataflow-visualizer/interop -e @dataflow-visualizer/layout -e @dataflow-visualizer/protocol -e @dataflow-visualizer/query -e @dataflow-visualizer/renderer-svg -e @dataflow-visualizer/runtime && bun build src/browser.ts --outdir dist --entry-naming 'browser.iife.[ext]' --target browser --format iife --sourcemap=external && tsc -p tsconfig.json --emitDeclarationOnly",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "bun test --pass-with-no-tests src/",
     "test:watch": "bun test --watch src/"
@@ -22,6 +22,7 @@
     "@dataflow-visualizer/interop": "workspace:*",
     "@dataflow-visualizer/layout": "workspace:*",
     "@dataflow-visualizer/protocol": "workspace:*",
+    "@dataflow-visualizer/query": "workspace:*",
     "@dataflow-visualizer/renderer-svg": "workspace:*",
     "@dataflow-visualizer/runtime": "workspace:*"
   },

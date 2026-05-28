@@ -21,6 +21,7 @@ The current capability roadmap is in [`Milestones.md`](../Milestones.md).
 |---|---|
 | [`milestones/milestone-08-workspace-sample-launch.md`](milestones/milestone-08-workspace-sample-launch.md) | Workspace sample launch and registry-backed sample index |
 | [`milestones/milestone-009-visual-identity-iteration-tool.md`](milestones/milestone-009-visual-identity-iteration-tool.md) | Default visual identity iteration tool and theme-draft workflow |
+| [`milestones/0010-layout-quality-and-path-highlighting.md`](milestones/0010-layout-quality-and-path-highlighting.md) | Layout strategy/direction quality improvements and path highlighting traversal model |
 
 ## Milestone Template
 

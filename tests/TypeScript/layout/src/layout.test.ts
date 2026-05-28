@@ -197,6 +197,80 @@ describe("computeLayout (backward-compat)", () => {
     const result = computeLayout(snapshot);
     expect(result.nodes.has("n1")).toBe(true);
   });
+
+  it("supports TopToBottom direction", () => {
+    const snapshot: GraphSnapshot = {
+      version: 1,
+      nodes: [
+        { id: "a", label: "A", kind: "x" },
+        { id: "b", label: "B", kind: "x" },
+        { id: "c", label: "C", kind: "x" },
+      ],
+      edges: [],
+    };
+    const leftToRight = computeLayout(snapshot, { direction: "LeftToRight" });
+    const topToBottom = computeLayout(snapshot, { direction: "TopToBottom" });
+    const nodeBLeftToRight = leftToRight.nodes.get("b");
+    const nodeBTopToBottom = topToBottom.nodes.get("b");
+    expect(nodeBLeftToRight?.x).not.toBe(nodeBTopToBottom?.x);
+    expect(nodeBLeftToRight?.y).not.toBe(nodeBTopToBottom?.y);
+  });
+
+  it("supports layered strategy with directional ordering", () => {
+    const snapshot: GraphSnapshot = {
+      version: 1,
+      nodes: [
+        { id: "n1", label: "A", kind: "x" },
+        { id: "n2", label: "B", kind: "x" },
+      ],
+      edges: [{ id: "e1", sourceId: "n1", targetId: "n2" }],
+    };
+    const leftToRight = computeLayout(snapshot, {
+      strategy: "Layered",
+      direction: "LeftToRight",
+    });
+    const topToBottom = computeLayout(snapshot, {
+      strategy: "Layered",
+      direction: "TopToBottom",
+    });
+    const sourceLtr = leftToRight.nodes.get("n1");
+    const targetLtr = leftToRight.nodes.get("n2");
+    const sourceTtb = topToBottom.nodes.get("n1");
+    const targetTtb = topToBottom.nodes.get("n2");
+    expect((targetLtr?.x ?? 0) - (sourceLtr?.x ?? 0)).toBeGreaterThan(0);
+    expect((targetTtb?.y ?? 0) - (sourceTtb?.y ?? 0)).toBeGreaterThan(0);
+  });
+
+  it("supports manual hints strategy", () => {
+    const snapshot: GraphSnapshot = {
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "x" }],
+      edges: [],
+    };
+    const result = computeLayout(snapshot, {
+      strategy: "ManualHints",
+      hints: { n1: { x: 321, y: 123 } },
+    });
+    const node = result.nodes.get("n1");
+    expect(node?.x).toBe(321);
+    expect(node?.y).toBe(123);
+  });
+
+  it("preserves previous positions when requested", () => {
+    const snapshot: GraphSnapshot = {
+      version: 1,
+      nodes: [{ id: "n1", label: "A", kind: "x" }],
+      edges: [],
+    };
+    const result = computeLayout(snapshot, {
+      strategy: "Grid",
+      preserveExistingPositions: true,
+      previousNodePositions: { n1: { x: 222, y: 111 } },
+    });
+    const node = result.nodes.get("n1");
+    expect(node?.x).toBe(222);
+    expect(node?.y).toBe(111);
+  });
 });
 
 // ---------------------------------------------------------------------------

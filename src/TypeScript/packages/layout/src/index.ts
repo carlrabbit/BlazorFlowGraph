@@ -48,10 +48,17 @@ export interface LayoutResult {
 }
 
 export interface LayoutOptions {
+  readonly strategy?: "Layered" | "Grid" | "ManualHints";
+  readonly direction?: "LeftToRight" | "TopToBottom";
   readonly algorithm?: string;
   readonly nodeWidth?: number;
   readonly nodeHeight?: number;
   readonly spacing?: number;
+  readonly hints?: Readonly<Record<string, { readonly x: number; readonly y: number }>>;
+  readonly previousNodePositions?: Readonly<
+    Record<string, { readonly x: number; readonly y: number }>
+  >;
+  readonly preserveExistingPositions?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -144,7 +151,12 @@ export interface LayoutProvider {
  */
 export class GridLayoutProvider implements LayoutProvider {
   async computeLayout(graph: LayoutGraph, options?: LayoutOptions): Promise<LayoutResult> {
-    const { nodeWidth = 120, nodeHeight = 40, spacing = 20 } = options ?? {};
+    const {
+      nodeWidth = 120,
+      nodeHeight = 40,
+      spacing = 20,
+      direction = "LeftToRight",
+    } = options ?? {};
     const cols = Math.max(1, Math.ceil(Math.sqrt(graph.nodes.length)));
 
     const nodes = new Map<string, LayoutNode>(
@@ -152,8 +164,14 @@ export class GridLayoutProvider implements LayoutProvider {
         node.id,
         {
           id: node.id,
-          x: (i % cols) * (nodeWidth + spacing),
-          y: Math.floor(i / cols) * (nodeHeight + spacing),
+          x:
+            direction === "TopToBottom"
+              ? Math.floor(i / cols) * (nodeWidth + spacing)
+              : (i % cols) * (nodeWidth + spacing),
+          y:
+            direction === "TopToBottom"
+              ? (i % cols) * (nodeHeight + spacing)
+              : Math.floor(i / cols) * (nodeHeight + spacing),
           width: node.width,
           height: node.height,
         },
@@ -203,23 +221,192 @@ export class GridLayoutProvider implements LayoutProvider {
  * Replace with ELK integration for production use.
  */
 export function computeLayout(snapshot: GraphSnapshot, options: LayoutOptions = {}): LayoutResult {
-  const { nodeWidth = 120, nodeHeight = 40, spacing = 20 } = options;
-  const cols = Math.ceil(Math.sqrt(snapshot.nodes.length));
+  const {
+    strategy = "Grid",
+    direction = "LeftToRight",
+    nodeWidth = 120,
+    nodeHeight = 40,
+    spacing = 20,
+    hints,
+    previousNodePositions,
+    preserveExistingPositions = false,
+  } = options;
+  const sortedNodes = [...snapshot.nodes].sort((a, b) => a.id.localeCompare(b.id));
+  const nodes =
+    strategy === "Layered"
+      ? computeLayeredNodePositions(sortedNodes, snapshot.edges, {
+          nodeWidth,
+          nodeHeight,
+          spacing,
+          direction,
+        })
+      : computeGridNodePositions(sortedNodes, { nodeWidth, nodeHeight, spacing, direction });
+  if (strategy === "ManualHints") {
+    for (const node of sortedNodes) {
+      const hint = hints?.[node.id];
+      if (hint != null) {
+        nodes.set(node.id, {
+          id: node.id,
+          x: Math.floor(hint.x),
+          y: Math.floor(hint.y),
+          width: nodeWidth,
+          height: nodeHeight,
+        });
+      }
+    }
+  }
+  if (preserveExistingPositions) {
+    for (const node of sortedNodes) {
+      const previous = previousNodePositions?.[node.id];
+      if (previous != null) {
+        nodes.set(node.id, {
+          id: node.id,
+          x: Math.floor(previous.x),
+          y: Math.floor(previous.y),
+          width: nodeWidth,
+          height: nodeHeight,
+        });
+      }
+    }
+  }
+  const edges = buildEdgeSections(snapshot, nodes);
 
-  const nodes = new Map<string, LayoutNode>(
-    snapshot.nodes.map((node, i) => [
+  let maxX = 0;
+  let maxY = 0;
+  for (const node of nodes.values()) {
+    maxX = Math.max(maxX, node.x + node.width);
+    maxY = Math.max(maxY, node.y + node.height);
+  }
+  return {
+    nodes,
+    edges,
+    width: maxX + spacing,
+    height: maxY + spacing,
+  };
+}
+
+function computeGridNodePositions(
+  nodes: readonly { readonly id: string }[],
+  options: {
+    readonly nodeWidth: number;
+    readonly nodeHeight: number;
+    readonly spacing: number;
+    readonly direction: "LeftToRight" | "TopToBottom";
+  },
+): Map<string, LayoutNode> {
+  const { nodeWidth, nodeHeight, spacing, direction } = options;
+  const cols = Math.max(1, Math.ceil(Math.sqrt(nodes.length)));
+  return new Map<string, LayoutNode>(
+    nodes.map((node, i) => [
       node.id,
       {
         id: node.id,
-        x: (i % cols) * (nodeWidth + spacing),
-        y: Math.floor(i / cols) * (nodeHeight + spacing),
+        x:
+          direction === "TopToBottom"
+            ? Math.floor(i / cols) * (nodeWidth + spacing)
+            : (i % cols) * (nodeWidth + spacing),
+        y:
+          direction === "TopToBottom"
+            ? (i % cols) * (nodeHeight + spacing)
+            : Math.floor(i / cols) * (nodeHeight + spacing),
         width: nodeWidth,
         height: nodeHeight,
       },
     ]),
   );
+}
 
-  const edges = new Map<string, LayoutEdge>(
+function computeLayeredNodePositions(
+  nodes: readonly { readonly id: string }[],
+  edges: readonly { readonly sourceId: string; readonly targetId: string }[],
+  options: {
+    readonly nodeWidth: number;
+    readonly nodeHeight: number;
+    readonly spacing: number;
+    readonly direction: "LeftToRight" | "TopToBottom";
+  },
+): Map<string, LayoutNode> {
+  const { nodeWidth, nodeHeight, spacing, direction } = options;
+  const inDegree = new Map<string, number>(nodes.map((n) => [n.id, 0]));
+  const outgoing = new Map<string, string[]>();
+  for (const edge of edges) {
+    if (!inDegree.has(edge.sourceId) || !inDegree.has(edge.targetId)) continue;
+    inDegree.set(edge.targetId, (inDegree.get(edge.targetId) ?? 0) + 1);
+    const bucket = outgoing.get(edge.sourceId);
+    if (bucket == null) {
+      outgoing.set(edge.sourceId, [edge.targetId]);
+    } else {
+      bucket.push(edge.targetId);
+    }
+  }
+
+  const queue = [...nodes.map((n) => n.id).filter((id) => (inDegree.get(id) ?? 0) === 0)].sort();
+  let queueIndex = 0;
+  const layerById = new Map<string, number>(nodes.map((n) => [n.id, 0]));
+  const processed = new Set<string>();
+  while (queueIndex < queue.length) {
+    const current = queue[queueIndex];
+    queueIndex += 1;
+    if (current == null) break;
+    processed.add(current);
+    const currentLayer = layerById.get(current) ?? 0;
+    const targets = [...(outgoing.get(current) ?? [])].sort();
+    for (const target of targets) {
+      layerById.set(target, Math.max(layerById.get(target) ?? 0, currentLayer + 1));
+      inDegree.set(target, (inDegree.get(target) ?? 1) - 1);
+      if ((inDegree.get(target) ?? 0) === 0) {
+        queue.push(target);
+        queue.sort();
+      }
+    }
+  }
+  for (const node of nodes) {
+    if (!processed.has(node.id)) {
+      layerById.set(node.id, 0);
+    }
+  }
+
+  const layers = new Map<number, string[]>();
+  for (const node of nodes) {
+    const layer = layerById.get(node.id) ?? 0;
+    const bucket = layers.get(layer);
+    if (bucket == null) {
+      layers.set(layer, [node.id]);
+    } else {
+      bucket.push(node.id);
+    }
+  }
+  for (const bucket of layers.values()) {
+    bucket.sort();
+  }
+  const sortedLayers = [...layers.keys()].sort((a, b) => a - b);
+  const positions = new Map<string, LayoutNode>();
+  for (const layer of sortedLayers) {
+    const bucket = layers.get(layer) ?? [];
+    bucket.forEach((id, index) => {
+      positions.set(id, {
+        id,
+        x:
+          direction === "LeftToRight"
+            ? layer * (nodeWidth + spacing)
+            : index * (nodeWidth + spacing),
+        y:
+          direction === "LeftToRight"
+            ? index * (nodeHeight + spacing)
+            : layer * (nodeHeight + spacing),
+        width: nodeWidth,
+        height: nodeHeight,
+      });
+    });
+  }
+  return positions;
+}
+
+function buildEdgeSections(
+  snapshot: GraphSnapshot,
+  nodes: ReadonlyMap<string, LayoutNode>,
+): Map<string, LayoutEdge> {
+  return new Map<string, LayoutEdge>(
     snapshot.edges.map((edge) => {
       const source = nodes.get(edge.sourceId);
       const target = nodes.get(edge.targetId);
@@ -246,15 +433,6 @@ export function computeLayout(snapshot: GraphSnapshot, options: LayoutOptions = 
       ];
     }),
   );
-
-  const cols2 = Math.max(1, cols);
-  const rows = Math.ceil(snapshot.nodes.length / cols2);
-  return {
-    nodes,
-    edges,
-    width: cols2 * (nodeWidth + spacing),
-    height: rows * (nodeHeight + spacing),
-  };
 }
 
 // ---------------------------------------------------------------------------

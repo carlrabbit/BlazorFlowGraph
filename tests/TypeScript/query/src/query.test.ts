@@ -8,7 +8,9 @@ import {
   findGroupBoundaryEdges,
   findGroupMembers,
   findNeighbors,
+  findPathBetween,
   findUpstream,
+  resolvePathHighlightVisualState,
 } from "@dataflow-visualizer/query";
 import { applySnapshot } from "@dataflow-visualizer/runtime";
 
@@ -296,5 +298,74 @@ describe("extractSubgraph", () => {
     });
     expect(subgraph.nodeIds.size).toBe(1);
     expect(subgraph.edgeIds.size).toBe(0);
+  });
+});
+
+describe("findPathBetween", () => {
+  it("returns deterministic path between two connected nodes", () => {
+    const state = applySnapshot({
+      version: 1,
+      nodes: [
+        { id: "a", label: "A", kind: "default" },
+        { id: "b", label: "B", kind: "default" },
+        { id: "c", label: "C", kind: "default" },
+        { id: "d", label: "D", kind: "default" },
+      ],
+      edges: [
+        { id: "e1", sourceId: "a", targetId: "b" },
+        { id: "e2", sourceId: "a", targetId: "c" },
+        { id: "e3", sourceId: "b", targetId: "d" },
+        { id: "e4", sourceId: "c", targetId: "d" },
+      ],
+    });
+    const index = buildTopologyIndex(state);
+    expect(findPathBetween("a", "d", index)).toEqual(["a", "b", "d"]);
+  });
+
+  it("returns empty path for disconnected nodes", () => {
+    const state = applySnapshot({
+      version: 1,
+      nodes: [
+        { id: "a", label: "A", kind: "default" },
+        { id: "b", label: "B", kind: "default" },
+      ],
+      edges: [],
+    });
+    const index = buildTopologyIndex(state);
+    expect(findPathBetween("a", "b", index)).toEqual([]);
+  });
+});
+
+describe("resolvePathHighlightVisualState", () => {
+  it("resolves upstream highlights and dims unrelated nodes", () => {
+    const state = makeState();
+    const index = buildTopologyIndex(state);
+    const visual = resolvePathHighlightVisualState(
+      { mode: "upstream", sourceNodeId: "n3" },
+      index,
+      {
+        allNodeIds: state.nodes.keys(),
+        dimUnrelated: true,
+      },
+    );
+
+    expect(visual.upstreamHighlightedNodeIds.has("n3")).toBe(true);
+    expect(visual.upstreamHighlightedNodeIds.has("n2")).toBe(true);
+    expect(visual.upstreamHighlightedNodeIds.has("n1")).toBe(true);
+    expect(visual.dimmedNodeIds.has("n4")).toBe(true);
+  });
+
+  it("resolves between highlights with edges", () => {
+    const state = makeState();
+    const index = buildTopologyIndex(state);
+    const visual = resolvePathHighlightVisualState(
+      { mode: "between", sourceNodeId: "n1", targetNodeId: "n3" },
+      index,
+    );
+    expect(visual.highlightedNodeIds.has("n1")).toBe(true);
+    expect(visual.highlightedNodeIds.has("n2")).toBe(true);
+    expect(visual.highlightedNodeIds.has("n3")).toBe(true);
+    expect(visual.highlightedEdgeIds.has("e1")).toBe(true);
+    expect(visual.highlightedEdgeIds.has("e2")).toBe(true);
   });
 });
