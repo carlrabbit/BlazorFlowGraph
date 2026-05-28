@@ -50,6 +50,30 @@ export interface LayoutResult {
 export interface LayoutOptions {
   readonly strategy?: "Layered" | "Grid" | "ManualHints";
   readonly direction?: "LeftToRight" | "TopToBottom";
+  readonly profile?: "generic" | "dataflow" | "dependency" | "hierarchical";
+  readonly primaryEdgeTypes?: readonly string[];
+  readonly secondaryEdgeTypes?: readonly string[];
+  readonly edgeTypes?: Readonly<Record<string, string>>;
+  readonly nodeRoles?: Readonly<
+    Record<
+      string,
+      "source" | "processor" | "sink" | "context" | "group" | "external" | "diagnostic"
+    >
+  >;
+  readonly edgeRoles?: Readonly<
+    Record<
+      string,
+      | "primary-flow"
+      | "secondary-flow"
+      | "dependency"
+      | "metadata"
+      | "diagnostic"
+      | "hierarchy"
+      | "ownership"
+    >
+  >;
+  readonly nodeImportance?: Readonly<Record<string, number>>;
+  readonly edgeImportance?: Readonly<Record<string, number>>;
   readonly algorithm?: string;
   readonly nodeWidth?: number;
   readonly nodeHeight?: number;
@@ -224,6 +248,7 @@ export function computeLayout(snapshot: GraphSnapshot, options: LayoutOptions = 
   const {
     strategy = "Grid",
     direction = "LeftToRight",
+    profile = "generic",
     nodeWidth = 120,
     nodeHeight = 40,
     spacing = 20,
@@ -232,15 +257,17 @@ export function computeLayout(snapshot: GraphSnapshot, options: LayoutOptions = 
     preserveExistingPositions = false,
   } = options;
   const sortedNodes = [...snapshot.nodes].sort((a, b) => a.id.localeCompare(b.id));
-  const nodes =
-    strategy === "Layered"
-      ? computeLayeredNodePositions(sortedNodes, snapshot.edges, {
-          nodeWidth,
-          nodeHeight,
-          spacing,
-          direction,
-        })
-      : computeGridNodePositions(sortedNodes, { nodeWidth, nodeHeight, spacing, direction });
+  const normalizedDirection = normalizeDirection(direction);
+  const normalizedProfile = normalizeProfile(profile);
+  const nodes = computeProfiledNodePositions(snapshot, sortedNodes, {
+    ...options,
+    strategy,
+    direction: normalizedDirection,
+    profile: normalizedProfile,
+    nodeWidth,
+    nodeHeight,
+    spacing,
+  });
   if (strategy === "ManualHints") {
     for (const node of sortedNodes) {
       const hint = hints?.[node.id];
@@ -283,6 +310,316 @@ export function computeLayout(snapshot: GraphSnapshot, options: LayoutOptions = 
     width: maxX + spacing,
     height: maxY + spacing,
   };
+}
+
+function computeProfiledNodePositions(
+  snapshot: GraphSnapshot,
+  sortedNodes: readonly { readonly id: string }[],
+  options: LayoutOptions & {
+    readonly strategy: "Layered" | "Grid" | "ManualHints";
+    readonly direction: "LeftToRight" | "TopToBottom";
+    readonly profile: "generic" | "dataflow" | "dependency" | "hierarchical";
+    readonly nodeWidth: number;
+    readonly nodeHeight: number;
+    readonly spacing: number;
+  },
+): Map<string, LayoutNode> {
+  if (options.profile === "generic") {
+    return computeGenericNodePositions(snapshot, sortedNodes, options);
+  }
+
+  if (options.profile === "dataflow") {
+    const primary = selectPrimaryEdges(snapshot, options);
+    if (primary.length === 0) {
+      return computeGenericNodePositions(snapshot, sortedNodes, options);
+    }
+
+    const allSecondary = selectSecondaryEdges(snapshot, options);
+    const primaryNodeIds = new Set<string>();
+    for (const edge of primary) {
+      primaryNodeIds.add(edge.sourceId);
+      primaryNodeIds.add(edge.targetId);
+    }
+
+    const layerById = computeLayerById(sortedNodes, primary);
+    const maxLayer = Math.max(0, ...layerById.values());
+    for (const node of sortedNodes) {
+      const role = options.nodeRoles?.[node.id];
+      if (role === "source") {
+        layerById.set(node.id, 0);
+      } else if (role === "sink") {
+        layerById.set(node.id, maxLayer + 1);
+      } else if (!primaryNodeIds.has(node.id)) {
+        const attachmentLayer = findAttachmentLayer(node.id, allSecondary, layerById);
+        if (attachmentLayer != null) {
+          layerById.set(node.id, attachmentLayer);
+        }
+      }
+    }
+
+    const order = buildNodeOrderByLayer(sortedNodes, layerById, options, primaryNodeIds);
+    return buildPositionsFromLayerOrder(order, options);
+  }
+
+  if (options.profile === "dependency") {
+    const focusEdges = selectEdgesByRoleOrType(snapshot, options, ["dependency"]);
+    if (focusEdges.length === 0) {
+      return computeGenericNodePositions(snapshot, sortedNodes, options);
+    }
+    const layerById = computeLayerById(sortedNodes, focusEdges);
+    const order = buildNodeOrderByLayer(sortedNodes, layerById, options);
+    return buildPositionsFromLayerOrder(order, options);
+  }
+
+  const hierarchyEdges = selectEdgesByRoleOrType(snapshot, options, ["hierarchy", "ownership"]);
+  if (hierarchyEdges.length === 0) {
+    return computeGenericNodePositions(snapshot, sortedNodes, options);
+  }
+  const layerById = computeLayerById(sortedNodes, hierarchyEdges);
+  const order = buildNodeOrderByLayer(sortedNodes, layerById, options);
+  return buildPositionsFromLayerOrder(order, options);
+}
+
+function computeGenericNodePositions(
+  snapshot: GraphSnapshot,
+  sortedNodes: readonly { readonly id: string }[],
+  options: {
+    readonly strategy: "Layered" | "Grid" | "ManualHints";
+    readonly direction: "LeftToRight" | "TopToBottom";
+    readonly nodeWidth: number;
+    readonly nodeHeight: number;
+    readonly spacing: number;
+  },
+): Map<string, LayoutNode> {
+  return options.strategy === "Layered"
+    ? computeLayeredNodePositions(sortedNodes, snapshot.edges, options)
+    : computeGridNodePositions(sortedNodes, options);
+}
+
+function normalizeDirection(
+  direction: "LeftToRight" | "TopToBottom" | undefined,
+): "LeftToRight" | "TopToBottom" {
+  return direction === "TopToBottom" ? "TopToBottom" : "LeftToRight";
+}
+
+function normalizeProfile(
+  profile: LayoutOptions["profile"] | undefined,
+): "generic" | "dataflow" | "dependency" | "hierarchical" {
+  return profile === "dataflow" ||
+    profile === "dependency" ||
+    profile === "hierarchical" ||
+    profile === "generic"
+    ? profile
+    : "generic";
+}
+
+function selectPrimaryEdges(
+  snapshot: GraphSnapshot,
+  options: LayoutOptions,
+): Array<{ sourceId: string; targetId: string }> {
+  return snapshot.edges.filter((edge) => {
+    const role = options.edgeRoles?.[edge.id];
+    if (role === "primary-flow") {
+      return true;
+    }
+    const edgeType = options.edgeTypes?.[edge.id] ?? edge.label;
+    return edgeType != null && options.primaryEdgeTypes?.includes(edgeType) === true;
+  });
+}
+
+function selectSecondaryEdges(
+  snapshot: GraphSnapshot,
+  options: LayoutOptions,
+): Array<{ sourceId: string; targetId: string }> {
+  return snapshot.edges.filter((edge) => {
+    const role = options.edgeRoles?.[edge.id];
+    if (role === "secondary-flow" || role === "metadata") {
+      return true;
+    }
+    const edgeType = options.edgeTypes?.[edge.id] ?? edge.label;
+    return edgeType != null && options.secondaryEdgeTypes?.includes(edgeType) === true;
+  });
+}
+
+function selectEdgesByRoleOrType(
+  snapshot: GraphSnapshot,
+  options: LayoutOptions,
+  roles: readonly string[],
+): Array<{ sourceId: string; targetId: string }> {
+  return snapshot.edges.filter((edge) => {
+    const role = options.edgeRoles?.[edge.id];
+    if (role != null && roles.includes(role)) {
+      return true;
+    }
+    const edgeType = options.edgeTypes?.[edge.id] ?? edge.label;
+    return edgeType != null && options.primaryEdgeTypes?.includes(edgeType) === true;
+  });
+}
+
+function computeLayerById(
+  nodes: readonly { readonly id: string }[],
+  edges: readonly { readonly sourceId: string; readonly targetId: string }[],
+): Map<string, number> {
+  const inDegree = new Map<string, number>(nodes.map((n) => [n.id, 0]));
+  const outgoing = new Map<string, string[]>();
+
+  for (const edge of edges) {
+    if (!inDegree.has(edge.sourceId) || !inDegree.has(edge.targetId)) continue;
+    inDegree.set(edge.targetId, (inDegree.get(edge.targetId) ?? 0) + 1);
+    const bucket = outgoing.get(edge.sourceId);
+    if (bucket == null) {
+      outgoing.set(edge.sourceId, [edge.targetId]);
+    } else {
+      bucket.push(edge.targetId);
+    }
+  }
+
+  const queue = [...nodes.map((n) => n.id).filter((id) => (inDegree.get(id) ?? 0) === 0)].sort();
+  let queueIndex = 0;
+  const layerById = new Map<string, number>(nodes.map((n) => [n.id, 0]));
+  const processed = new Set<string>();
+
+  while (queueIndex < queue.length) {
+    const current = queue[queueIndex];
+    queueIndex += 1;
+    if (current == null) break;
+    processed.add(current);
+    const currentLayer = layerById.get(current) ?? 0;
+    const targets = [...(outgoing.get(current) ?? [])].sort();
+    for (const target of targets) {
+      layerById.set(target, Math.max(layerById.get(target) ?? 0, currentLayer + 1));
+      inDegree.set(target, (inDegree.get(target) ?? 1) - 1);
+      if ((inDegree.get(target) ?? 0) === 0) {
+        queue.push(target);
+        queue.sort();
+      }
+    }
+  }
+
+  for (const node of nodes) {
+    if (!processed.has(node.id)) {
+      layerById.set(node.id, 0);
+    }
+  }
+
+  return layerById;
+}
+
+function findAttachmentLayer(
+  nodeId: string,
+  edges: readonly { sourceId: string; targetId: string }[],
+  layerById: ReadonlyMap<string, number>,
+): number | undefined {
+  for (const edge of edges) {
+    if (edge.sourceId === nodeId && layerById.has(edge.targetId)) {
+      return layerById.get(edge.targetId);
+    }
+    if (edge.targetId === nodeId && layerById.has(edge.sourceId)) {
+      return layerById.get(edge.sourceId);
+    }
+  }
+  return undefined;
+}
+
+function buildNodeOrderByLayer(
+  nodes: readonly { readonly id: string }[],
+  layerById: ReadonlyMap<string, number>,
+  options: LayoutOptions,
+  primaryNodeIds?: ReadonlySet<string>,
+): Map<number, string[]> {
+  const layers = new Map<number, string[]>();
+  for (const node of nodes) {
+    const layer = layerById.get(node.id) ?? 0;
+    const bucket = layers.get(layer);
+    if (bucket == null) {
+      layers.set(layer, [node.id]);
+    } else {
+      bucket.push(node.id);
+    }
+  }
+
+  for (const bucket of layers.values()) {
+    bucket.sort((left, right) => {
+      const leftPrimary = primaryNodeIds?.has(left) ?? false;
+      const rightPrimary = primaryNodeIds?.has(right) ?? false;
+      if (leftPrimary !== rightPrimary) {
+        return leftPrimary ? -1 : 1;
+      }
+
+      const leftRoleRank = nodeRoleRank(options.nodeRoles?.[left]);
+      const rightRoleRank = nodeRoleRank(options.nodeRoles?.[right]);
+      if (leftRoleRank !== rightRoleRank) {
+        return leftRoleRank - rightRoleRank;
+      }
+
+      const leftImportance = options.nodeImportance?.[left] ?? 0;
+      const rightImportance = options.nodeImportance?.[right] ?? 0;
+      if (leftImportance !== rightImportance) {
+        return rightImportance - leftImportance;
+      }
+
+      return left.localeCompare(right);
+    });
+  }
+
+  return layers;
+}
+
+function nodeRoleRank(role: LayoutOptions["nodeRoles"] extends Readonly<
+  Record<string, infer T>
+>
+  ? T
+  : never): number {
+  switch (role) {
+    case "source":
+      return 0;
+    case "processor":
+      return 1;
+    case "sink":
+      return 2;
+    case "group":
+      return 3;
+    case "context":
+      return 4;
+    case "external":
+      return 5;
+    case "diagnostic":
+      return 6;
+    default:
+      return 7;
+  }
+}
+
+function buildPositionsFromLayerOrder(
+  layers: ReadonlyMap<number, readonly string[]>,
+  options: {
+    readonly nodeWidth: number;
+    readonly nodeHeight: number;
+    readonly spacing: number;
+    readonly direction: "LeftToRight" | "TopToBottom";
+  },
+): Map<string, LayoutNode> {
+  const positions = new Map<string, LayoutNode>();
+  const sortedLayers = [...layers.keys()].sort((a, b) => a - b);
+  for (const layer of sortedLayers) {
+    const bucket = layers.get(layer) ?? [];
+    bucket.forEach((id, index) => {
+      positions.set(id, {
+        id,
+        x:
+          options.direction === "LeftToRight"
+            ? layer * (options.nodeWidth + options.spacing)
+            : index * (options.nodeWidth + options.spacing),
+        y:
+          options.direction === "LeftToRight"
+            ? index * (options.nodeHeight + options.spacing)
+            : layer * (options.nodeHeight + options.spacing),
+        width: options.nodeWidth,
+        height: options.nodeHeight,
+      });
+    });
+  }
+  return positions;
 }
 
 function computeGridNodePositions(
